@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 export function WorkspaceSkeleton() {
   return (
-    <div className="flex-1 flex flex-col h-full bg-[var(--background)] p-6 space-y-6 max-w-5xl mx-auto w-full text-left">
+    <div className="flex-1 flex flex-col h-full bg-[var(--background)] p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto w-full text-left">
       {/* Metrics Row Skeleton */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (

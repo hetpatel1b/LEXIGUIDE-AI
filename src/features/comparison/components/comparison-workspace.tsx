@@ -87,15 +87,10 @@ export function ComparisonWorkspace() {
       <WorkspaceNav
         documentName="Employment_Agreement_2026.pdf"
         documentType="Employment Agreement"
-        extraRightControls={
-          <Badge variant="brand" size="sm" dot className="hidden sm:inline-flex">
-            Comparison Preview
-          </Badge>
-        }
       />
 
       {/* 2. Main Scrollable Container */}
-      <main className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 text-left">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
           <div className="space-y-1">

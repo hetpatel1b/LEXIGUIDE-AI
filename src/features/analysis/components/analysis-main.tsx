@@ -47,52 +47,54 @@ export function AnalysisMain({
       aria-label="Document Analysis Workspace"
       className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--background)] min-w-0"
     >
-      {/* Contextual Sub-Header (Tablet & Mobile drawer toggles + Active section tag) */}
-      <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 bg-[var(--surface)] border-b border-[var(--border)] shrink-0">
-        {/* Left: Mobile/Tablet Document trigger & contextual breadcrumb */}
-        <div className="flex items-center gap-2 min-w-0">
+      {/* 1. Inner Workspace Titlebar (Independent Layout Layer) */}
+      <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-5 lg:px-6 py-2.5 bg-[var(--surface)] border-b border-[var(--border)] shrink-0 min-h-[44px]">
+        {/* Left: Heading + Mobile/Tablet Document Trigger + Active Section Tag */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onOpenDocumentDrawer && (
             <Button
               variant="outline"
               size="sm"
               onClick={onOpenDocumentDrawer}
               leftIcon={<PanelLeftOpen className="h-4 w-4" />}
-              className="lg:hidden text-xs shrink-0"
+              className="lg:hidden text-xs shrink-0 min-h-[36px]"
               aria-label="Open document structure drawer"
             >
               <span className="hidden sm:inline">Document</span>
             </Button>
           )}
 
-          {selectedSection ? (
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] text-xs text-[var(--foreground)] truncate">
-              <span className="font-mono text-[10px] text-[var(--foreground-muted)]">
-                Sec {selectedSection.sectionNumber}
-              </span>
-              <span className="truncate max-w-[140px] sm:max-w-[220px] font-medium" title={selectedSection.title}>
-                {selectedSection.title}
-              </span>
-              {onClearSection && (
-                <button
-                  type="button"
-                  onClick={onClearSection}
-                  className="hover:text-[var(--danger)] text-[var(--foreground-muted)] ml-1"
-                  aria-label="Clear active section filter"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          ) : (
-            <span className="text-xs text-[var(--foreground-muted)] truncate hidden sm:inline">
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-xs sm:text-sm font-semibold text-[var(--foreground)] truncate">
               Primary Analysis Workspace
-            </span>
-          )}
+            </h1>
+
+            {selectedSection && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] text-xs text-[var(--foreground)] shrink-0">
+                <span className="font-mono text-[10px] text-[var(--foreground-muted)]">
+                  Sec {selectedSection.sectionNumber}
+                </span>
+                <span className="truncate max-w-[120px] sm:max-w-[180px] font-medium" title={selectedSection.title}>
+                  {selectedSection.title}
+                </span>
+                {onClearSection && (
+                  <button
+                    type="button"
+                    onClick={onClearSection}
+                    className="hover:text-[var(--danger)] text-[var(--foreground-muted)] ml-0.5 p-0.5 rounded"
+                    aria-label="Clear active section filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Right: Mobile/Tablet AI Copilot trigger */}
+        {/* Right: Illustrative Analysis Badge + Mobile/Tablet Copilot Trigger */}
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="neutral" size="sm" dot className="hidden md:inline-flex">
+          <Badge variant="neutral" size="sm" dot className="inline-flex shrink-0">
             Illustrative Analysis
           </Badge>
 
@@ -102,7 +104,7 @@ export function AnalysisMain({
               size="sm"
               onClick={onOpenCopilotDrawer}
               leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-              className="xl:hidden text-xs shadow-sm"
+              className="lg:hidden text-xs shadow-sm min-h-[36px]"
               aria-label="Open Document Copilot assistant drawer"
             >
               <span>Copilot</span>
@@ -111,37 +113,38 @@ export function AnalysisMain({
         </div>
       </div>
 
-      {/* Primary 6 Analysis Tabs */}
+      {/* 2. Primary 6 Analysis Tabs (Full Workspace Width) */}
       <AnalysisTabs activeTab={activeTab} onSelectTab={onSelectTab} />
 
-      {/* Active Tab View Body */}
+      {/* 3. Active Tab View Body (Fluid Layout with Consistent Gutter) */}
       <div
-        role="tabpanel"
         id={`panel-${activeTab}`}
+        role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
-        tabIndex={0}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 focus:outline-none"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
       >
-        {activeTab === "overview" && (
-          <OverviewTab
-            onNavigateTab={onSelectTab}
-            onViewEvidence={onViewEvidence}
-          />
-        )}
+        <div className="w-full max-w-[1600px] mx-auto space-y-6">
+          {activeTab === "overview" && (
+            <OverviewTab
+              onNavigateTab={onSelectTab}
+              onViewEvidence={onViewEvidence}
+            />
+          )}
 
-        {activeTab === "summary" && <SummaryTab />}
+          {activeTab === "summary" && <SummaryTab />}
 
-        {activeTab === "clauses" && (
-          <ClausesTab onViewEvidence={onViewEvidence} />
-        )}
+          {activeTab === "clauses" && (
+            <ClausesTab onViewEvidence={onViewEvidence} />
+          )}
 
-        {activeTab === "concerns" && (
-          <ConcernsTab onViewEvidence={onViewEvidence} />
-        )}
+          {activeTab === "concerns" && (
+            <ConcernsTab onViewEvidence={onViewEvidence} />
+          )}
 
-        {activeTab === "obligations" && <ObligationsTab />}
+          {activeTab === "obligations" && <ObligationsTab />}
 
-        {activeTab === "dates" && <DatesTab />}
+          {activeTab === "dates" && <DatesTab />}
+        </div>
       </div>
     </main>
   );

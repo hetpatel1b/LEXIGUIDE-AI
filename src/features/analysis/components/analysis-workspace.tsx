@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WorkspaceHeader, type WorkspacePreviewState } from "./workspace-header";
+import { WorkspaceNav } from "@/components/shared";
 import { DocumentPanel } from "./document-panel";
 import { AnalysisMain } from "./analysis-main";
 import { CopilotPanel } from "./copilot/copilot-panel";
@@ -20,10 +20,12 @@ import type { AnalysisTabId } from "./analysis-tabs";
 import type { EvidenceDetail } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
 
+export type WorkspacePreviewState = "normal" | "loading" | "empty" | "error";
+
 export function AnalysisWorkspace() {
-  // Desktop Panel Collapse State
-  const [isLeftCollapsed, setIsLeftCollapsed] = React.useState(false);
-  const [isRightCollapsed, setIsRightCollapsed] = React.useState(false);
+  // Desktop Panel Collapse State: default closed as requested
+  const [isLeftCollapsed, setIsLeftCollapsed] = React.useState(true);
+  const [isRightCollapsed, setIsRightCollapsed] = React.useState(true);
 
   // Mobile / Tablet Drawer State
   const [isDocDrawerOpen, setIsDocDrawerOpen] = React.useState(false);
@@ -38,8 +40,17 @@ export function AnalysisWorkspace() {
   const [activeEvidence, setActiveEvidence] = React.useState<EvidenceDetail | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
 
-  // Development Preview State (normal / loading / empty / error)
-  const [previewState, setPreviewState] = React.useState<WorkspacePreviewState>("normal");
+  // Development Preview State (normal by default; testable via ?state=loading|empty|error)
+  const [previewState, setPreviewState] = React.useState<WorkspacePreviewState>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const st = params.get("state") as WorkspacePreviewState | null;
+      if (st && ["normal", "loading", "empty", "error"].includes(st)) {
+        return st;
+      }
+    }
+    return "normal";
+  });
 
   const handleOpenEvidence = (evidence: EvidenceDetail) => {
     setActiveEvidence(evidence);
@@ -65,14 +76,14 @@ export function AnalysisWorkspace() {
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      {/* 1. Dedicated Workspace Application Header */}
-      <WorkspaceHeader
-        previewState={previewState}
-        onSelectPreviewState={setPreviewState}
+      {/* 1. Global Workspace Navigation (Shared across /analyze, /qa, /compare, /action-center) */}
+      <WorkspaceNav
+        documentName="Employment_Agreement_2026.pdf"
+        documentType="Employment Agreement"
       />
 
       {/* 2. Mobile Quick-Navigation Strip (< 768px) */}
-      <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2 shrink-0">
+      <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-3 sm:px-4 py-1.5 shrink-0">
         <span className="text-xs font-semibold text-[var(--foreground)]">
           Navigation:
         </span>
@@ -81,26 +92,29 @@ export function AnalysisWorkspace() {
           <button
             type="button"
             onClick={() => setIsDocDrawerOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
+            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            aria-label="Open document structure drawer"
           >
-            <FileText className="h-3.5 w-3.5 text-red-500" />
+            <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
             <span>Document</span>
           </button>
 
           <button
             type="button"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs"
+            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            aria-current="page"
           >
-            <LayoutDashboard className="h-3.5 w-3.5" />
+            <LayoutDashboard className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>Analysis</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsCopilotDrawerOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
+            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            aria-label="Open Copilot assistant drawer"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />
+            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />
             <span>Copilot</span>
           </button>
         </div>
@@ -147,8 +161,8 @@ export function AnalysisWorkspace() {
               onViewEvidence={handleOpenEvidence}
             />
 
-            {/* Right: AI Copilot Assistant (Desktop >= 1280px) */}
-            <div className="hidden xl:flex h-full shrink-0">
+            {/* Right: AI Copilot Assistant (Desktop >= 1024px) */}
+            <div className="hidden lg:flex h-full shrink-0">
               <CopilotPanel
                 isCollapsed={isRightCollapsed}
                 onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}

@@ -12,7 +12,7 @@ export interface ConcernsTabProps {
 
 export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
   return (
-    <div className="space-y-6 text-left max-w-4xl mx-auto">
+    <div className="space-y-6 text-left w-full">
       {/* Header & Subtitle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[var(--border)]">
         <div>
@@ -41,16 +41,16 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
       </div>
 
       {/* Concerns Cards List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-3.5">
         {POTENTIAL_CONCERNS.map((concern) => (
           <Card
             key={concern.id}
-            density="spacious"
-            className="bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-3"
+            density="compact"
+            className="p-4 sm:p-4.5 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--foreground)]">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--foreground)] shrink-0">
                   {concern.clauseReference}
                 </span>
                 <h3 className="text-sm font-semibold text-[var(--foreground)]">
@@ -58,7 +58,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
                 </h3>
               </div>
 
-              <RiskIndicator severity={concern.severity} size="md" />
+              <RiskIndicator severity={concern.severity} size="sm" />
             </div>
 
             <div className="space-y-1.5 text-xs">
@@ -93,10 +93,10 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
                     excerpt: concern.evidenceSnippet || "",
                   })
                 }
-                className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer py-1 px-1.5 -mr-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
               >
                 <span>View Exact Clause Text</span>
-                <ExternalLink className="h-3 w-3" />
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
           </Card>

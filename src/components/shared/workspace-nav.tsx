@@ -88,39 +88,38 @@ export function WorkspaceNav({
           </div>
         </div>
 
-        {/* Center: Primary 4 Workspace Workflow Links */}
-        <nav
-          aria-label="Workspace Tools Navigation"
-          className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1"
-        >
-          {WORKSPACE_ROUTES.map((route) => {
-            const isActive = pathname === route.href || (route.href === "/analyze" && pathname.startsWith("/analyze"));
-            const Icon = route.icon;
+        {/* Right: Workspace Navigation Tools + Extra Controls + Exit */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <nav
+            aria-label="Workspace Tools Navigation"
+            className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1"
+          >
+            {WORKSPACE_ROUTES.map((route) => {
+              const isActive = pathname === route.href || (route.href === "/analyze" && pathname.startsWith("/analyze"));
+              const Icon = route.icon;
 
-            return (
-              <Link
-                key={route.href}
-                href={route.href}
-                title={route.tooltip}
-                className={cn(
-                  "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-all whitespace-nowrap",
-                  isActive
-                    ? "bg-[var(--primary)] text-white font-semibold shadow-xs"
-                    : "text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
-                )}
-              >
-                <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-white" : "text-[var(--foreground-muted)]")} />
-                <span>{route.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+              return (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  title={route.tooltip}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-all whitespace-nowrap",
+                    isActive
+                      ? "bg-[var(--primary)] text-white font-semibold shadow-xs"
+                      : "text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
+                  )}
+                >
+                  <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-white" : "text-[var(--foreground-muted)]")} />
+                  <span>{route.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-        {/* Right: Extra Controls + Return Home */}
-        <div className="flex items-center gap-2 shrink-0">
           {extraRightControls}
 
-          <div className="border-l border-[var(--border)] pl-2 flex items-center">
+          <div className="border-l border-[var(--border)] pl-2 sm:pl-2.5 flex items-center">
             <Link
               href="/"
               title="Exit Workspace & Return Home"

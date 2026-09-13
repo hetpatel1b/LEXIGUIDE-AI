@@ -28,7 +28,7 @@ export function PageList({
         </span>
       </div>
 
-      <div className="grid grid-cols-6 sm:grid-cols-6 gap-1.5 max-h-36 overflow-y-auto pr-1">
+      <div className="grid grid-cols-6 gap-1.5">
         {DOCUMENT_PAGES.map((page) => {
           const isSelected = selectedPage === page.pageNumber;
           return (

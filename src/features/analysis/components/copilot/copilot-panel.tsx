@@ -157,12 +157,12 @@ export function CopilotPanel({
     <aside
       aria-label="Document AI Copilot Assistant"
       className={cn(
-        "w-80 lg:w-96 shrink-0 border-l border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
+        "w-[350px] lg:w-[360px] shrink-0 border-l border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
         className
       )}
     >
       {/* Copilot Header */}
-      <div className="p-3.5 px-4 border-b border-[var(--border)] bg-[var(--surface)] shrink-0">
+      <div className="p-3 sm:p-3.5 px-4 border-b border-[var(--border)] bg-[var(--surface)] shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
@@ -213,7 +213,7 @@ export function CopilotPanel({
       {/* Messages Scroll Area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4 focus:outline-none"
+        className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 focus:outline-none"
       >
         {messages.map((msg) => (
           <CopilotMessage
@@ -242,7 +242,7 @@ export function CopilotPanel({
                   key={suggestion}
                   type="button"
                   onClick={() => handleSend(suggestion)}
-                  className="w-full text-left p-2 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-raised)] text-xs text-[var(--foreground-secondary)] transition-all cursor-pointer"
+                  className="w-full text-left p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-raised)] text-xs text-[var(--foreground-secondary)] transition-all cursor-pointer min-h-[44px] flex items-center"
                 >
                   &ldquo;{suggestion}&rdquo;
                 </button>

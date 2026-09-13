@@ -15,7 +15,7 @@ export function ObligationsTab() {
   );
 
   return (
-    <div className="space-y-6 text-left max-w-4xl mx-auto">
+    <div className="space-y-6 text-left w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[var(--border)]">
         <div>

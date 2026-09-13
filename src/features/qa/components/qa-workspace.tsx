@@ -187,11 +187,6 @@ export function QAWorkspace() {
       <WorkspaceNav
         documentName="Employment_Agreement_2026.pdf"
         documentType="Employment Agreement"
-        extraRightControls={
-          <Badge variant="brand" size="sm" dot className="hidden sm:inline-flex">
-            Grounded Q&amp;A
-          </Badge>
-        }
       />
 
       {/* 2. Main Q&A Content Area */}

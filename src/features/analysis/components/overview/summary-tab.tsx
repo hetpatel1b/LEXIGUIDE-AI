@@ -18,7 +18,7 @@ import {
 
 export function SummaryTab() {
   return (
-    <div className="space-y-6 text-left max-w-4xl mx-auto">
+    <div className="space-y-6 text-left w-full">
       {/* Header & Subtitle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-[var(--border)]">
         <div>
@@ -36,25 +36,25 @@ export function SummaryTab() {
       </div>
 
       {/* Main Executive Summary Card */}
-      <Card density="spacious" className="bg-[var(--surface)] border-[var(--border)] space-y-4">
+      <Card density="compact" className="p-4 sm:p-5 bg-[var(--surface)] border-[var(--border)] space-y-3.5">
         <div className="flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
           <Sparkles className="h-4 w-4 text-[var(--primary)]" aria-hidden="true" />
           <span>Core Contract Overview</span>
         </div>
 
-        <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed">
+        <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed">
           {EXECUTIVE_SUMMARY.overview}
         </p>
 
-        <div className="p-4 rounded-[var(--radius-lg)] bg-[var(--surface-subtle)] border border-[var(--border)] space-y-3">
+        <div className="p-3 sm:p-4 rounded-[var(--radius-lg)] bg-[var(--surface-subtle)] border border-[var(--border)] space-y-2.5">
           <h3 className="text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider">
             Primary Findings &amp; Deal Terms
           </h3>
 
-          <ul className="space-y-2.5">
+          <ul className="space-y-2">
             {EXECUTIVE_SUMMARY.bulletPoints.map((point, index) => (
-              <li key={index} className="flex items-start gap-2.5 text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                <span className="h-2 w-2 rounded-full bg-[var(--primary)] mt-1 shrink-0" aria-hidden="true" />
+              <li key={index} className="flex items-start gap-2 text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" aria-hidden="true" />
                 <span>{point}</span>
               </li>
             ))}
@@ -63,9 +63,9 @@ export function SummaryTab() {
       </Card>
 
       {/* Contractual Context & Legal Framework */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card density="spacious" className="bg-[var(--surface)] space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider text-[var(--foreground-muted)]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <Card density="compact" className="p-4 bg-[var(--surface)] space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
             <MapPin className="h-3.5 w-3.5 text-[var(--primary)]" aria-hidden="true" />
             <span>Jurisdiction &amp; Venue</span>
           </div>
@@ -83,8 +83,8 @@ export function SummaryTab() {
           </div>
         </Card>
 
-        <Card density="spacious" className="bg-[var(--surface)] space-y-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider text-[var(--foreground-muted)]">
+        <Card density="compact" className="p-4 bg-[var(--surface)] space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">
             <Calendar className="h-3.5 w-3.5 text-[var(--primary)]" aria-hidden="true" />
             <span>Term &amp; Effective Status</span>
           </div>
@@ -104,7 +104,7 @@ export function SummaryTab() {
       </div>
 
       {/* Structural Scope Guide */}
-      <Card density="spacious" className="bg-[var(--surface)] space-y-3">
+      <Card density="compact" className="p-4 bg-[var(--surface)] space-y-2.5">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)]">
           <BookOpen className="h-4 w-4 text-[var(--primary)]" aria-hidden="true" />
           <span>Document Architecture Summary</span>

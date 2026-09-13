@@ -29,7 +29,7 @@ export function SectionList({
         </span>
       </div>
 
-      <nav aria-label="Document Sections Navigation" className="space-y-0.5 max-h-56 overflow-y-auto pr-1">
+      <nav aria-label="Document Sections Navigation" className="space-y-0.5">
         {DOCUMENT_SECTIONS.map((section) => {
           const isSelected = selectedSectionId === section.id;
           return (
