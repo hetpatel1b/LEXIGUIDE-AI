@@ -5,7 +5,7 @@ import { BRAND } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export interface BrandLogoProps {
-  variant?: "light" | "dark" | "icon" | "full";
+  variant?: "auto" | "light" | "dark" | "icon" | "full";
   className?: string;
   width?: number;
   height?: number;
@@ -14,13 +14,54 @@ export interface BrandLogoProps {
 }
 
 export function BrandLogo({
-  variant = "light",
+  variant = "auto",
   className,
   width,
   height,
   priority = false,
   withLink = true,
 }: BrandLogoProps) {
+  // If variant is 'auto', render dual images switched via CSS dark: class to prevent hydration mismatch
+  if (variant === "auto") {
+    const finalWidth = width || 200;
+    const finalHeight = height || 55;
+
+    const dualImageElement = (
+      <span className="relative inline-flex items-center">
+        <Image
+          src={BRAND.assets.logoLight}
+          alt="LexiGuide AI — Understand. Compare. Act with confidence."
+          width={finalWidth}
+          height={finalHeight}
+          priority={priority}
+          className={cn("dark:hidden object-contain transition-opacity", className)}
+        />
+        <Image
+          src={BRAND.assets.logoDark}
+          alt="LexiGuide AI — Understand. Compare. Act with confidence."
+          width={finalWidth}
+          height={finalHeight}
+          priority={priority}
+          className={cn("hidden dark:inline-block object-contain transition-opacity", className)}
+        />
+      </span>
+    );
+
+    if (withLink) {
+      return (
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-[var(--radius-md)]"
+          aria-label="LexiGuide AI Home"
+        >
+          {dualImageElement}
+        </Link>
+      );
+    }
+
+    return dualImageElement;
+  }
+
   const assetMap = {
     light: {
       src: BRAND.assets.logoLight,
@@ -67,7 +108,7 @@ export function BrandLogo({
     return (
       <Link
         href="/"
-        className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-blue)] rounded-md"
+        className="inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] rounded-[var(--radius-md)]"
         aria-label="LexiGuide AI Home"
       >
         {imageElement}

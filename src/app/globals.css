@@ -1,48 +1,204 @@
 @import "tailwindcss";
 
-:root {
-  /* LexiGuide AI Approved Brand Tokens */
+@theme {
+  /* Brand Identity Tokens */
   --color-brand-navy: #0B1F44;
   --color-brand-blue: #2563EB;
   --color-brand-accent: #38BDF8;
-  --color-surface: #F8FAFC;
+  --color-brand-surface: #F8FAFC;
 
-  /* Semantic Theme Tokens (Light Mode - Default) */
+  /* Semantic Theme Tokens */
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-subtle: var(--surface-subtle);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-border-muted: var(--border-muted);
+
+  --color-interactive: var(--primary);
+  --color-interactive-hover: var(--primary-hover);
+  --color-interactive-active: var(--primary-active);
+
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Radius Scale */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}
+
+:root {
+  /* Core Brand Tokens */
+  --color-brand-navy: #0B1F44;
+  --color-brand-blue: #2563EB;
+  --color-brand-accent: #38BDF8;
+  --color-surface-base: #F8FAFC;
+
+  /* Light Theme (Default) - Clean, Bright, Document-Centric */
   --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --surface-muted: #F1F5F9;
+  --surface-subtle: #F8FAFC;
+
   --foreground: #0B1F44;
-  --card: #FFFFFF;
-  --card-foreground: #0B1F44;
+  --foreground-secondary: #334155;
+  --foreground-muted: #64748B;
+  --foreground-subtle: #94A3B8;
+
   --border: #E2E8F0;
-  --input: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-muted: #F1F5F9;
+
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-active: #1E40AF;
+  --primary-foreground: #FFFFFF;
+
   --ring: #2563EB;
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;
+  --focus-ring: rgba(37, 99, 235, 0.25);
+
+  /* Semantic States - Light */
+  --success: #16A34A;
+  --success-subtle: #F0FDF4;
+  --success-foreground: #15803D;
+
+  --warning: #D97706;
+  --warning-subtle: #FFFBEB;
+  --warning-foreground: #B45309;
+
+  --danger: #DC2626;
+  --danger-subtle: #FEF2F2;
+  --danger-foreground: #B91C1C;
+
+  --info: #0284C7;
+  --info-subtle: #F0F9FF;
+  --info-foreground: #0369A1;
+
+  /* Shadows - Light Mode */
+  --shadow-subtle: 0 1px 2px 0 rgba(11, 31, 68, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(11, 31, 68, 0.06), 0 2px 4px -2px rgba(11, 31, 68, 0.04);
+  --shadow-raised: 0 10px 15px -3px rgba(11, 31, 68, 0.08), 0 4px 6px -4px rgba(11, 31, 68, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    /* Dark Theme - Deep Navy Professional (Not pure black) */
     --background: #060E1E;
+    --surface: #0B1F44;
+    --surface-raised: #112550;
+    --surface-muted: #08152E;
+    --surface-subtle: #0E2248;
+
     --foreground: #F8FAFC;
-    --card: #0B1F44;
-    --card-foreground: #F8FAFC;
-    --border: #1E2E4A;
-    --input: #1E2E4A;
+    --foreground-secondary: #CBD5E1;
+    --foreground-muted: #94A3B8;
+    --foreground-subtle: #64748B;
+
+    --border: #1A2F5A;
+    --border-strong: #25417A;
+    --border-muted: #112242;
+
+    --primary: #38BDF8;
+    --primary-hover: #60A5FA;
+    --primary-active: #2563EB;
+    --primary-foreground: #0B1F44;
+
     --ring: #38BDF8;
-    --muted: #0B1F44;
-    --muted-foreground: #94A3B8;
+    --focus-ring: rgba(56, 189, 248, 0.3);
+
+    /* Semantic States - Dark */
+    --success: #22C55E;
+    --success-subtle: rgba(34, 197, 94, 0.12);
+    --success-foreground: #86EFAC;
+
+    --warning: #F59E0B;
+    --warning-subtle: rgba(245, 158, 11, 0.12);
+    --warning-foreground: #FCD34D;
+
+    --danger: #EF4444;
+    --danger-subtle: rgba(239, 68, 68, 0.12);
+    --danger-foreground: #FCA5A5;
+
+    --info: #38BDF8;
+    --info-subtle: rgba(56, 189, 248, 0.12);
+    --info-foreground: #7DD3FC;
+
+    /* Shadows - Dark Mode (Zero black halos) */
+    --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+    --shadow-raised: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
   }
 }
 
-.dark {
+.dark,
+[data-theme="dark"] {
+  /* Explicit Dark Theme Class */
   --background: #060E1E;
+  --surface: #0B1F44;
+  --surface-raised: #112550;
+  --surface-muted: #08152E;
+  --surface-subtle: #0E2248;
+
   --foreground: #F8FAFC;
-  --card: #0B1F44;
-  --card-foreground: #F8FAFC;
-  --border: #1E2E4A;
-  --input: #1E2E4A;
+  --foreground-secondary: #CBD5E1;
+  --foreground-muted: #94A3B8;
+  --foreground-subtle: #64748B;
+
+  --border: #1A2F5A;
+  --border-strong: #25417A;
+  --border-muted: #112242;
+
+  --primary: #38BDF8;
+  --primary-hover: #60A5FA;
+  --primary-active: #2563EB;
+  --primary-foreground: #0B1F44;
+
   --ring: #38BDF8;
-  --muted: #0B1F44;
-  --muted-foreground: #94A3B8;
+  --focus-ring: rgba(56, 189, 248, 0.3);
+
+  --success: #22C55E;
+  --success-subtle: rgba(34, 197, 94, 0.12);
+  --success-foreground: #86EFAC;
+
+  --warning: #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.12);
+  --warning-foreground: #FCD34D;
+
+  --danger: #EF4444;
+  --danger-subtle: rgba(239, 68, 68, 0.12);
+  --danger-foreground: #FCA5A5;
+
+  --info: #38BDF8;
+  --info-subtle: rgba(56, 189, 248, 0.12);
+  --info-foreground: #7DD3FC;
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
 }
 
 /* Base Body Styles */
@@ -63,7 +219,7 @@ body {
 
 /* Text Selection Styling */
 ::selection {
-  background-color: #2563eb33;
+  background-color: rgba(37, 99, 235, 0.2);
   color: inherit;
 }
 

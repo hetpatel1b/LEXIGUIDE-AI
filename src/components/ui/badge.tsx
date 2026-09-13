@@ -2,35 +2,65 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "brand" | "info" | "warning" | "success" | "neutral";
+  variant?: "neutral" | "brand" | "info" | "warning" | "danger" | "success";
+  size?: "sm" | "md";
+  dot?: boolean;
 }
 
 export function Badge({
   className,
   variant = "brand",
+  size = "md",
+  dot = false,
+  children,
   ...props
 }: BadgeProps) {
   const variantStyles = {
-    brand:
-      "bg-blue-50 text-[var(--color-brand-blue)] border-blue-200 dark:bg-blue-950/40 dark:text-sky-300 dark:border-blue-800/60",
-    info:
-      "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60",
-    warning:
-      "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60",
-    success:
-      "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60",
     neutral:
-      "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700",
+      "bg-[var(--surface-muted)] text-[var(--foreground-secondary)] border-[var(--border)]",
+    brand:
+      "bg-blue-50 text-[var(--primary)] border-blue-200 dark:bg-blue-950/40 dark:text-sky-300 dark:border-blue-800/60",
+    info:
+      "bg-[var(--info-subtle)] text-[var(--info-foreground)] border-sky-200 dark:border-sky-800/60",
+    warning:
+      "bg-[var(--warning-subtle)] text-[var(--warning-foreground)] border-amber-200 dark:border-amber-800/60",
+    danger:
+      "bg-[var(--danger-subtle)] text-[var(--danger-foreground)] border-red-200 dark:border-red-800/60",
+    success:
+      "bg-[var(--success-subtle)] text-[var(--success-foreground)] border-emerald-200 dark:border-emerald-800/60",
+  };
+
+  const dotStyles = {
+    neutral: "bg-slate-400 dark:bg-slate-500",
+    brand: "bg-[var(--primary)]",
+    info: "bg-sky-500",
+    warning: "bg-amber-500",
+    danger: "bg-red-500",
+    success: "bg-emerald-500",
+  };
+
+  const sizeStyles = {
+    sm: "text-[11px] px-2 py-0.5 gap-1",
+    md: "text-xs px-2.5 py-0.5 gap-1.5",
   };
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold tracking-wide transition-colors",
+        "inline-flex items-center rounded-[var(--radius-full)] border font-medium tracking-wide transition-colors select-none",
         variantStyles[variant],
+        sizeStyles[size],
         className
       )}
       {...props}
-    />
+    >
+      {dot && (
+        <span
+          className={cn("h-1.5 w-1.5 rounded-full shrink-0", dotStyles[variant])}
+          aria-hidden="true"
+        />
+      )}
+      <span>{children}</span>
+    </span>
   );
 }
