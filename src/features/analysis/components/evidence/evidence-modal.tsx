@@ -76,7 +76,7 @@ export function EvidenceModal({
         </div>
 
         {/* Informational Guidance */}
-        <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-950 dark:text-blue-300 leading-relaxed">
+        <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/60 border border-blue-200/60 text-[11px] text-blue-950 leading-relaxed">
           <span className="font-semibold mr-1">Verification Note:</span>
           LexiGuide AI highlights exact phrasing to ensure all explanations and potential concern flags remain transparently grounded in the source text.
         </div>

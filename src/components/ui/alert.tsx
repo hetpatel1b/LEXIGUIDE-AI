@@ -19,23 +19,23 @@ export function Alert({
   const variantMap = {
     info: {
       container:
-        "border-sky-300 bg-sky-50/90 text-sky-950 dark:border-sky-700/60 dark:bg-sky-950/40 dark:text-sky-100",
-      icon: <Info className="h-5 w-5 text-sky-600 dark:text-sky-300 shrink-0 mt-0.5" aria-hidden="true" />,
+        "border-sky-300 bg-sky-50/90 text-sky-950",
+      icon: <Info className="h-5 w-5 text-sky-600 shrink-0 mt-0.5" aria-hidden="true" />,
     },
     success: {
       container:
-        "border-emerald-300 bg-emerald-50/90 text-emerald-950 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-100",
-      icon: <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-300 shrink-0 mt-0.5" aria-hidden="true" />,
+        "border-emerald-300 bg-emerald-50/90 text-emerald-950",
+      icon: <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />,
     },
     warning: {
       container:
-        "border-amber-300 bg-amber-50/90 text-amber-950 dark:border-amber-700/60 dark:bg-amber-950/40 dark:text-amber-100",
-      icon: <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />,
+        "border-amber-300 bg-amber-50/90 text-amber-950",
+      icon: <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />,
     },
     danger: {
       container:
-        "border-red-300 bg-red-50/90 text-red-950 dark:border-red-700/60 dark:bg-red-950/40 dark:text-red-100",
-      icon: <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-300 shrink-0 mt-0.5" aria-hidden="true" />,
+        "border-red-300 bg-red-50/90 text-red-950",
+      icon: <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />,
     },
   };
 

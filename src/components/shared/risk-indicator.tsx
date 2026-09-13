@@ -22,19 +22,19 @@ export function RiskIndicator({
     high: {
       defaultLabel: "Potential Concern",
       badgeClass:
-        "border-red-200 bg-red-50/80 text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300",
+        "border-red-200 bg-red-50/80 text-red-700",
       icon: <AlertCircle className="shrink-0" aria-hidden="true" />,
     },
     medium: {
       defaultLabel: "Requires Review",
       badgeClass:
-        "border-amber-200 bg-amber-50/80 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300",
+        "border-amber-200 bg-amber-50/80 text-amber-700",
       icon: <AlertTriangle className="shrink-0" aria-hidden="true" />,
     },
     low: {
       defaultLabel: "Informational",
       badgeClass:
-        "border-sky-200 bg-sky-50/80 text-sky-700 dark:border-sky-900/50 dark:bg-sky-950/40 dark:text-sky-300",
+        "border-sky-200 bg-sky-50/80 text-sky-700",
       icon: <Info className="shrink-0" aria-hidden="true" />,
     },
   };

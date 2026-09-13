@@ -22,13 +22,13 @@ export default function ErrorBoundary({
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center px-4 py-16">
       <div className="space-y-4 max-w-md">
-        <span className="inline-block text-3xl font-mono text-amber-600 dark:text-amber-400" aria-hidden="true">
+        <span className="inline-block text-3xl font-mono text-amber-600" aria-hidden="true">
           ⚠️
         </span>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900">
           Something went wrong
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           {getSafeErrorMessage(error, "An unexpected issue occurred while rendering this page.")}
         </p>
         <div className="pt-2 flex items-center justify-center gap-3">

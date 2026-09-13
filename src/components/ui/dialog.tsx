@@ -58,7 +58,7 @@ export function Dialog({
       <div
         onClick={onClose}
         aria-hidden="true"
-        className="fixed inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
       />
 
       {/* Dialog Surface */}

@@ -30,7 +30,7 @@ export function DocumentPair({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 border border-red-200 text-red-600">
               <FileText className="h-5 w-5" aria-hidden="true" />
             </div>
 
@@ -69,7 +69,7 @@ export function DocumentPair({
           <span aria-hidden="true">&bull;</span>
           <span>{(docA.sizeBytes / (1024 * 1024)).toFixed(1)} MB</span>
           <span aria-hidden="true">&bull;</span>
-          <span className="text-emerald-600 dark:text-emerald-400 font-sans font-medium">Base Contract</span>
+          <span className="text-emerald-600 font-sans font-medium">Base Contract</span>
         </div>
       </Card>
 
@@ -80,7 +80,7 @@ export function DocumentPair({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-[var(--primary)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-200 text-[var(--primary)]">
               <FileText className="h-5 w-5" aria-hidden="true" />
             </div>
 

@@ -105,7 +105,7 @@ export function UploadDropzone({
       className={cn(
         "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
         isDragging
-          ? "border-[var(--primary)] bg-blue-50/70 dark:bg-blue-950/30 scale-[1.005]"
+          ? "border-[var(--primary)] bg-blue-50/70 scale-[1.005]"
           : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-subtle)]",
         disabled && "pointer-events-none opacity-50",
         className
@@ -129,7 +129,7 @@ export function UploadDropzone({
           "flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform duration-200 mb-4",
           isDragging
             ? "bg-[var(--primary)] text-white scale-110 shadow-[var(--shadow-md)]"
-            : "bg-blue-50 text-[var(--primary)] dark:bg-blue-950/60 dark:text-sky-300 group-hover:scale-105"
+            : "bg-blue-50 text-[var(--primary)] group-hover:scale-105"
         )}
       >
         <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 stroke-[1.75]" aria-hidden="true" />
@@ -176,7 +176,7 @@ export function UploadDropzone({
 
       {/* Privacy & Confidentiality Micro-signal */}
       <div className="flex items-center gap-1.5 mt-3 text-[11px] text-[var(--foreground-subtle)]">
-        <Shield className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <Shield className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
         <span>Confidential document handling &bull; Client-side validation active</span>
       </div>
     </div>

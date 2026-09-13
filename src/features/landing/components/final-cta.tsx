@@ -6,7 +6,7 @@ export function FinalCta() {
   return (
     <section className="w-full py-16 sm:py-20 lg:py-24 border-t border-[var(--border-muted)] bg-gradient-to-b from-[var(--surface-subtle)] to-[var(--background)]">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
-        <div className="inline-flex items-center justify-center p-2 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[var(--primary)] mb-2">
+        <div className="inline-flex items-center justify-center p-2 rounded-full bg-blue-50 text-[var(--primary)] mb-2">
           <Sparkles className="h-5 w-5" />
         </div>
 

@@ -35,17 +35,17 @@ export function DocumentCard({
 
   const typeConfig = {
     pdf: {
-      icon: <FileText className="h-5 w-5 text-red-500 dark:text-red-400" aria-hidden="true" />,
+      icon: <FileText className="h-5 w-5 text-red-500" aria-hidden="true" />,
       badge: "PDF",
       badgeColor: "danger" as const,
     },
     docx: {
-      icon: <File className="h-5 w-5 text-blue-500 dark:text-blue-400" aria-hidden="true" />,
+      icon: <File className="h-5 w-5 text-blue-500" aria-hidden="true" />,
       badge: "DOCX",
       badgeColor: "brand" as const,
     },
     txt: {
-      icon: <FileCode className="h-5 w-5 text-slate-500 dark:text-slate-400" aria-hidden="true" />,
+      icon: <FileCode className="h-5 w-5 text-slate-500" aria-hidden="true" />,
       badge: "TXT",
       badgeColor: "neutral" as const,
     },

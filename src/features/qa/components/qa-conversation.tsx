@@ -94,8 +94,8 @@ export function QAConversation({
 
                   {/* Not Found in Document Notification */}
                   {msg.isNotFound && (
-                    <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-300 flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
                       <div className="leading-relaxed">
                         <span className="font-semibold mr-1">Not Found in Uploaded Document:</span>
                         LexiGuide AI only reports terms actually identified in this contract and does not fabricate missing clauses.

@@ -142,9 +142,9 @@ export function ActionItemCard({
 
       {/* Suggested Question for Legal Advocate (if in discuss category) */}
       {item.suggestedQuestion && (
-        <div className="ml-8 p-3 rounded-[var(--radius-md)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 space-y-2 text-xs">
+        <div className="ml-8 p-3 rounded-[var(--radius-md)] bg-blue-50/50 border border-blue-200/60 space-y-2 text-xs">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-blue-950 dark:text-blue-300 flex items-center gap-1.5">
+            <span className="font-semibold text-blue-950 flex items-center gap-1.5">
               <HelpCircle className="h-3.5 w-3.5 text-[var(--primary)]" />
               Suggested Question for Legal Advisor:
             </span>
@@ -159,7 +159,7 @@ export function ActionItemCard({
             </Button>
           </div>
 
-          <p className="italic text-[11px] text-blue-900 dark:text-blue-200 leading-relaxed font-serif pl-2 border-l-2 border-[var(--primary)]">
+          <p className="italic text-[11px] text-blue-900 leading-relaxed font-serif pl-2 border-l-2 border-[var(--primary)]">
             &ldquo;{item.suggestedQuestion}&rdquo;
           </p>
         </div>

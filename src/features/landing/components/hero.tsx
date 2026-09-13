@@ -53,7 +53,7 @@ export function Hero() {
             {/* Trust Micro-signals */}
             <div className="flex flex-wrap items-center gap-y-2 gap-x-4 pt-4 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
               <span className="flex items-center gap-1.5 font-medium">
-                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 Confidential &amp; Private
               </span>
               <span aria-hidden="true" className="opacity-40">&bull;</span>
@@ -74,7 +74,7 @@ export function Hero() {
 
               {/* Stacked Preview Card */}
               <Card className="relative border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-raised)] overflow-hidden">
-                <div className="bg-slate-100 dark:bg-slate-900/90 px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs text-[var(--foreground-muted)]">
+                <div className="bg-slate-100 px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between text-xs text-[var(--foreground-muted)]">
                   <div className="flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5 text-[var(--primary)]" />
                     <span className="font-medium text-[var(--foreground)] truncate max-w-[180px]">
@@ -111,7 +111,7 @@ export function Hero() {
                   </div>
 
                   {/* Grounded Evidence Tag */}
-                  <div className="rounded-[var(--radius-md)] border border-blue-100 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/30 p-2.5 flex items-start gap-2 text-xs">
+                  <div className="rounded-[var(--radius-md)] border border-blue-100 bg-blue-50/50 p-2.5 flex items-start gap-2 text-xs">
                     <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] shrink-0 mt-0.5" />
                     <div className="space-y-0.5">
                       <p className="font-medium text-[var(--foreground)] text-[11px]">

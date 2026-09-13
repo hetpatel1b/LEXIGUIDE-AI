@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "@/components/shared";
-import { Button, ThemeToggle } from "@/components/ui";
+import { Button } from "@/components/ui";
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -23,12 +23,12 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Left: Brand Identity */}
+        {/* Left: Brand Identity (Light Wordmark) */}
         <div className="flex items-center gap-3">
-          <BrandLogo variant="auto" width={180} height={50} priority />
+          <BrandLogo variant="logo" width={144} height={48} priority />
         </div>
 
-        {/* Center / Right: Nav Anchors + Primary CTA + Theme Toggle */}
+        {/* Center / Right: Nav Anchors + Primary CTA */}
         <div className="flex items-center gap-2 sm:gap-6">
           <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-5">
             <Link
@@ -61,10 +61,6 @@ export function AppHeader() {
             >
               Analyze a Document
             </Button>
-
-            <div className="border-l border-[var(--border)] pl-1.5 sm:pl-2">
-              <ThemeToggle />
-            </div>
           </div>
         </div>
       </div>

@@ -264,7 +264,7 @@ export function QAWorkspace() {
           <QATopicGroups onSelectQuestion={handleSendMessage} />
 
           {/* Statutory Informational Banner */}
-          <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-950 dark:text-blue-300 space-y-1">
+          <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/50 border border-blue-200/60 text-[11px] text-blue-950 space-y-1">
             <p className="font-semibold">Informational Assistance</p>
             <p className="leading-relaxed text-[10px]">
               LexiGuide AI helps users understand and navigate legal text. It does not provide formal legal representation or legal advice.

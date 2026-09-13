@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export interface WorkspaceNavProps {
@@ -67,10 +66,10 @@ export function WorkspaceNav({
       )}
     >
       <div className="flex h-14 items-center justify-between gap-3">
-        {/* Left: Brand Identity & Document Context */}
+        {/* Left: Brand Identity (Light Wordmark) & Document Context */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center" title="LexiGuide Home">
-            <BrandLogo variant="auto" width={125} height={34} priority />
+            <BrandLogo variant="logo" width={114} height={38} priority />
           </div>
 
           <div className="h-4 w-px bg-[var(--border)] hidden lg:block" />
@@ -117,20 +116,18 @@ export function WorkspaceNav({
           })}
         </nav>
 
-        {/* Right: Extra Controls + Theme Toggle + Return Home */}
+        {/* Right: Extra Controls + Return Home */}
         <div className="flex items-center gap-2 shrink-0">
           {extraRightControls}
 
-          <div className="border-l border-[var(--border)] pl-2 flex items-center gap-1.5">
-            <ThemeToggle />
-
+          <div className="border-l border-[var(--border)] pl-2 flex items-center">
             <Link
               href="/"
               title="Exit Workspace & Return Home"
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
             >
               <ArrowLeft className="h-3 w-3" />
-              <span className="hidden sm:inline">Exit</span>
+              <span className="hidden sm:inline font-medium">Exit</span>
             </Link>
           </div>
         </div>

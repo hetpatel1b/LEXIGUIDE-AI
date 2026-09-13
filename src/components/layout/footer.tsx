@@ -25,8 +25,18 @@ export function AppFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Main Footer Row */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-[var(--border-muted)]">
-          <div className="space-y-2 max-w-md text-left">
-            <BrandLogo variant="auto" width={180} height={50} priority={false} />
+          <div className="space-y-3 max-w-md text-left">
+            <div className="flex items-center gap-3">
+              <BrandLogo variant="icon" width={40} height={40} priority={false} />
+              <div>
+                <span className="text-sm font-bold text-[var(--foreground)] tracking-tight">
+                  {BRAND.name}
+                </span>
+                <p className="text-[11px] text-[var(--foreground-muted)]">
+                  {BRAND.tagline}
+                </p>
+              </div>
+            </div>
             <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
               Legal document intelligence and legal information assistant. Built with an India-first vision and international contract support.
             </p>
@@ -49,7 +59,7 @@ export function AppFooter() {
         </div>
 
         {/* Mandatory Legal Information Disclaimer */}
-        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 p-4 text-xs leading-relaxed text-amber-950 dark:text-amber-300 text-left">
+        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-4 text-xs leading-relaxed text-amber-950 text-left">
           <p className="font-semibold mb-1 flex items-center gap-1.5">
             <span aria-hidden="true">⚖️</span> Legal Information Disclaimer
           </p>

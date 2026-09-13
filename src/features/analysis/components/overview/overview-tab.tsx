@@ -91,7 +91,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-[var(--color-brand-blue)]/10 dark:bg-[var(--color-brand-blue)]/20 text-[var(--primary)]">
+                <div className="p-1.5 rounded-lg bg-[var(--color-brand-blue)]/10 text-[var(--primary)]">
                   <Sparkles className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div>
@@ -152,7 +152,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-[var(--border-muted)]">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+                  <AlertTriangle className="h-4 w-4 text-amber-600" aria-hidden="true" />
                   <h2 id="concerns-preview-heading" className="text-sm font-semibold text-[var(--foreground)]">
                     Potential Concerns
                   </h2>
@@ -311,7 +311,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-[var(--border-muted)]">
                 <div className="flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+                  <CheckSquare className="h-4 w-4 text-emerald-600" aria-hidden="true" />
                   <h2 id="obligations-preview-heading" className="text-sm font-semibold text-[var(--foreground)]">
                     Important Obligations
                   </h2>
@@ -412,7 +412,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
       </div>
 
       {/* Safety Notice Footer Banner */}
-      <div className="rounded-[var(--radius-lg)] border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 p-3.5 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-300">
+      <div className="rounded-[var(--radius-lg)] border border-blue-200/70 bg-blue-50/50 p-3.5 flex items-start gap-2.5 text-xs text-blue-900">
         <Info className="h-4 w-4 shrink-0 mt-0.5 text-[var(--primary)]" aria-hidden="true" />
         <div>
           <p className="font-semibold mb-0.5">Informational Document Intelligence</p>

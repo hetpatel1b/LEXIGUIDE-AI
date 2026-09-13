@@ -55,7 +55,7 @@ export function DocumentPanel({
 
         <div className="flex-1 flex flex-col items-center justify-start pt-4 gap-6">
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600"
             title={`${SAMPLE_DOCUMENT.name} (PDF, 18 pages)`}
           >
             <FileText className="h-4 w-4" />
@@ -81,7 +81,7 @@ export function DocumentPanel({
       <div className="p-4 border-b border-[var(--border)] bg-[var(--surface)] shrink-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200/60 dark:border-red-900/40 text-red-600 dark:text-red-400">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 border border-red-200/60 text-red-600">
               <FileText className="h-5 w-5" aria-hidden="true" />
             </div>
 

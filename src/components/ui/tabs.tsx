@@ -87,7 +87,7 @@ export function Tabs({
                 className={cn(
                   "rounded-full px-1.5 py-0.2 text-[10px] font-mono",
                   isActive
-                    ? "bg-blue-100 dark:bg-blue-950 text-[var(--primary)]"
+                    ? "bg-blue-100 text-[var(--primary)]"
                     : "bg-[var(--surface-muted)] text-[var(--foreground-subtle)]"
                 )}
               >

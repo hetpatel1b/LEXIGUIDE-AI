@@ -170,7 +170,7 @@ export function ComparisonWorkspace() {
         </section>
 
         {/* Statutory Informational Guidance Footer */}
-        <div className="rounded-[var(--radius-lg)] border border-blue-200/70 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 p-3.5 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-300">
+        <div className="rounded-[var(--radius-lg)] border border-blue-200/70 bg-blue-50/50 p-3.5 flex items-start gap-2.5 text-xs text-blue-900">
           <Info className="h-4 w-4 shrink-0 mt-0.5 text-[var(--primary)]" aria-hidden="true" />
           <div className="leading-relaxed">
             <span className="font-semibold mr-1">Comparison Guidance:</span>
@@ -211,7 +211,7 @@ export function ComparisonWorkspace() {
               </div>
 
               {/* Doc B */}
-              <div className="p-3 rounded-[var(--radius-lg)] border border-[var(--primary)]/40 bg-blue-50/40 dark:bg-blue-950/20 space-y-1.5">
+              <div className="p-3 rounded-[var(--radius-lg)] border border-[var(--primary)]/40 bg-blue-50/40 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-[var(--primary)] font-semibold">
                   <span>Document B (Updated)</span>
                   <span className="font-mono">Page {activeEvidenceChange.pageB}</span>

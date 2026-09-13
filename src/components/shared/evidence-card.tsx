@@ -23,14 +23,14 @@ export function EvidenceCard({
   return (
     <div
       className={cn(
-        "relative rounded-[var(--radius-lg)] border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 text-left transition-all duration-150 hover:border-slate-300 dark:hover:border-slate-700",
+        "relative rounded-[var(--radius-lg)] border border-slate-200 bg-slate-50/70 p-4 text-left transition-all duration-150 hover:border-slate-300",
         className
       )}
       {...props}
     >
       {/* Grounding Source Header */}
-      <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-brand-blue)] dark:text-sky-400">
+      <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-slate-200/60">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-brand-blue)]">
           <BookOpen className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>Grounded Source Citation</span>
         </div>
@@ -50,7 +50,7 @@ export function EvidenceCard({
       </div>
 
       {/* Verbatim Excerpt */}
-      <div className="relative pl-3 border-l-2 border-[var(--color-brand-blue)]/50 dark:border-sky-400/50 my-2">
+      <div className="relative pl-3 border-l-2 border-[var(--color-brand-blue)]/50 my-2">
         <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] italic leading-relaxed">
           &ldquo;{excerpt}&rdquo;
         </p>

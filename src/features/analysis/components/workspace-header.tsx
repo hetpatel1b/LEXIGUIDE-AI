@@ -6,7 +6,6 @@ import { ArrowLeft, FileText, Sparkles, CheckCircle2, ChevronDown } from "lucide
 import { BrandLogo } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { SAMPLE_DOCUMENT, DOCUMENT_METADATA_DETAILS } from "../fixtures/analysis-fixture";
 
 export type WorkspacePreviewState = "normal" | "loading" | "empty" | "error";
@@ -22,9 +21,9 @@ export function WorkspaceHeader({
 }: WorkspaceHeaderProps) {
   return (
     <header className="sticky top-0 z-30 w-full h-14 border-b border-[var(--border)] bg-[var(--surface)] px-3 sm:px-5 flex items-center justify-between gap-3 shrink-0 shadow-sm">
-      {/* Left: Brand Identity & Return Link */}
+      {/* Left: Brand Identity (Light Wordmark) & Return Link */}
       <div className="flex items-center gap-3 min-w-0">
-        <BrandLogo variant="auto" width={130} height={36} priority />
+        <BrandLogo variant="logo" width={114} height={38} priority />
 
         <div className="h-4 w-px bg-[var(--border)] hidden sm:block" />
 
@@ -40,7 +39,7 @@ export function WorkspaceHeader({
       {/* Center: Contextual Document Details & Workspace Links */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] text-xs truncate">
-          <FileText className="h-3.5 w-3.5 text-red-500 dark:text-red-400 shrink-0" aria-hidden="true" />
+          <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
           <span className="font-semibold text-[var(--foreground)] truncate max-w-[140px] sm:max-w-[180px]" title={SAMPLE_DOCUMENT.name}>
             {SAMPLE_DOCUMENT.name}
           </span>
@@ -82,7 +81,7 @@ export function WorkspaceHeader({
         </nav>
       </div>
 
-      {/* Right: Preview State Switcher + Theme Toggle + Close */}
+      {/* Right: Preview State Switcher + Close */}
       <div className="flex items-center gap-2 shrink-0">
         {/* State Preview Switcher for Development Inspection */}
         <div className="relative hidden sm:flex items-center gap-1 bg-[var(--surface-muted)] p-0.5 rounded-[var(--radius-md)] border border-[var(--border)] text-[11px]">
@@ -103,9 +102,7 @@ export function WorkspaceHeader({
           ))}
         </div>
 
-        <div className="border-l border-[var(--border)] pl-2 flex items-center gap-1.5">
-          <ThemeToggle />
-
+        <div className="border-l border-[var(--border)] pl-2 flex items-center">
           <Button
             href="/"
             variant="ghost"

@@ -21,7 +21,7 @@ export function UnchangedSectionCard({ section }: UnchangedSectionProps) {
       className="p-3.5 bg-[var(--surface)] border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left hover:border-[var(--border-strong)] transition-all"
     >
       <div className="flex items-start gap-2.5 min-w-0">
-        <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
         <div className="min-w-0 space-y-0.5">
           <div className="flex items-center gap-2">
             <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">

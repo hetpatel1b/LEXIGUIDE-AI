@@ -19,19 +19,19 @@ export function Badge({
     neutral:
       "bg-[var(--surface-muted)] text-[var(--foreground-secondary)] border-[var(--border)]",
     brand:
-      "bg-blue-50 text-[var(--primary)] border-blue-200 dark:bg-blue-950/40 dark:text-sky-300 dark:border-blue-800/60",
+      "bg-blue-50 text-[var(--primary)] border-blue-200",
     info:
-      "bg-[var(--info-subtle)] text-[var(--info-foreground)] border-sky-200 dark:border-sky-800/60",
+      "bg-[var(--info-subtle)] text-[var(--info-foreground)] border-sky-200",
     warning:
-      "bg-[var(--warning-subtle)] text-[var(--warning-foreground)] border-amber-200 dark:border-amber-800/60",
+      "bg-[var(--warning-subtle)] text-[var(--warning-foreground)] border-amber-200",
     danger:
-      "bg-[var(--danger-subtle)] text-[var(--danger-foreground)] border-red-200 dark:border-red-800/60",
+      "bg-[var(--danger-subtle)] text-[var(--danger-foreground)] border-red-200",
     success:
-      "bg-[var(--success-subtle)] text-[var(--success-foreground)] border-emerald-200 dark:border-emerald-800/60",
+      "bg-[var(--success-subtle)] text-[var(--success-foreground)] border-emerald-200",
   };
 
   const dotStyles = {
-    neutral: "bg-slate-400 dark:bg-slate-500",
+    neutral: "bg-slate-400",
     brand: "bg-[var(--primary)]",
     info: "bg-sky-500",
     warning: "bg-amber-500",

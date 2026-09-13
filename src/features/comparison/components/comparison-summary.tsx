@@ -33,14 +33,14 @@ export function ComparisonSummary({
       value: metrics.majorChanges,
       secondary: "Deserves closer review",
       icon: AlertCircle,
-      accent: "text-amber-600 dark:text-amber-400",
+      accent: "text-amber-600",
     },
     {
       label: "Unchanged Sections",
       value: metrics.unchangedCount,
       secondary: "Identical substantive terms",
       icon: CheckCircle2,
-      accent: "text-emerald-600 dark:text-emerald-400",
+      accent: "text-emerald-600",
     },
   ];
 

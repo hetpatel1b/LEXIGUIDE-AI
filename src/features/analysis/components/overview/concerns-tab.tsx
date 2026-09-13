@@ -32,7 +32,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
       </div>
 
       {/* Statutory Informational Banner */}
-      <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 p-3.5 flex items-start gap-2.5 text-xs text-amber-950 dark:text-amber-300">
+      <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-3.5 flex items-start gap-2.5 text-xs text-amber-950">
         <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <div className="leading-relaxed">
           <span className="font-semibold mr-1">Balanced Informational Review:</span>

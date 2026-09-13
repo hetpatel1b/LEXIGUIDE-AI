@@ -27,7 +27,7 @@ export function ErrorState({
       )}
       {...props}
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50 text-[var(--danger)] mb-4">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-[var(--danger)] mb-4">
         <AlertCircle className="h-6 w-6 stroke-[1.75]" aria-hidden="true" />
       </div>
 

@@ -42,7 +42,7 @@ export function Tooltip({
           id={tooltipId}
           role="tooltip"
           className={cn(
-            "pointer-events-none absolute z-50 rounded-[var(--radius-sm)] bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-100 shadow-[var(--shadow-md)] whitespace-nowrap transition-opacity animate-in fade-in-0 duration-100 dark:bg-slate-800 dark:text-slate-200 border border-slate-700/50",
+            "pointer-events-none absolute z-50 rounded-[var(--radius-sm)] bg-slate-900 px-2.5 py-1 text-[11px] font-medium text-slate-100 shadow-[var(--shadow-md)] whitespace-nowrap transition-opacity animate-in fade-in-0 duration-100 border border-slate-700/50",
             positionStyles[position],
             className
           )}

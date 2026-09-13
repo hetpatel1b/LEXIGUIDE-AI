@@ -114,7 +114,7 @@ export function AnalysisTabs({
                 className={cn(
                   "ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold transition-colors",
                   isActive
-                    ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:bg-[var(--primary)]/20"
+                    ? "bg-[var(--primary)]/10 text-[var(--primary)]"
                     : "bg-[var(--surface-muted)] text-[var(--foreground-muted)]"
                 )}
               >

@@ -66,7 +66,7 @@ export function DatesTab() {
 
               <div className="flex items-center gap-2">
                 {renderTypeBadge(dateItem.type)}
-                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 dark:bg-[var(--color-brand-blue)]/20 text-[var(--primary)]">
+                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 text-[var(--primary)]">
                   {dateItem.dateOrDuration}
                 </span>
               </div>

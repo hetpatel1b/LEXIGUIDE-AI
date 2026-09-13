@@ -90,7 +90,7 @@ export function ObligationsTab() {
         {/* Right Column: Other Party's Obligations (Employer) */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-muted)]">
-            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
               <Building2 className="h-4 w-4" aria-hidden="true" />
             </div>
             <div>

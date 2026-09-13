@@ -39,7 +39,7 @@ export function CopilotMessage({ message, onViewEvidence }: CopilotMessageProps)
   // Assistant Response
   return (
     <div className="flex items-start gap-2.5 text-left pr-4">
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-brand-blue)]/10 dark:bg-[var(--color-brand-blue)]/20 text-[var(--primary)] border border-[var(--primary)]/20 mt-0.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20 mt-0.5">
         <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
       </div>
 
@@ -52,8 +52,8 @@ export function CopilotMessage({ message, onViewEvidence }: CopilotMessageProps)
 
           {/* Not Found State Alert */}
           {message.isNotFound && (
-            <div className="p-2.5 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/40 dark:bg-amber-950/20 text-[11px] text-amber-900 dark:text-amber-300 flex items-start gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+            <div className="p-2.5 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 text-[11px] text-amber-900 flex items-start gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600" />
               <span>
                 Not found in the uploaded document. LexiGuide AI only reports terms actually identified in this contract.
               </span>

@@ -150,7 +150,7 @@ export function ComparisonChangeCard({
 
         {/* Document B Column */}
         <div
-          className={`p-3.5 rounded-[var(--radius-lg)] border border-[var(--primary)]/30 bg-blue-50/40 dark:bg-blue-950/20 space-y-2 ${
+          className={`p-3.5 rounded-[var(--radius-lg)] border border-[var(--primary)]/30 bg-blue-50/40 space-y-2 ${
             mobileTab === "a" ? "hidden md:block" : "block"
           }`}
         >

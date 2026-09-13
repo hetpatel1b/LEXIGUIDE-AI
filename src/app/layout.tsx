@@ -36,10 +36,11 @@ export const metadata: Metadata = {
   authors: [{ name: "LexiGuide AI Engineering" }],
   icons: {
     icon: [
-      { url: BRAND.assets.favicon, sizes: "32x32", type: "image/png" },
-      { url: BRAND.assets.icon, type: "image/png" },
+      { url: BRAND.assets.appIcon, sizes: "192x192", type: "image/png" },
+      { url: BRAND.assets.appIcon, type: "image/png" },
     ],
     apple: [{ url: BRAND.assets.appIcon, sizes: "180x180" }],
+    shortcut: BRAND.assets.appIcon,
   },
   openGraph: {
     type: "website",
@@ -50,9 +51,9 @@ export const metadata: Metadata = {
     siteName: BRAND.name,
     images: [
       {
-        url: BRAND.assets.logoDark,
+        url: BRAND.assets.logoLight,
         width: 800,
-        height: 290,
+        height: 267,
         alt: `${BRAND.name} Brand Identity`,
       },
     ],
@@ -66,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="min-h-screen flex flex-col font-sans bg-[var(--background)] text-[var(--foreground)] selection:bg-blue-100 dark:selection:bg-blue-950">
+      <body className="min-h-screen flex flex-col font-sans bg-[var(--background)] text-[var(--foreground)] selection:bg-blue-100">
         {/* Accessible Skip Link */}
         <a
           href="#main-content"

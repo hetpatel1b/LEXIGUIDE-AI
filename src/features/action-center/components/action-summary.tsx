@@ -25,7 +25,7 @@ export function ActionSummary({
       count: metrics.reviewCount,
       secondary: "Clauses requiring scrutiny",
       icon: CheckSquare,
-      accent: "text-amber-600 dark:text-amber-400",
+      accent: "text-amber-600",
     },
     {
       label: "Upcoming Dates",
@@ -39,14 +39,14 @@ export function ActionSummary({
       count: metrics.confirmCount,
       secondary: "Carve-outs & benefits",
       icon: HelpCircle,
-      accent: "text-blue-600 dark:text-blue-400",
+      accent: "text-blue-600",
     },
     {
       label: "Professional Topics",
       count: metrics.discussCount,
       secondary: "Questions for advocate",
       icon: MessageSquare,
-      accent: "text-indigo-600 dark:text-indigo-400",
+      accent: "text-indigo-600",
     },
   ];
 

@@ -22,7 +22,7 @@ export const variantStyles = {
   primary:
     "bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] focus-visible:ring-[var(--ring)] shadow-[var(--shadow-subtle)]",
   secondary:
-    "bg-[var(--color-brand-navy)] text-white hover:bg-[#142952] active:bg-[#0B1F44] dark:bg-[var(--surface-raised)] dark:hover:bg-[var(--border-strong)] focus-visible:ring-[var(--ring)] shadow-[var(--shadow-subtle)]",
+    "bg-[var(--color-brand-navy)] text-white hover:bg-[#142952] active:bg-[#0B1F44] focus-visible:ring-[var(--ring)] shadow-[var(--shadow-subtle)]",
   outline:
     "border border-[var(--border-strong)] bg-transparent hover:bg-[var(--surface-muted)] active:bg-[var(--border)] text-[var(--foreground)] focus-visible:ring-[var(--ring)]",
   ghost:

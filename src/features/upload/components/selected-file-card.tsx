@@ -34,17 +34,17 @@ export function SelectedFileCard({
 
   const typeConfig = {
     pdf: {
-      icon: <FileText className="h-6 w-6 text-red-500 dark:text-red-400" aria-hidden="true" />,
+      icon: <FileText className="h-6 w-6 text-red-500" aria-hidden="true" />,
       badge: "PDF",
       badgeVariant: "danger" as const,
     },
     docx: {
-      icon: <File className="h-6 w-6 text-blue-500 dark:text-blue-400" aria-hidden="true" />,
+      icon: <File className="h-6 w-6 text-blue-500" aria-hidden="true" />,
       badge: "DOCX",
       badgeVariant: "brand" as const,
     },
     txt: {
-      icon: <FileCode className="h-6 w-6 text-slate-500 dark:text-slate-400" aria-hidden="true" />,
+      icon: <FileCode className="h-6 w-6 text-slate-500" aria-hidden="true" />,
       badge: "TXT",
       badgeVariant: "neutral" as const,
     },
@@ -82,7 +82,7 @@ export function SelectedFileCard({
               </Badge>
               <span>{formatSize(file.size)}</span>
               <span aria-hidden="true">&bull;</span>
-              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-sans font-medium">
+              <span className="inline-flex items-center gap-1 text-emerald-600 font-sans font-medium">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Validated &amp; Ready
               </span>
@@ -97,7 +97,7 @@ export function SelectedFileCard({
             variant="ghost"
             onClick={onRemove}
             aria-label="Remove selected document"
-            className="text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/40"
+            className="text-[var(--danger)] hover:bg-red-50"
             title="Remove file"
           >
             <Trash2 className="h-4 w-4" />
