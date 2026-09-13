@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { UploadCloud, FileText, ArrowRight } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -18,15 +17,14 @@ export function WorkspaceEmpty({ onReset }: WorkspaceEmptyProps) {
         description="Upload a legal document to begin understanding its key clauses, obligations, potential concerns, and important dates."
         action={
           <div className="flex items-center gap-3 pt-2">
-            <Link href="/#upload-section">
-              <Button
-                variant="primary"
-                size="md"
-                leftIcon={<UploadCloud className="h-4 w-4" />}
-              >
-                Analyze a Document
-              </Button>
-            </Link>
+            <Button
+              href="/#upload-section"
+              variant="primary"
+              size="md"
+              leftIcon={<UploadCloud className="h-4 w-4" />}
+            >
+              Analyze a Document
+            </Button>
 
             {onReset && (
               <Button

@@ -1,5 +1,4 @@
 import * as React from "react";
-import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles, FileText, CheckCircle2 } from "lucide-react";
 import { Button, Badge, Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 import { RiskIndicator } from "@/components/shared";
@@ -13,18 +12,13 @@ export function Hero() {
           <div className="lg:col-span-7 space-y-6 text-left">
             <div className="inline-flex items-center gap-2">
               <Badge variant="brand" size="sm" dot>
-                Legal Document Intelligence
+                Legal Document Intelligence &bull; India-First
               </Badge>
-              <span className="text-xs text-[var(--foreground-muted)] hidden sm:inline-block">
-                India-first &bull; Global contract support
-              </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-[var(--foreground)] leading-[1.15]">
-              Understand your legal documents{" "}
-              <span className="text-[var(--primary)] bg-gradient-to-r from-[var(--color-brand-blue)] to-[var(--color-brand-accent)] bg-clip-text text-transparent">
-                with clarity.
-              </span>
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[var(--foreground)] leading-[1.15]">
+              Understand. Compare. <br className="hidden sm:inline" />
+              <span className="text-[var(--primary)]">Act with confidence.</span>
             </h1>
 
             <p className="max-w-2xl text-base sm:text-lg text-[var(--foreground-secondary)] leading-relaxed">
@@ -34,23 +28,26 @@ export function Hero() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              <Link href="#upload-section" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="primary"
-                  fullWidth
-                  rightIcon={<ArrowRight className="h-4 w-4" />}
-                  className="shadow-[var(--shadow-md)]"
-                >
-                  Analyze a Document
-                </Button>
-              </Link>
+              <Button
+                href="#upload-section"
+                size="lg"
+                variant="primary"
+                fullWidth={false}
+                rightIcon={<ArrowRight className="h-4 w-4" />}
+                className="w-full sm:w-auto shadow-[var(--shadow-md)]"
+              >
+                Analyze a Document
+              </Button>
 
-              <Link href="#how-it-works" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" fullWidth>
-                  See How It Works
-                </Button>
-              </Link>
+              <Button
+                href="#how-it-works"
+                size="lg"
+                variant="outline"
+                fullWidth={false}
+                className="w-full sm:w-auto"
+              >
+                See How It Works
+              </Button>
             </div>
 
             {/* Trust Micro-signals */}

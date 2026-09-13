@@ -52,16 +52,15 @@ export function AppHeader() {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="#upload-section">
-              <Button
-                variant="primary"
-                size="sm"
-                rightIcon={<ArrowRight className="h-3.5 w-3.5 hidden sm:inline-block" />}
-                className="shadow-[var(--shadow-subtle)] text-xs sm:text-sm"
-              >
-                Analyze a Document
-              </Button>
-            </Link>
+            <Button
+              href="#upload-section"
+              variant="primary"
+              size="sm"
+              rightIcon={<ArrowRight className="h-3.5 w-3.5 hidden sm:inline-block" />}
+              className="shadow-[var(--shadow-subtle)] text-xs sm:text-sm"
+            >
+              Analyze a Document
+            </Button>
 
             <div className="border-l border-[var(--border)] pl-1.5 sm:pl-2">
               <ThemeToggle />

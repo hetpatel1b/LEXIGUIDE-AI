@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   ArrowRight,
   ExternalLink,
@@ -195,16 +194,15 @@ export function ComparisonChangeCard({
 
         <div className="flex items-center gap-2">
           {/* Ask About This Change (navigates to Q&A) */}
-          <Link href={`/qa?q=${encodeURIComponent(`Why did the ${change.clauseTitle} change between Document A and B?`)}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
-              className="text-xs"
-            >
-              Ask About Change
-            </Button>
-          </Link>
+          <Button
+            href={`/qa?q=${encodeURIComponent(`Why did the ${change.clauseTitle} change between Document A and B?`)}`}
+            variant="outline"
+            size="sm"
+            leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
+            className="text-xs"
+          >
+            Ask About Change
+          </Button>
 
           {/* Add to Action Center */}
           <Button

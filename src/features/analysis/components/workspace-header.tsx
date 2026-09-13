@@ -106,15 +106,14 @@ export function WorkspaceHeader({
         <div className="border-l border-[var(--border)] pl-2 flex items-center gap-1.5">
           <ThemeToggle />
 
-          <Link href="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] sm:hidden"
-            >
-              Close
-            </Button>
-          </Link>
+          <Button
+            href="/"
+            variant="ghost"
+            size="sm"
+            className="text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] sm:hidden"
+          >
+            Close
+          </Button>
         </div>
       </div>
     </header>

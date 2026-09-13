@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   Check,
   Calendar,
@@ -183,16 +182,15 @@ export function ActionItemCard({
 
         <div className="flex items-center gap-2">
           {/* Discuss with Copilot */}
-          <Link href={`/qa?q=${encodeURIComponent(item.suggestedQuestion || item.title)}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
-              className="text-xs"
-            >
-              Discuss with Copilot
-            </Button>
-          </Link>
+          <Button
+            href={`/qa?q=${encodeURIComponent(item.suggestedQuestion || item.title)}`}
+            variant="outline"
+            size="sm"
+            leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
+            className="text-xs"
+          >
+            Discuss with Copilot
+          </Button>
         </div>
       </div>
     </Card>

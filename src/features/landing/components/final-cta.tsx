@@ -1,5 +1,4 @@
 import * as React from "react";
-import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
 
@@ -20,16 +19,15 @@ export function FinalCta() {
         </p>
 
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="#upload-section" className="w-full sm:w-auto">
-            <Button
-              size="lg"
-              variant="primary"
-              rightIcon={<ArrowRight className="h-4 w-4" />}
-              className="w-full sm:w-auto shadow-[var(--shadow-md)]"
-            >
-              Analyze a Document
-            </Button>
-          </Link>
+          <Button
+            href="#upload-section"
+            size="lg"
+            variant="primary"
+            rightIcon={<ArrowRight className="h-4 w-4" />}
+            className="w-full sm:w-auto shadow-[var(--shadow-md)]"
+          >
+            Analyze a Document
+          </Button>
         </div>
 
         <p className="text-xs text-[var(--foreground-subtle)] pt-2">
