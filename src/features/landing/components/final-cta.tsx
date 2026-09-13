@@ -1,0 +1,41 @@
+import * as React from "react";
+import Link from "next/link";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui";
+
+export function FinalCta() {
+  return (
+    <section className="w-full py-16 sm:py-20 lg:py-24 border-t border-[var(--border-muted)] bg-gradient-to-b from-[var(--surface-subtle)] to-[var(--background)]">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center space-y-6">
+        <div className="inline-flex items-center justify-center p-2 rounded-full bg-blue-50 dark:bg-blue-950/60 text-[var(--primary)] mb-2">
+          <Sparkles className="h-5 w-5" />
+        </div>
+
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+          Ready to understand your document?
+        </h2>
+
+        <p className="max-w-xl mx-auto text-sm sm:text-base text-[var(--foreground-muted)] leading-relaxed">
+          Upload a contract or legal text in PDF, DOCX, or TXT format and start exploring clauses, obligations, and key terms with clarity.
+        </p>
+
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link href="#upload-section" className="w-full sm:w-auto">
+            <Button
+              size="lg"
+              variant="primary"
+              rightIcon={<ArrowRight className="h-4 w-4" />}
+              className="w-full sm:w-auto shadow-[var(--shadow-md)]"
+            >
+              Analyze a Document
+            </Button>
+          </Link>
+        </div>
+
+        <p className="text-xs text-[var(--foreground-subtle)] pt-2">
+          No sign-up or account required &bull; Confidential client validation active
+        </p>
+      </div>
+    </section>
+  );
+}

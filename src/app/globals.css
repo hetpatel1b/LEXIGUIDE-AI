@@ -201,7 +201,11 @@
   --shadow-raised: 0 10px 20px -3px rgba(0, 0, 0, 0.5);
 }
 
-/* Base Body Styles */
+/* Base HTML & Body Styles */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

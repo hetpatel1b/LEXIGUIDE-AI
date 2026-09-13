@@ -1,43 +1,58 @@
+"use client";
+
 import * as React from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "@/components/shared";
-import { Badge, ThemeToggle } from "@/components/ui";
-import { NAV_LINKS } from "@/lib/constants";
+import { Button, ThemeToggle } from "@/components/ui";
 
 export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3 sm:gap-4">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center gap-3">
           <BrandLogo variant="auto" width={180} height={50} priority />
-          <Badge variant="brand" size="sm" className="hidden sm:inline-flex">
-            Phase 1B Active
-          </Badge>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <nav aria-label="Main Navigation" className="flex items-center gap-1 sm:gap-2">
-            {NAV_LINKS.map((link) => (
-              <span
-                key={link.label}
-                className={`text-xs sm:text-sm px-2.5 py-1.5 rounded-[var(--radius-md)] font-medium transition-colors ${
-                  link.disabled
-                    ? "text-[var(--foreground-subtle)] cursor-not-allowed"
-                    : "text-[var(--foreground-secondary)] hover:text-[var(--primary)]"
-                }`}
-                title={link.disabled ? `Available in ${link.tag}` : undefined}
-              >
-                {link.label}
-                {link.tag && (
-                  <span className="ml-1.5 hidden md:inline-block text-[10px] uppercase font-mono tracking-wider opacity-60">
-                    {link.tag}
-                  </span>
-                )}
-              </span>
-            ))}
+        {/* Center / Right: Nav Anchors + Primary CTA + Theme Toggle */}
+        <div className="flex items-center gap-2 sm:gap-6">
+          <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-5">
+            <Link
+              href="#capabilities"
+              className="text-xs sm:text-sm font-medium text-[var(--foreground-secondary)] hover:text-[var(--primary)] transition-colors"
+            >
+              Capabilities
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="text-xs sm:text-sm font-medium text-[var(--foreground-secondary)] hover:text-[var(--primary)] transition-colors"
+            >
+              How It Works
+            </Link>
+            <Link
+              href="#safety"
+              className="text-xs sm:text-sm font-medium text-[var(--foreground-secondary)] hover:text-[var(--primary)] transition-colors"
+            >
+              Safety &amp; Trust
+            </Link>
           </nav>
 
-          <div className="border-l border-[var(--border)] pl-2 sm:pl-3">
-            <ThemeToggle />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="#upload-section">
+              <Button
+                variant="primary"
+                size="sm"
+                rightIcon={<ArrowRight className="h-3.5 w-3.5 hidden sm:inline-block" />}
+                className="shadow-[var(--shadow-subtle)] text-xs sm:text-sm"
+              >
+                Analyze a Document
+              </Button>
+            </Link>
+
+            <div className="border-l border-[var(--border)] pl-1.5 sm:pl-2">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>
