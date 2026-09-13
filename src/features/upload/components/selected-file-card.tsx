@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { FileText, File, FileCode, Trash2, CheckCircle2, Sparkles } from "lucide-react";
 import { Button, IconButton, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -126,19 +127,16 @@ export function SelectedFileCard({
             Select Different File
           </Button>
 
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-            onClick={() => {
-              alert(
-                "Document validated successfully! Real document extraction and analysis will be connected in Phase 2 & 3."
-              );
-            }}
-          >
-            Start Analysis
-          </Button>
+          <Link href="/analyze">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+            >
+              Start Analysis
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

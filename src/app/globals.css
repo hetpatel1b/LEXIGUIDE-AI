@@ -261,3 +261,12 @@ body {
   clip: auto;
   white-space: normal;
 }
+
+/* Custom Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

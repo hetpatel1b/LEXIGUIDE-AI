@@ -1,10 +1,24 @@
+"use client";
+
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/shared";
 import { BRAND } from "@/lib/constants";
 
 export function AppFooter() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
+
+  const isWorkspaceRoute =
+    pathname?.startsWith("/analyze") ||
+    pathname?.startsWith("/compare") ||
+    pathname?.startsWith("/qa") ||
+    pathname?.startsWith("/action-center");
+
+  if (isWorkspaceRoute) {
+    return null;
+  }
 
   return (
     <footer className="w-full border-t border-[var(--border)] bg-[var(--surface-subtle)] py-12">

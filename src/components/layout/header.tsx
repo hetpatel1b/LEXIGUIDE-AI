@@ -2,11 +2,24 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BrandLogo } from "@/components/shared";
 import { Button, ThemeToggle } from "@/components/ui";
 
 export function AppHeader() {
+  const pathname = usePathname();
+
+  const isWorkspaceRoute =
+    pathname?.startsWith("/analyze") ||
+    pathname?.startsWith("/compare") ||
+    pathname?.startsWith("/qa") ||
+    pathname?.startsWith("/action-center");
+
+  if (isWorkspaceRoute) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

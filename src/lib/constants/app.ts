@@ -35,7 +35,8 @@ export interface NavLinkItem {
 
 export const NAV_LINKS: readonly NavLinkItem[] = [
   { label: "Overview", href: "/", disabled: false },
-  { label: "Upload & Understand", href: "#upload", disabled: true, tag: "Phase 1C" },
-  { label: "Document Compare", href: "#compare", disabled: true, tag: "Phase 1E" },
-  { label: "Action Center", href: "#actions", disabled: true, tag: "Phase 1E" },
+  { label: "Analysis Workspace", href: "/analyze", disabled: false },
+  { label: "Ask Document (Q&A)", href: "/qa", disabled: false },
+  { label: "Document Compare", href: "/compare", disabled: false },
+  { label: "Action Center", href: "/action-center", disabled: false },
 ] as const;

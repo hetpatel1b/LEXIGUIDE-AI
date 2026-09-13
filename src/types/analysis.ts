@@ -11,6 +11,8 @@ export interface ClauseItem {
   summary: string;
   pageNumber?: number;
   sectionReference?: string;
+  importance?: "critical" | "standard" | "notable";
+  evidenceSnippet?: string;
 }
 
 export interface RiskItem {
@@ -21,6 +23,7 @@ export interface RiskItem {
   recommendation: string;
   clauseReference?: string;
   pageNumber?: number;
+  evidenceSnippet?: string;
 }
 
 export interface ObligationItem {
@@ -30,4 +33,40 @@ export interface ObligationItem {
   deadline?: string;
   consequences?: string;
   clauseReference?: string;
+  pageNumber?: number;
+  status?: "Identified" | "Pending Review";
+}
+
+export type ImportantDateType =
+  | "calendar_date"
+  | "duration"
+  | "notice_period"
+  | "renewal_period";
+
+export interface ImportantDateItem {
+  id: string;
+  event: string;
+  dateOrDuration: string;
+  type: ImportantDateType;
+  sourceSection?: string;
+  pageNumber?: number;
+  description?: string;
+}
+
+export interface DocumentSectionItem {
+  id: string;
+  sectionNumber: string;
+  title: string;
+  pageNumber: number;
+}
+
+export interface ExecutiveSummaryData {
+  overview: string;
+  bulletPoints: string[];
+  documentContext: {
+    jurisdiction: string;
+    governingLaw: string;
+    effectiveDate: string;
+    documentType: string;
+  };
 }
