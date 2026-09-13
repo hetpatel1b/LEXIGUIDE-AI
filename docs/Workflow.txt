@@ -1,0 +1,364 @@
+# ⏱️ NOW THE 2–3 DAY DEVELOPMENT PLAN
+
+I recommend **7 phases**.
+
+Not 15 phases.
+
+Not 20 phases.
+
+# **7 PHASES TOTAL**
+
+---
+
+## 🔵 PHASE 1 — Foundation + UI
+
+### Goal: \~3–4 hours
+
+Build:
+
+-  Next.js project 
+-  TypeScript 
+-  Tailwind 
+-  Component system 
+-  Global design system 
+-  Navbar 
+-  Homepage 
+-  Upload UI 
+-  Dashboard shell 
+-  Responsive layout 
+-  Theme/visual consistency 
+
+### Deliverable:
+
+A beautiful but mostly non-functional product shell.
+
+---
+
+# 🟢 PHASE 2 — Document Engine
+
+### Goal: \~4 hours
+
+Implement:
+
+```
+```
+
+```
+PDF
+DOCX
+TXT
+ ↓
+Extraction
+ ↓
+Page mapping
+ ↓
+Section detection
+ ↓
+Chunking
+ ↓
+Validation
+```
+
+Also:
+
+-  file size limits 
+-  type validation 
+-  safe filenames 
+-  error handling 
+
+### Deliverable:
+
+**Real documents can be uploaded and processed.**
+
+---
+
+# 🟡 PHASE 3 — Nemotron AI Integration
+
+### Goal: \~4–5 hours
+
+Connect:
+
+```
+```
+
+```
+Vercel Backend
+       ↓
+NVIDIA API
+       ↓
+Nemotron Ultra
+```
+
+Implement:
+
+-  Secure API key 
+-  Structured prompts 
+-  Structured JSON responses 
+-  Zod validation 
+-  Error handling 
+-  Reasoning modes 
+-  Streaming where appropriate 
+
+Then build:
+
+### Summary
+
+### Key Clauses
+
+### Obligations
+
+### Risks
+
+### Deliverable:
+
+**Real AI analysis.**
+
+---
+
+# 🟠 PHASE 4 — Evidence + Q&A
+
+### Goal: \~3–4 hours
+
+Implement:
+
+```
+```
+
+```
+Document
+ ↓
+Chunk retrieval
+ ↓
+Relevant evidence
+ ↓
+Nemotron
+ ↓
+Answer
+ ↓
+Citation
+```
+
+Build:
+
+### Ask Your Document
+
+with:
+
+-  Question input 
+-  Answer 
+-  Evidence 
+-  Page 
+-  Section 
+-  Follow-up question 
+
+### Deliverable:
+
+**Grounded legal Q&A.**
+
+---
+
+# 🔴 PHASE 5 — Comparison + Inconsistency Detection
+
+### Goal: \~4 hours
+
+Build:
+
+```
+```
+
+```
+Document A
++
+Document B
+       ↓
+Clause mapping
+       ↓
+Comparison
+       ↓
+Differences
+       ↓
+Potential inconsistencies
+```
+
+UI:
+
+-  Side-by-side documents 
+-  Comparison summary 
+-  Major changes 
+-  Moderate changes 
+-  Unchanged clauses 
+-  Evidence 
+
+### Deliverable:
+
+**Second flagship feature completed.**
+
+---
+
+# 🟣 PHASE 6 — Security + Quota + Testing + Accessibility
+
+### Goal: \~4–5 hours
+
+Implement:
+
+### Security
+
+-  API key protection 
+-  Input validation 
+-  Prompt-injection defense 
+-  Rate limiting 
+-  Anonymous identity 
+-  Server-side quota 
+
+### Testing
+
+-  Unit 
+-  Integration 
+-  E2E 
+-  AI output validation 
+
+### Accessibility
+
+-  Keyboard 
+-  Screen reader 
+-  Focus 
+-  Contrast 
+-  Responsive 
+
+### Deliverable:
+
+**Production-quality engineering layer.**
+
+---
+
+# ⚫ PHASE 7 — Final Polish + Deployment + Evaluation
+
+### Goal: \~3–4 hours
+
+Final pass:
+
+-  UI polish 
+-  Loading states 
+-  Empty states 
+-  Error states 
+-  Mobile 
+-  Performance 
+-  Console errors 
+-  Broken links 
+-  Security audit 
+-  GitHub cleanup 
+-  README 
+- `.env.example` 
+-  Architecture diagram 
+-  Screenshots 
+-  Demo flow 
+-  Vercel deployment 
+-  Final evaluator audit 
+
+Then:
+
+# 🚨 DO NOT SUBMIT YET
+
+First we perform our own:
+
+## **100/100 Score Audit**
+
+---
+
+# 📊 TIME PLAN
+
+Approximately:
+
+| PhaseEstimated time         |                 |
+| --------------------------- | --------------- |
+| 1. Foundation/UI            | 3–4 h           |
+| 2. Document Engine          | 4 h             |
+| 3. AI Integration           | 4–5 h           |
+| 4. Evidence + Q&A           | 3–4 h           |
+| 5. Comparison               | 4 h             |
+| 6. Quality/Security/Testing | 4–5 h           |
+| 7. Final Polish/Deploy      | 3–4 h           |
+| **TOTAL**                   | **25–30 hours** |
+
+This is achievable over **2–3 focused days**, provided we don't keep adding features.
+
+---
+
+# 🧭 DEVELOPMENT PRIORITY
+
+If we ever run out of time, this is the order:
+
+### 🥇 MUST WORK
+
+**Upload → Analyze → Summary → Clauses → Risks → Obligations → Q&A → Evidence**
+
+### 🥈 MUST WORK
+
+**Compare A vs B → Differences → Inconsistencies**
+
+### 🥉 MUST HAVE
+
+**Quota + Security + Validation**
+
+### 4️⃣
+
+**Testing**
+
+### 5️⃣
+
+**Accessibility + Performance**
+
+### 6️⃣
+
+**Visual polish**
+
+So if something goes wrong on Day 2, we **do not start building another feature**.
+
+We protect the core workflow.
+
+---
+
+# 🎯 THE ONE DEMO FLOW
+
+The judges should be able to understand LexiGuide in **under 60 seconds**:
+
+```
+```
+
+```
+             UPLOAD CONTRACT
+                    ↓
+              AI ANALYSIS
+                    ↓
+        ┌───────────┼───────────┐
+        ↓           ↓           ↓
+     SUMMARY      RISKS     OBLIGATIONS
+        │           │           │
+        └───────────┼───────────┘
+                    ↓
+             ASK DOCUMENT
+                    ↓
+             ANSWER + SOURCE
+                    ↓
+             COMPARE CONTRACT
+                    ↓
+          DIFFERENCES + RISKS
+                    ↓
+              ACTION PLAN
+```
+
+That single workflow demonstrates almost the entire problem statement.
+
+---
+
+# 🔒 FEATURE FREEZE
+
+From this point:
+
+> **No new major features unless we discover that one of the six evaluation criteria cannot be properly satisfied without it.**
+
+That's how we avoid the exact problem you mentioned:
+
+**"more and more unused features."**
+
+We now have a **small, deep, technically credible legal AI product**, rather than a large collection of shallow features.

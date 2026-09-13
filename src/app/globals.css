@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  /* LexiGuide AI Approved Brand Tokens */
+  --color-brand-navy: #0B1F44;
+  --color-brand-blue: #2563EB;
+  --color-brand-accent: #38BDF8;
+  --color-surface: #F8FAFC;
+
+  /* Semantic Theme Tokens (Light Mode - Default) */
+  --background: #F8FAFC;
+  --foreground: #0B1F44;
+  --card: #FFFFFF;
+  --card-foreground: #0B1F44;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #2563EB;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #060E1E;
+    --foreground: #F8FAFC;
+    --card: #0B1F44;
+    --card-foreground: #F8FAFC;
+    --border: #1E2E4A;
+    --input: #1E2E4A;
+    --ring: #38BDF8;
+    --muted: #0B1F44;
+    --muted-foreground: #94A3B8;
+  }
+}
+
+.dark {
+  --background: #060E1E;
+  --foreground: #F8FAFC;
+  --card: #0B1F44;
+  --card-foreground: #F8FAFC;
+  --border: #1E2E4A;
+  --input: #1E2E4A;
+  --ring: #38BDF8;
+  --muted: #0B1F44;
+  --muted-foreground: #94A3B8;
+}
+
+/* Base Body Styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Accessible Focus-Visible Foundation */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Text Selection Styling */
+::selection {
+  background-color: #2563eb33;
+  color: inherit;
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessible Screen-Reader-Only Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
