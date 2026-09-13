@@ -51,31 +51,33 @@ export function ActionSummary({
   ];
 
   return (
-    <div className="space-y-4 text-left">
+    <div className="space-y-3.5 sm:space-y-4 text-left w-full">
       {/* 4 Category Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left items-stretch w-full">
         {cards.map((c) => {
           const Icon = c.icon;
           return (
             <Card
               key={c.label}
               density="compact"
-              className="p-3.5 bg-[var(--surface)] border-[var(--border)] flex flex-col justify-between space-y-1 shadow-2xs"
+              className="p-3.5 sm:p-4 bg-[var(--surface)] border-[var(--border)] rounded-[var(--radius-lg)] flex flex-col justify-between h-full space-y-2.5 shadow-2xs"
             >
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-[11px] font-medium text-[var(--foreground-muted)] truncate">
+              {/* Top Row: Label & Icon */}
+              <div className="flex items-center justify-between gap-2 min-w-0">
+                <span className="text-xs font-medium text-[var(--foreground-muted)] truncate">
                   {c.label}
                 </span>
-                <div className="p-1 rounded bg-[var(--surface-muted)] text-[var(--foreground-muted)] shrink-0">
+                <div className="p-1.5 rounded-md bg-[var(--surface-muted)] text-[var(--foreground-muted)] shrink-0 flex items-center justify-center">
                   <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                 </div>
               </div>
 
-              <div>
-                <div className={`text-xl font-bold tracking-tight ${c.accent}`}>
+              {/* Middle & Bottom: Number & Description */}
+              <div className="space-y-0.5">
+                <div className={`text-2xl sm:text-3xl font-bold tracking-tight ${c.accent}`}>
                   {c.count}
                 </div>
-                <p className="text-[10px] text-[var(--foreground-muted)] truncate">
+                <p className="text-[11px] text-[var(--foreground-muted)] truncate">
                   {c.secondary}
                 </p>
               </div>
@@ -85,17 +87,17 @@ export function ActionSummary({
       </div>
 
       {/* Lightweight Session Checklist Progress Bar */}
-      <div className="p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] space-y-2">
-        <div className="flex items-center justify-between text-xs font-medium">
+      <div className="p-3.5 sm:p-4 rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] space-y-2.5 shadow-2xs w-full">
+        <div className="flex items-center justify-between text-xs font-medium gap-2">
           <span className="text-[var(--foreground)] font-semibold">
             Action Review Progress:
           </span>
-          <span className="text-[var(--foreground-muted)] font-mono text-[11px]">
+          <span className="text-[var(--foreground-muted)] font-mono text-[11px] shrink-0">
             {completedCount} of {totalCount} reviewed ({percentage}%)
           </span>
         </div>
 
-        <Progress value={percentage} aria-label="Review checklist progress" />
+        <Progress value={percentage} aria-label="Review checklist progress" className="h-2 w-full" />
       </div>
     </div>
   );

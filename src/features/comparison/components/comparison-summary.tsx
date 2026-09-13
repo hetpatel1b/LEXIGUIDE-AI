@@ -45,29 +45,31 @@ export function ComparisonSummary({
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-left">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left items-stretch w-full">
       {cards.map((card) => {
         const Icon = card.icon;
         return (
           <Card
             key={card.label}
             density="compact"
-            className="p-3.5 bg-[var(--surface)] border-[var(--border)] flex flex-col justify-between space-y-1 shadow-2xs"
+            className="p-3.5 sm:p-4 bg-[var(--surface)] border-[var(--border)] rounded-[var(--radius-lg)] flex flex-col justify-between h-full space-y-2.5 shadow-2xs"
           >
-            <div className="flex items-center justify-between gap-1">
-              <span className="text-[11px] font-medium text-[var(--foreground-muted)] truncate">
+            {/* Top Row: Label & Icon */}
+            <div className="flex items-center justify-between gap-2 min-w-0">
+              <span className="text-xs font-medium text-[var(--foreground-muted)] truncate">
                 {card.label}
               </span>
-              <div className="p-1 rounded bg-[var(--surface-muted)] text-[var(--foreground-muted)] shrink-0">
+              <div className="p-1.5 rounded-md bg-[var(--surface-muted)] text-[var(--foreground-muted)] shrink-0 flex items-center justify-center">
                 <Icon className="h-3.5 w-3.5" aria-hidden="true" />
               </div>
             </div>
 
-            <div>
-              <div className={`text-xl font-bold tracking-tight ${card.accent}`}>
+            {/* Middle & Bottom: Prominent Metric Number & Secondary Description */}
+            <div className="space-y-0.5">
+              <div className={`text-2xl sm:text-3xl font-bold tracking-tight ${card.accent}`}>
                 {card.value}
               </div>
-              <p className="text-[10px] text-[var(--foreground-muted)] truncate">
+              <p className="text-[11px] text-[var(--foreground-muted)] truncate">
                 {card.secondary}
               </p>
             </div>

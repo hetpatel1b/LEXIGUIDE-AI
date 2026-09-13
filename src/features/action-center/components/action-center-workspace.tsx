@@ -91,38 +91,38 @@ export function ActionCenterWorkspace() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
-      {/* 1. Shared Workspace Navigation */}
+    <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden">
+      {/* 1. Shared Workspace Navigation (Strictly Approved WorkspaceNav) */}
       <WorkspaceNav
         documentName="Employment_Agreement_2026.pdf"
         documentType="Employment Agreement"
       />
 
-      {/* 2. Main Action Center Area */}
-      <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6 text-left">
+      {/* 2. Main Wide Action Center Workspace */}
+      <main className="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 space-y-6 text-left">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)]">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] shrink-0">
                 <CheckSquare className="h-4 w-4" aria-hidden="true" />
               </div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)]">
                 Action Center
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-[var(--foreground-muted)]">
+            <p className="text-xs sm:text-sm text-[var(--foreground-muted)] max-w-4xl leading-relaxed">
               Turn document findings into clear, structured next steps and professional consultation points.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleResetChecklist}
-              leftIcon={<RotateCcw className="h-3 w-3" />}
-              className="text-xs"
+              leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+              className="text-xs font-medium"
               title="Reset checklist progress"
             >
               Reset Checklist
@@ -131,7 +131,7 @@ export function ActionCenterWorkspace() {
         </div>
 
         {/* Action Summary Cards & Progress */}
-        <section aria-label="Action Summary">
+        <section aria-label="Action Summary" className="w-full">
           <ActionSummary
             metrics={metrics}
             completedCount={completedCount}
@@ -140,7 +140,7 @@ export function ActionCenterWorkspace() {
         </section>
 
         {/* Category Filters */}
-        <div className="pt-2">
+        <div className="pt-1 w-full">
           <ActionFilters
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
@@ -149,7 +149,7 @@ export function ActionCenterWorkspace() {
         </div>
 
         {/* Action Items List */}
-        <section aria-label="Action Items Checklist" className="space-y-3.5 pt-1">
+        <section aria-label="Action Items Checklist" className="space-y-3.5 pt-1 w-full">
           {filteredItems.map((item) => (
             <ActionItemCard
               key={item.id}
@@ -160,17 +160,17 @@ export function ActionCenterWorkspace() {
           ))}
 
           {filteredItems.length === 0 && (
-            <div className="p-8 text-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--foreground-muted)]">
+            <div className="p-8 text-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] text-xs text-[var(--foreground-muted)] w-full">
               No action items found in this category.
             </div>
           )}
         </section>
 
         {/* Statutory Legal Disclaimer */}
-        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-3.5 flex items-start gap-2.5 text-xs text-amber-950">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
-          <div className="leading-relaxed">
-            <span className="font-semibold mr-1">Action Center Guidance:</span>
+        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 p-4 flex items-start gap-3 text-xs text-amber-950 dark:text-amber-200 shadow-2xs w-full">
+          <Info className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+          <div className="leading-relaxed max-w-5xl">
+            <span className="font-bold mr-1.5 text-amber-950 dark:text-amber-100">Action Center Guidance:</span>
             LexiGuide AI highlights practical points to consider, clarify, and discuss. Action Center items represent structured informational organization and do not constitute formal legal representation, attorney-client advice, or guaranteed outcomes.
           </div>
         </div>
@@ -182,15 +182,15 @@ export function ActionCenterWorkspace() {
         onClose={() => setIsEvidenceOpen(false)}
         title="Action Source Evidence"
         description="Contractual passage grounding this action item."
-        className="max-w-xl"
+        className="max-w-2xl"
       >
         {activeEvidenceItem && (
           <div className="space-y-4 text-left">
             <div className="flex items-center justify-between gap-2 p-2.5 rounded-[var(--radius-md)] bg-[var(--surface-muted)] text-xs font-mono">
-              <span className="font-semibold text-[var(--foreground)] truncate max-w-[220px]">
+              <span className="font-semibold text-[var(--foreground)] truncate max-w-[280px]">
                 {activeEvidenceItem.title}
               </span>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <Badge variant="brand" size="sm">
                   {activeEvidenceItem.sourceSection}
                 </Badge>
