@@ -76,19 +76,19 @@ export function EvidenceModal({
         </div>
 
         {/* Informational Guidance */}
-        <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/60 border border-blue-200/60 text-[11px] text-blue-950 leading-relaxed">
+        <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-950 dark:text-blue-100 leading-relaxed">
           <span className="font-semibold mr-1">Verification Note:</span>
           LexiGuide AI highlights exact phrasing to ensure all explanations and potential concern flags remain transparently grounded in the source text.
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)]">
+        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 pt-2 border-t border-[var(--border-muted)]">
           <Button
             variant="outline"
             size="sm"
-            leftIcon={copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+            leftIcon={copied ? <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
             onClick={handleCopyCitation}
-            className="text-xs"
+            className="text-xs w-full xs:w-auto justify-center"
           >
             {copied ? "Citation Copied!" : "Copy Citation"}
           </Button>
@@ -97,7 +97,7 @@ export function EvidenceModal({
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="text-xs"
+            className="text-xs w-full xs:w-auto justify-center"
           >
             Done
           </Button>

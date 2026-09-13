@@ -226,12 +226,12 @@ export function ComparisonWorkspace() {
               <span>{activeEvidenceChange.summaryChange}</span>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)]">
+            <div className="flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 pt-2 border-t border-[var(--border-muted)]">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCopyCitation}
-                className="text-xs"
+                className="text-xs w-full xs:w-auto"
               >
                 {copiedCitation ? "Citation Copied!" : "Copy Comparison Citation"}
               </Button>
@@ -240,7 +240,7 @@ export function ComparisonWorkspace() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setIsEvidenceModalOpen(false)}
-                className="text-xs"
+                className="text-xs w-full xs:w-auto"
               >
                 Done
               </Button>

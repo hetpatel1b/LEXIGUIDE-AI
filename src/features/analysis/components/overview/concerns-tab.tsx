@@ -24,7 +24,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           <RiskIndicator severity="high" size="sm" label="1 High Attention" />
           <RiskIndicator severity="medium" size="sm" label="3 Review" />
           <RiskIndicator severity="low" size="sm" label="1 Info" />
@@ -32,7 +32,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
       </div>
 
       {/* Statutory Informational Banner */}
-      <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-3.5 flex items-start gap-2.5 text-xs text-amber-950">
+      <div className="rounded-[var(--radius-lg)] border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 p-3.5 flex items-start gap-2.5 text-xs text-amber-950 dark:text-amber-200">
         <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <div className="leading-relaxed">
           <span className="font-semibold mr-1">Balanced Informational Review:</span>
@@ -77,7 +77,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 pt-2 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
               <span className="font-mono text-[11px]">
                 {concern.clauseReference} · Page {concern.pageNumber}
               </span>
@@ -93,7 +93,7 @@ export function ConcernsTab({ onViewEvidence }: ConcernsTabProps) {
                     excerpt: concern.evidenceSnippet || "",
                   })
                 }
-                className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer py-1 px-1.5 -mr-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+                className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer py-1 px-1.5 -mr-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] self-start xs:self-auto"
               >
                 <span>View Exact Clause Text</span>
                 <ExternalLink className="h-3 w-3" aria-hidden="true" />

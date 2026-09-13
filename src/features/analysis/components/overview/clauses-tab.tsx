@@ -47,7 +47,7 @@ export function ClausesTab({ onViewEvidence }: ClausesTabProps) {
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 max-w-full">
           <Filter className="h-3.5 w-3.5 text-[var(--foreground-muted)] mr-1 shrink-0" aria-hidden="true" />
           {categories.map((cat) => (
             <button
@@ -75,8 +75,8 @@ export function ClausesTab({ onViewEvidence }: ClausesTabProps) {
             className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--foreground)]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--foreground)] shrink-0">
                   {clause.sectionReference}
                 </span>
                 <h3 className="text-sm font-semibold text-[var(--foreground)]">
@@ -84,7 +84,7 @@ export function ClausesTab({ onViewEvidence }: ClausesTabProps) {
                 </h3>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="neutral" size="sm">
                   {clause.category}
                 </Badge>
@@ -96,7 +96,7 @@ export function ClausesTab({ onViewEvidence }: ClausesTabProps) {
               {clause.summary}
             </p>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
+            <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1.5 pt-2 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
               <span className="font-mono text-[11px]">
                 Page {clause.pageNumber} · Verified in source
               </span>
@@ -112,10 +112,10 @@ export function ClausesTab({ onViewEvidence }: ClausesTabProps) {
                     excerpt: clause.evidenceSnippet || "",
                   })
                 }
-                className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer py-1 px-1.5 -mr-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] self-start xs:self-auto"
               >
-                <span>View Exact Evidence</span>
-                <ExternalLink className="h-3 w-3" />
+                <span>View Evidence</span>
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
           </Card>

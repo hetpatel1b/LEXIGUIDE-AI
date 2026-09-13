@@ -37,11 +37,11 @@ export function TrustSafety() {
         </div>
 
         {/* Two-Column Comparison: Desktop 2 Columns, Mobile/Tablet 1 Column */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto text-left">
           {/* What LexiGuide Does */}
-          <Card className="p-5 sm:p-6 md:p-7 border-[var(--border)] bg-[var(--surface)] space-y-4">
+          <Card className="p-4 sm:p-6 md:p-7 border-[var(--border)] bg-[var(--surface)] space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-[var(--border-muted)]">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 shrink-0">
                 <Check className="h-4 w-4 stroke-[2.5]" />
               </div>
               <h3 className="text-base font-semibold text-[var(--foreground)]">
@@ -60,9 +60,9 @@ export function TrustSafety() {
           </Card>
 
           {/* What LexiGuide Does NOT Do */}
-          <Card className="p-5 sm:p-6 md:p-7 border-[var(--border)] bg-[var(--surface)] space-y-4">
+          <Card className="p-4 sm:p-6 md:p-7 border-[var(--border)] bg-[var(--surface)] space-y-4">
             <div className="flex items-center gap-2.5 pb-3 border-b border-[var(--border-muted)]">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[var(--foreground-muted)] shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-[var(--foreground-muted)] shrink-0">
                 <X className="h-4 w-4 stroke-[2.5]" />
               </div>
               <h3 className="text-base font-semibold text-[var(--foreground)]">
@@ -82,9 +82,9 @@ export function TrustSafety() {
         </div>
 
         {/* Prominent Legal Safety Banner */}
-        <div className="max-w-4xl mx-auto rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-4 sm:p-5 text-left text-xs text-amber-950 space-y-1.5">
+        <div className="max-w-4xl mx-auto rounded-[var(--radius-lg)] border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 p-4 sm:p-5 text-left text-xs text-amber-950 dark:text-amber-200 space-y-1.5">
           <div className="flex items-center gap-2 font-semibold">
-            <Scale className="h-4 w-4 text-amber-700 shrink-0" />
+            <Scale className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0" />
             <span>Legal Information Assistant &bull; Not an AI Lawyer</span>
           </div>
           <p className="leading-relaxed opacity-95">

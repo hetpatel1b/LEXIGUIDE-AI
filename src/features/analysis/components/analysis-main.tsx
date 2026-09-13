@@ -48,7 +48,7 @@ export function AnalysisMain({
       className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--background)] min-w-0"
     >
       {/* 1. Inner Workspace Titlebar (Independent Layout Layer) */}
-      <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-5 lg:px-6 py-2.5 bg-[var(--surface)] border-b border-[var(--border)] shrink-0 min-h-[44px]">
+      <div className="flex items-center justify-between gap-2 px-2.5 sm:px-5 lg:px-6 py-2 sm:py-2.5 bg-[var(--surface)] border-b border-[var(--border)] shrink-0 min-h-[44px]">
         {/* Left: Heading + Mobile/Tablet Document Trigger + Active Section Tag */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onOpenDocumentDrawer && (
@@ -94,7 +94,7 @@ export function AnalysisMain({
 
         {/* Right: Illustrative Analysis Badge + Mobile/Tablet Copilot Trigger */}
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="neutral" size="sm" dot className="inline-flex shrink-0">
+          <Badge variant="neutral" size="sm" dot className="hidden xs:inline-flex shrink-0">
             Illustrative Analysis
           </Badge>
 

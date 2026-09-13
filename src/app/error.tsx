@@ -25,17 +25,17 @@ export default function ErrorBoundary({
         <span className="inline-block text-3xl font-mono text-amber-600" aria-hidden="true">
           ⚠️
         </span>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-xl font-bold tracking-tight text-[var(--foreground)]">
           Something went wrong
         </h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-[var(--foreground-muted)]">
           {getSafeErrorMessage(error, "An unexpected issue occurred while rendering this page.")}
         </p>
-        <div className="pt-2 flex items-center justify-center gap-3">
-          <Button variant="primary" size="md" onClick={() => reset()}>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
+          <Button variant="primary" size="md" onClick={() => reset()} className="w-full sm:w-auto">
             Try Again
           </Button>
-          <Button variant="outline" size="md" onClick={() => router.push("/")}>
+          <Button variant="outline" size="md" onClick={() => router.push("/")} className="w-full sm:w-auto">
             Return Home
           </Button>
         </div>

@@ -26,8 +26,6 @@ export function ComparisonChangeCard({
   onViewEvidence,
   onAddToActionCenter,
 }: ComparisonChangeCardProps) {
-  // Mobile tab toggle: "a" vs "b" vs "both"
-  const [mobileTab, setMobileTab] = React.useState<"a" | "b">("b");
   const [addedToAction, setAddedToAction] = React.useState(false);
 
   const severityBadge = (sev: string) => {
@@ -101,40 +99,10 @@ export function ComparisonChangeCard({
         </div>
       </div>
 
-      {/* 3. Mobile View Switcher (< md) */}
-      <div className="md:hidden flex items-center justify-center gap-1.5 bg-[var(--surface-muted)] p-1 rounded-[var(--radius-lg)] border border-[var(--border)] text-xs">
-        <button
-          type="button"
-          onClick={() => setMobileTab("a")}
-          className={`flex-1 py-1.5 px-2 rounded-md text-center font-medium transition-colors ${
-            mobileTab === "a"
-              ? "bg-[var(--surface)] text-[var(--foreground)] shadow-xs font-semibold"
-              : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
-          }`}
-        >
-          Document A (Original)
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobileTab("b")}
-          className={`flex-1 py-1.5 px-2 rounded-md text-center font-medium transition-colors ${
-            mobileTab === "b"
-              ? "bg-[var(--primary)] text-white shadow-xs font-semibold"
-              : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
-          }`}
-        >
-          Document B (Updated)
-        </button>
-      </div>
-
-      {/* 4. Side-by-Side Evidence Panels (Desktop) & Mobile Toggle */}
+      {/* 3. Evidence Panels: Stacks on Mobile, Side-by-Side on Desktop (>= md) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 lg:gap-5 text-xs items-stretch w-full">
         {/* Document A Column */}
-        <div
-          className={`p-3.5 sm:p-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col justify-between space-y-2.5 h-full ${
-            mobileTab === "b" ? "hidden md:flex" : "flex"
-          }`}
-        >
+        <div className="p-3.5 sm:p-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col justify-between space-y-2.5 h-full">
           <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[var(--foreground-muted)] pb-2 border-b border-[var(--border-muted)]">
             <span className="flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
@@ -151,11 +119,7 @@ export function ComparisonChangeCard({
         </div>
 
         {/* Document B Column */}
-        <div
-          className={`p-3.5 sm:p-4 rounded-[var(--radius-lg)] border border-[var(--primary)]/30 bg-blue-50/40 dark:bg-blue-950/20 flex flex-col justify-between space-y-2.5 h-full ${
-            mobileTab === "a" ? "hidden md:flex" : "flex"
-          }`}
-        >
+        <div className="p-3.5 sm:p-4 rounded-[var(--radius-lg)] border border-[var(--primary)]/30 bg-blue-50/40 dark:bg-blue-950/20 flex flex-col justify-between space-y-2.5 h-full">
           <div className="flex items-center justify-between gap-2 text-[11px] font-semibold text-[var(--primary)] pb-2 border-b border-[var(--primary)]/20">
             <span className="flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />
@@ -172,37 +136,37 @@ export function ComparisonChangeCard({
         </div>
       </div>
 
-      {/* 5. Why It Matters & Review Context */}
+      {/* 4. Why It Matters & Review Context */}
       {change.whyItMatters && (
         <div className="p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface-subtle)] border border-[var(--border-muted)] space-y-1.5 text-xs">
           <div className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
             <Info className="h-4 w-4 text-[var(--primary)] shrink-0" aria-hidden="true" />
             <span>Why It Matters &amp; Review Context:</span>
           </div>
-          <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-6 max-w-4xl">
+          <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-6 max-w-4xl">
             {change.whyItMatters}
           </p>
         </div>
       )}
 
-      {/* 6. Bottom Action Row */}
+      {/* 5. Bottom Action Row */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[var(--border-muted)] text-xs">
         <button
           type="button"
           onClick={() => onViewEvidence(change)}
-          className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-semibold cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded py-1"
+          className="inline-flex items-center gap-1.5 text-[var(--primary)] hover:underline font-semibold cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded py-1 self-start sm:self-auto"
         >
           <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           <span>View Side-by-Side Evidence</span>
         </button>
 
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Button
             href={`/qa?q=${encodeURIComponent(`Why did the ${change.clauseTitle} change between Document A and B?`)}`}
             variant="outline"
             size="sm"
             leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
-            className="text-xs shrink-0"
+            className="text-xs w-full xs:w-auto justify-center"
           >
             Ask About Change
           </Button>
@@ -212,7 +176,7 @@ export function ComparisonChangeCard({
             size="sm"
             onClick={handleAddToActions}
             leftIcon={<CheckSquare className="h-3 w-3" />}
-            className="text-xs shrink-0"
+            className="text-xs w-full xs:w-auto justify-center"
           >
             {addedToAction ? "Added to Actions!" : "Add to Action Center"}
           </Button>

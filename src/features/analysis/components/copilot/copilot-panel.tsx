@@ -157,7 +157,7 @@ export function CopilotPanel({
     <aside
       aria-label="Document AI Copilot Assistant"
       className={cn(
-        "w-[350px] lg:w-[360px] shrink-0 border-l border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
+        "w-full lg:w-[360px] shrink-0 border-l border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
         className
       )}
     >

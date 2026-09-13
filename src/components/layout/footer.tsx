@@ -71,7 +71,7 @@ export function AppFooter() {
         </div>
 
         {/* Mandatory Legal Information Disclaimer */}
-        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 bg-amber-50/70 p-4 text-xs leading-relaxed text-amber-950 text-left">
+        <div className="rounded-[var(--radius-lg)] border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 p-4 text-xs leading-relaxed text-amber-950 dark:text-amber-200 text-left">
           <p className="font-semibold mb-1 flex items-center gap-1.5">
             <span aria-hidden="true">⚖️</span> Legal Information Disclaimer
           </p>

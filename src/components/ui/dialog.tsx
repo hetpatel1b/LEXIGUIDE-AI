@@ -52,7 +52,7 @@ export function Dialog({
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
       aria-describedby={description ? descId : undefined}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
     >
       {/* Backdrop */}
       <div
@@ -64,7 +64,7 @@ export function Dialog({
       {/* Dialog Surface */}
       <div
         className={cn(
-          "relative w-full max-w-lg rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-raised)] text-[var(--foreground)] z-10 space-y-4 animate-in fade-in-0 zoom-in-95 duration-150",
+          "relative w-full max-w-lg max-h-[calc(100dvh-2rem)] sm:max-h-[85vh] overflow-y-auto rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6 shadow-[var(--shadow-raised)] text-[var(--foreground)] z-10 space-y-4 animate-in fade-in-0 zoom-in-95 duration-150",
           className
         )}
       >

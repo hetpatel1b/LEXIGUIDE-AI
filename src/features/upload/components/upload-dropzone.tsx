@@ -103,9 +103,9 @@ export function UploadDropzone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-5 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
+        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-4 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
         isDragging
-          ? "border-[var(--primary)] bg-blue-50/70 scale-[1.005]"
+          ? "border-[var(--primary)] bg-blue-50/70 dark:bg-blue-950/40 scale-[1.005]"
           : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-subtle)]",
         disabled && "pointer-events-none opacity-50",
         className
@@ -129,7 +129,7 @@ export function UploadDropzone({
           "flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-transform duration-200 mb-3 sm:mb-4",
           isDragging
             ? "bg-[var(--primary)] text-white scale-110 shadow-[var(--shadow-md)]"
-            : "bg-blue-50 text-[var(--primary)] group-hover:scale-105"
+            : "bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] group-hover:scale-105"
         )}
       >
         <UploadCloud className="h-6 w-6 sm:h-7 sm:w-7 stroke-[1.75]" aria-hidden="true" />

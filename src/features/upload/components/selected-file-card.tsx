@@ -57,20 +57,20 @@ export function SelectedFileCard({
       role="region"
       aria-label="Selected document preview"
       className={cn(
-        "rounded-[var(--radius-xl)] border border-[var(--primary)]/40 bg-[var(--surface)] p-6 sm:p-8 shadow-[var(--shadow-md)] text-[var(--foreground)] space-y-6 transition-all",
+        "rounded-[var(--radius-xl)] border border-[var(--primary)]/40 bg-[var(--surface)] p-4 xs:p-6 sm:p-8 shadow-[var(--shadow-md)] text-[var(--foreground)] space-y-4 sm:space-y-6 transition-all",
         className
       )}
     >
       {/* File Information Row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-muted)] border border-[var(--border)]">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-muted)] border border-[var(--border)]">
             {currentType.icon}
           </div>
 
           <div className="min-w-0 text-left space-y-0.5">
             <h4
-              className="text-base font-semibold text-[var(--foreground)] truncate max-w-[240px] sm:max-w-md"
+              className="text-sm sm:text-base font-semibold text-[var(--foreground)] truncate max-w-[180px] xs:max-w-[240px] sm:max-w-md"
               title={file.name}
             >
               {file.name}
@@ -82,7 +82,7 @@ export function SelectedFileCard({
               </Badge>
               <span>{formatSize(file.size)}</span>
               <span aria-hidden="true">&bull;</span>
-              <span className="inline-flex items-center gap-1 text-emerald-600 font-sans font-medium">
+              <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-sans font-medium">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Validated &amp; Ready
               </span>
@@ -97,7 +97,7 @@ export function SelectedFileCard({
             variant="ghost"
             onClick={onRemove}
             aria-label="Remove selected document"
-            className="text-[var(--danger)] hover:bg-red-50"
+            className="text-[var(--danger)] hover:bg-red-50 dark:hover:bg-red-950/30 min-h-[36px] min-w-[36px]"
             title="Remove file"
           >
             <Trash2 className="h-4 w-4" />
@@ -116,12 +116,13 @@ export function SelectedFileCard({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onRemove}
+            className="w-full sm:w-auto justify-center"
           >
             Select Different File
           </Button>
@@ -131,6 +132,7 @@ export function SelectedFileCard({
             variant="primary"
             size="sm"
             leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+            className="w-full sm:w-auto justify-center"
           >
             Start Analysis
           </Button>

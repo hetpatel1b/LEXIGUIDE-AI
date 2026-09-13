@@ -64,16 +64,16 @@ export function DatesTab() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {renderTypeBadge(dateItem.type)}
-                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 text-[var(--primary)]">
+                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 text-[var(--primary)] whitespace-nowrap">
                   {dateItem.dateOrDuration}
                 </span>
               </div>
             </div>
 
             {dateItem.description && (
-              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-10">
+              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-10 mt-1">
                 {dateItem.description}
               </p>
             )}

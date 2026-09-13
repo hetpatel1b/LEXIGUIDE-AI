@@ -61,7 +61,7 @@ export function QATopicGroups({
                     key={q}
                     type="button"
                     onClick={() => onSelectQuestion(q)}
-                    className="w-full text-left p-1.5 rounded-[var(--radius-sm)] text-[11px] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors cursor-pointer block truncate"
+                    className="w-full text-left p-1.5 rounded-[var(--radius-sm)] text-[11px] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors cursor-pointer block leading-relaxed break-words"
                     title={q}
                   >
                     &bull; &ldquo;{q}&rdquo;

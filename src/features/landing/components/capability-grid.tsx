@@ -71,10 +71,10 @@ export function CapabilityGrid() {
             <Card
               key={cap.id}
               variant="default"
-              className="h-full flex flex-col justify-start p-5 sm:p-6 transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] bg-[var(--surface)]"
+              className="h-full flex flex-col justify-start p-4 sm:p-6 transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] bg-[var(--surface)]"
             >
               <div className="space-y-3 mb-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50/80 border border-blue-100 shrink-0">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 shrink-0">
                   {cap.icon}
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-[var(--foreground)] tracking-tight">

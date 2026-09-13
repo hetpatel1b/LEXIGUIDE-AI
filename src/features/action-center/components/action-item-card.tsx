@@ -112,7 +112,7 @@ export function ActionItemCard({
           </div>
         </div>
 
-        <div className="shrink-0 self-start sm:self-auto pl-7 sm:pl-0">
+        <div className="shrink-0 self-start sm:self-auto">
           {item.isChecked ? (
             <Badge variant="success" size="sm" dot>
               Reviewed
@@ -124,18 +124,18 @@ export function ActionItemCard({
       </div>
 
       {/* 2. Action Item Description */}
-      <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed pl-7 sm:pl-8 max-w-4xl">
+      <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-8 max-w-4xl">
         {item.description}
       </p>
 
       {/* 3. Why This Matters Callout */}
       {item.whyItMatters && (
-        <div className="ml-7 sm:ml-8 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface-muted)] border border-[var(--border)] space-y-1.5 text-xs">
+        <div className="ml-0 sm:ml-8 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-[var(--surface-muted)] border border-[var(--border)] space-y-1.5 text-xs">
           <div className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
             <Info className="h-4 w-4 text-[var(--primary)] shrink-0" aria-hidden="true" />
             <span>Why This Matters:</span>
           </div>
-          <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-6 max-w-4xl">
+          <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-6 max-w-4xl">
             {item.whyItMatters}
           </p>
         </div>
@@ -143,7 +143,7 @@ export function ActionItemCard({
 
       {/* 4. Suggested Question for Legal Advisor (if present) */}
       {item.suggestedQuestion && (
-        <div className="ml-7 sm:ml-8 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/70 dark:border-blue-900/50 space-y-2 text-xs">
+        <div className="ml-0 sm:ml-8 p-3 sm:p-3.5 rounded-[var(--radius-lg)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/70 dark:border-blue-900/50 space-y-2 text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-semibold text-blue-950 dark:text-blue-100">
               <HelpCircle className="h-4 w-4 text-[var(--primary)] shrink-0" />
@@ -167,7 +167,7 @@ export function ActionItemCard({
       )}
 
       {/* 5. Footer Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[var(--border-muted)] text-xs ml-7 sm:ml-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[var(--border-muted)] text-xs ml-0 sm:ml-8">
         {item.evidenceSnippet ? (
           <button
             type="button"
@@ -181,14 +181,14 @@ export function ActionItemCard({
           <span />
         )}
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           {/* Discuss with Copilot */}
           <Button
             href={`/qa?q=${encodeURIComponent(item.suggestedQuestion || item.title)}`}
             variant="outline"
             size="sm"
             leftIcon={<Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />}
-            className="text-xs shrink-0"
+            className="text-xs shrink-0 w-full sm:w-auto"
           >
             Discuss with Copilot
           </Button>

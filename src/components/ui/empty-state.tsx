@@ -20,7 +20,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] text-[var(--foreground)]",
+        "flex flex-col items-center justify-center p-6 sm:p-12 text-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] text-[var(--foreground)]",
         className
       )}
       {...props}
@@ -37,7 +37,11 @@ export function EmptyState({
         {description}
       </p>
 
-      {action && <div className="inline-flex items-center">{action}</div>}
+      {action && (
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full sm:w-auto">
+          {action}
+        </div>
+      )}
     </div>
   );
 }

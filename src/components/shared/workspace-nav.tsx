@@ -26,24 +26,28 @@ export const WORKSPACE_ROUTES = [
   {
     href: "/analyze",
     label: "Analysis",
+    shortLabel: "Analysis",
     icon: LayoutDashboard,
     tooltip: "Comprehensive clause, risk, and obligation analysis",
   },
   {
     href: "/qa",
     label: "Ask Document",
+    shortLabel: "Ask",
     icon: Sparkles,
     tooltip: "Grounded Q&A assistant for this agreement",
   },
   {
     href: "/compare",
     label: "Compare",
+    shortLabel: "Compare",
     icon: GitCompare,
     tooltip: "Compare original and updated document revisions",
   },
   {
     href: "/action-center",
     label: "Action Center",
+    shortLabel: "Actions",
     icon: CheckSquare,
     tooltip: "Review items, upcoming dates, and legal follow-ups",
   },
@@ -61,15 +65,21 @@ export function WorkspaceNav({
     <header
       role="banner"
       className={cn(
-        "sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)] px-3 sm:px-6 shrink-0 shadow-sm",
+        "sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)] px-2.5 sm:px-6 shrink-0 shadow-sm",
         className
       )}
     >
-      <div className="flex h-14 items-center justify-between gap-3">
+      <div className="flex h-14 items-center justify-between gap-2 sm:gap-3">
         {/* Left: Brand Identity (Light Wordmark) & Document Context */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <div className="flex items-center" title="LexiGuide Home">
-            <BrandLogo variant="logo" width={114} height={38} priority />
+            <BrandLogo
+              variant="logo"
+              width={114}
+              height={38}
+              priority
+              className="w-[82px] xs:w-[96px] sm:w-[114px] h-auto shrink-0"
+            />
           </div>
 
           <div className="h-4 w-px bg-[var(--border)] hidden lg:block" />
@@ -89,10 +99,10 @@ export function WorkspaceNav({
         </div>
 
         {/* Right: Workspace Navigation Tools + Extra Controls + Exit */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 min-w-0 flex-1 justify-end">
           <nav
             aria-label="Workspace Tools Navigation"
-            className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1"
+            className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1 min-w-0"
           >
             {WORKSPACE_ROUTES.map((route) => {
               const isActive = pathname === route.href || (route.href === "/analyze" && pathname.startsWith("/analyze"));
@@ -104,14 +114,17 @@ export function WorkspaceNav({
                   href={route.href}
                   title={route.tooltip}
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-md)] text-xs font-medium transition-all whitespace-nowrap",
+                    "flex items-center gap-1 sm:gap-1.5 px-1.5 xs:px-2.5 sm:px-3 py-1.5 rounded-[var(--radius-md)] text-[11px] xs:text-xs font-medium transition-all whitespace-nowrap shrink-0",
                     isActive
                       ? "bg-[var(--primary)] text-white font-semibold shadow-xs"
                       : "text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)]"
                   )}
                 >
-                  <Icon className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-white" : "text-[var(--foreground-muted)]")} />
-                  <span>{route.label}</span>
+                  <Icon className={cn("h-3 w-3 xs:h-3.5 xs:w-3.5 shrink-0", isActive ? "text-white" : "text-[var(--foreground-muted)]")} />
+                  <span>
+                    <span className="inline md:hidden">{route.shortLabel}</span>
+                    <span className="hidden md:inline">{route.label}</span>
+                  </span>
                 </Link>
               );
             })}
@@ -119,13 +132,14 @@ export function WorkspaceNav({
 
           {extraRightControls}
 
-          <div className="border-l border-[var(--border)] pl-2 sm:pl-2.5 flex items-center">
+          <div className="border-l border-[var(--border)] pl-1.5 sm:pl-2.5 flex items-center shrink-0">
             <Link
               href="/"
               title="Exit Workspace & Return Home"
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
+              aria-label="Exit Workspace & Return Home"
+              className="inline-flex items-center justify-center p-1.5 sm:px-2.5 sm:py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3.5 w-3.5" />
               <span className="hidden sm:inline font-medium">Exit</span>
             </Link>
           </div>

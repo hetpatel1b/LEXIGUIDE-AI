@@ -83,16 +83,16 @@ export function AnalysisWorkspace() {
       />
 
       {/* 2. Mobile Quick-Navigation Strip (< 768px) */}
-      <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-3 sm:px-4 py-1.5 shrink-0">
-        <span className="text-xs font-semibold text-[var(--foreground)]">
+      <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-2.5 sm:px-4 py-1.5 shrink-0">
+        <span className="text-xs font-semibold text-[var(--foreground)] hidden xs:inline">
           Navigation:
         </span>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center justify-between xs:justify-end gap-1.5 w-full xs:w-auto">
           <button
             type="button"
             onClick={() => setIsDocDrawerOpen(true)}
-            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 min-h-[40px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Open document structure drawer"
           >
             <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
@@ -101,7 +101,7 @@ export function AnalysisWorkspace() {
 
           <button
             type="button"
-            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 min-h-[40px] rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-current="page"
           >
             <LayoutDashboard className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -111,7 +111,7 @@ export function AnalysisWorkspace() {
           <button
             type="button"
             onClick={() => setIsCopilotDrawerOpen(true)}
-            className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 min-h-[40px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-label="Open Copilot assistant drawer"
           >
             <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />

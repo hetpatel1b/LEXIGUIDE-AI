@@ -183,7 +183,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                       {concern.description}
                     </p>
 
-                    <div className="flex items-center justify-between pt-1 text-[11px] text-[var(--foreground-muted)]">
+                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
                       <span className="font-mono text-[10px]">
                         {concern.clauseReference} &bull; Page {concern.pageNumber}
                       </span>
@@ -198,7 +198,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                             excerpt: concern.evidenceSnippet || "",
                           })
                         }
-                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
                       >
                         <span>View Evidence</span>
                         <ExternalLink className="h-3 w-3" />
@@ -262,7 +262,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                       {clause.summary}
                     </p>
 
-                    <div className="flex items-center justify-between pt-1 text-[11px] text-[var(--foreground-muted)]">
+                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
                       <span className="font-mono text-[10px]">
                         Page {clause.pageNumber} &bull; {clause.category}
                       </span>
@@ -277,7 +277,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                             excerpt: clause.evidenceSnippet || "",
                           })
                         }
-                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
                       >
                         <span>View Evidence</span>
                         <ExternalLink className="h-3 w-3" />
@@ -412,7 +412,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
       </div>
 
       {/* Safety Notice Footer Banner */}
-      <div className="rounded-[var(--radius-lg)] border border-blue-200/70 bg-blue-50/50 p-3 sm:p-3.5 flex items-start gap-2.5 text-xs text-blue-900">
+      <div className="rounded-[var(--radius-lg)] border border-blue-200/70 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 p-3 sm:p-3.5 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-100">
         <Info className="h-4 w-4 shrink-0 mt-0.5 text-[var(--primary)]" aria-hidden="true" />
         <div>
           <p className="font-semibold mb-0.5 text-xs">Informational Document Intelligence</p>

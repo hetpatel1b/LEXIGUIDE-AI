@@ -54,8 +54,8 @@ export function QAConversation({
         return (
           <div key={msg.id} className="space-y-4">
             {/* User Message Bubble */}
-            <div className="flex justify-end pl-6 sm:pl-16">
-              <div className="rounded-2xl rounded-tr-sm bg-[var(--primary)] text-white px-4 py-3 text-xs sm:text-sm max-w-[85%] shadow-sm">
+            <div className="flex justify-end pl-2 sm:pl-16">
+              <div className="rounded-2xl rounded-tr-sm bg-[var(--primary)] text-white px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm max-w-[90%] sm:max-w-[85%] shadow-sm">
                 <p className="leading-relaxed font-medium">{msg.question}</p>
                 <span className="text-[10px] text-white/70 block text-right mt-1 font-mono">
                   {msg.askedAt}
@@ -65,18 +65,18 @@ export function QAConversation({
 
             {/* Assistant Response Card */}
             {msg.answer && (
-              <div className="flex items-start gap-3 pr-2 sm:pr-10">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20 mt-0.5">
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+              <div className="flex items-start gap-2.5 sm:gap-3 pr-0 sm:pr-10">
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20 mt-0.5">
+                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                 </div>
 
                 <Card
                   density="spacious"
-                  className="flex-1 bg-[var(--surface)] border-[var(--border)] p-4 sm:p-5 space-y-3.5 shadow-2xs"
+                  className="flex-1 min-w-0 bg-[var(--surface)] border-[var(--border)] p-3.5 sm:p-5 space-y-3.5 shadow-2xs"
                 >
                   {/* Direct Answer Header */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
                       <Badge variant="brand" size="sm" dot>
                         Document-Grounded Answer
                       </Badge>
@@ -94,8 +94,8 @@ export function QAConversation({
 
                   {/* Not Found in Document Notification */}
                   {msg.isNotFound && (
-                    <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                    <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                       <div className="leading-relaxed">
                         <span className="font-semibold mr-1">Not Found in Uploaded Document:</span>
                         LexiGuide AI only reports terms actually identified in this contract and does not fabricate missing clauses.
@@ -106,7 +106,7 @@ export function QAConversation({
                   {/* Source Citation & Verbatim Evidence */}
                   {firstCitation && (
                     <div className="pt-2 border-t border-[var(--border-muted)] space-y-2">
-                      <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
                         <div className="flex items-center gap-1.5 font-mono text-[11px] text-[var(--primary)] font-medium">
                           <BookOpen className="h-3.5 w-3.5 shrink-0" />
                           <span>
@@ -119,34 +119,21 @@ export function QAConversation({
                           onClick={() => toggleExcerpt(msg.id)}
                           className="text-[11px] text-[var(--foreground-muted)] hover:text-[var(--primary)] font-medium cursor-pointer"
                         >
-                          {isExpanded ? "Hide Verbatim Excerpt" : "Show Verbatim Excerpt"}
+                          {isExpanded ? "Hide Excerpt" : "Show Excerpt"}
                         </button>
                       </div>
 
-                      {isExpanded && (
-                        <div className="p-3 rounded-[var(--radius-md)] bg-[var(--surface-subtle)] border border-[var(--border)] space-y-2 text-xs">
-                          <p className="italic text-[var(--foreground-secondary)] leading-relaxed font-serif pl-2 border-l-2 border-[var(--primary)]">
-                            &ldquo;{firstCitation.excerpt}&rdquo;
-                          </p>
-
-                          <div className="flex justify-end">
-                            <button
-                              type="button"
-                              onClick={() => onViewEvidence(msg)}
-                              className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-xs cursor-pointer"
-                            >
-                              <span>Inspect in Evidence Modal</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </button>
-                          </div>
+                      {isExpanded && firstCitation.excerpt && (
+                        <div className="p-3 rounded-[var(--radius-md)] bg-[var(--surface-sunken)] border border-[var(--border-muted)] font-mono text-xs text-[var(--foreground)] leading-relaxed italic">
+                          &ldquo;{firstCitation.excerpt}&rdquo;
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Suggested Next Step */}
+                  {/* Actionable Next Step Suggestion */}
                   {msg.suggestedNextStep && (
-                    <div className="p-2.5 rounded-[var(--radius-md)] bg-[var(--surface-muted)] border border-[var(--border-muted)] text-xs text-[var(--foreground-secondary)]">
+                    <div className="p-3 rounded-[var(--radius-md)] bg-[var(--surface-sunken)] border border-[var(--border-muted)] text-xs text-[var(--foreground-muted)] leading-relaxed">
                       <span className="font-semibold text-[var(--foreground)] mr-1">
                         Suggested Next Step:
                       </span>
@@ -155,7 +142,7 @@ export function QAConversation({
                   )}
 
                   {/* Action Bar */}
-                  <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)] text-xs">
+                  <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2.5 pt-2 border-t border-[var(--border-muted)] text-xs">
                     {firstCitation ? (
                       <button
                         type="button"
@@ -175,7 +162,7 @@ export function QAConversation({
                         size="sm"
                         onClick={() => handleAddToAction(msg)}
                         leftIcon={<CheckSquare className="h-3 w-3" />}
-                        className="text-xs"
+                        className="text-xs w-full xs:w-auto"
                       >
                         {isAdded ? "Added to Actions!" : "Add to Action Center"}
                       </Button>

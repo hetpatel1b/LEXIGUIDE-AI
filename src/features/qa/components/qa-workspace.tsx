@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { WorkspaceDrawer } from "@/features/analysis/components/workspace-drawers";
 import { QATopicGroups } from "./qa-topic-groups";
 import { QAConversation } from "./qa-conversation";
 import { QAInput } from "./qa-input";
@@ -56,6 +57,7 @@ export function QAWorkspace() {
   const [isThinking, setIsThinking] = React.useState(false);
   const [activeCitation, setActiveCitation] = React.useState<EvidenceCitation | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
+  const [isTopicsDrawerOpen, setIsTopicsDrawerOpen] = React.useState(false);
   const [copiedCitation, setCopiedCitation] = React.useState(false);
 
   const counterRef = React.useRef(200);
@@ -211,6 +213,16 @@ export function QAWorkspace() {
 
             <div className="flex items-center gap-2 shrink-0">
               <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsTopicsDrawerOpen(true)}
+                leftIcon={<BookOpen className="h-3.5 w-3.5" />}
+                className="md:hidden text-xs"
+                title="View suggested inquiries and document grounding"
+              >
+                Topics
+              </Button>
+              <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
@@ -226,7 +238,7 @@ export function QAWorkspace() {
           {/* Messages Scroll Area */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 focus:outline-none"
+            className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 space-y-6 focus:outline-none"
           >
             <QAConversation
               messages={messages}
@@ -259,14 +271,48 @@ export function QAWorkspace() {
           <QATopicGroups onSelectQuestion={handleSendMessage} />
 
           {/* Statutory Informational Banner */}
-          <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/50 border border-blue-200/60 text-[11px] text-blue-950 space-y-1">
+          <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-950 dark:text-blue-200 space-y-1">
             <p className="font-semibold">Informational Assistance</p>
-            <p className="leading-relaxed text-[10px]">
+            <p className="leading-relaxed text-[10px] text-blue-900/80 dark:text-blue-300/80">
               LexiGuide AI helps users understand and navigate legal text. It does not provide formal legal representation or legal advice.
             </p>
           </div>
         </aside>
       </div>
+
+      {/* Mobile Topics & Grounding Drawer */}
+      <WorkspaceDrawer
+        isOpen={isTopicsDrawerOpen}
+        onClose={() => setIsTopicsDrawerOpen(false)}
+        title="Suggested Inquiries & Topics"
+        side="right"
+      >
+        <div className="p-4 space-y-6 text-left">
+          <Card density="compact" className="p-3.5 bg-[var(--surface)] border-[var(--border)] space-y-2 text-xs">
+            <div className="flex items-center gap-2 font-semibold text-[var(--primary)]">
+              <FileText className="h-4 w-4" />
+              <span>Grounded Document Context</span>
+            </div>
+            <p className="text-[11px] text-[var(--foreground-secondary)] leading-relaxed">
+              Every answer is synthesized strictly from the 18 substantive pages of <span className="font-semibold text-[var(--foreground)]">Employment_Agreement_2026.pdf</span>.
+            </p>
+          </Card>
+
+          <QATopicGroups
+            onSelectQuestion={(q) => {
+              handleSendMessage(q);
+              setIsTopicsDrawerOpen(false);
+            }}
+          />
+
+          <div className="p-3 rounded-[var(--radius-md)] bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-950 dark:text-blue-200 space-y-1">
+            <p className="font-semibold">Informational Assistance</p>
+            <p className="leading-relaxed text-[10px] text-blue-900/80 dark:text-blue-300/80">
+              LexiGuide AI helps users understand and navigate legal text. It does not provide formal legal representation or legal advice.
+            </p>
+          </div>
+        </div>
+      </WorkspaceDrawer>
 
       {/* Grounded Citation Modal */}
       <Dialog
@@ -278,7 +324,7 @@ export function QAWorkspace() {
       >
         {activeCitation && (
           <div className="space-y-4 text-left">
-            <div className="flex items-center justify-between gap-2 p-2.5 rounded-[var(--radius-md)] bg-[var(--surface-muted)] text-xs font-mono">
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-[var(--radius-md)] bg-[var(--surface-muted)] text-xs font-mono flex-wrap">
               <span className="font-semibold text-[var(--foreground)]">
                 {activeCitation.documentTitle}
               </span>
@@ -292,22 +338,22 @@ export function QAWorkspace() {
               </div>
             </div>
 
-            <div className="p-4 rounded-[var(--radius-lg)] border-l-4 border-[var(--primary)] bg-[var(--surface-subtle)] border border-[var(--border)]">
+            <div className="p-3.5 sm:p-4 rounded-[var(--radius-lg)] border-l-4 border-[var(--primary)] bg-[var(--surface-subtle)] border border-[var(--border)]">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] mb-2">
                 <BookOpen className="h-3.5 w-3.5" />
                 <span>Extracted Clause Passage</span>
               </div>
-              <p className="text-sm italic leading-relaxed text-[var(--foreground)] font-serif">
+              <p className="text-xs sm:text-sm italic leading-relaxed text-[var(--foreground)] font-serif">
                 &ldquo;{activeCitation.excerpt}&rdquo;
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border-muted)]">
+            <div className="flex flex-col xs:flex-row items-stretch xs:items-center justify-between gap-2 pt-2 border-t border-[var(--border-muted)]">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCopyCitation}
-                className="text-xs"
+                className="text-xs w-full xs:w-auto"
               >
                 {copiedCitation ? "Citation Copied!" : "Copy Citation"}
               </Button>
@@ -316,7 +362,7 @@ export function QAWorkspace() {
                 variant="secondary"
                 size="sm"
                 onClick={() => setIsEvidenceOpen(false)}
-                className="text-xs"
+                className="text-xs w-full xs:w-auto"
               >
                 Done
               </Button>

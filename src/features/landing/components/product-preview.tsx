@@ -114,7 +114,7 @@ export function ProductPreview() {
 
                 <div className="space-y-3">
                   {/* Concern Card */}
-                  <div className="rounded-[var(--radius-md)] border border-amber-200 bg-[var(--warning-subtle)] p-3 sm:p-3.5 space-y-2">
+                  <div className="rounded-[var(--radius-md)] border border-amber-200/80 dark:border-amber-900/60 bg-[var(--warning-subtle)] p-3 sm:p-3.5 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-semibold text-[var(--foreground)] truncate">
                         Section 8.2: Termination &amp; Notice Period
@@ -127,7 +127,7 @@ export function ProductPreview() {
                   </div>
 
                   {/* Grounded Citation Card */}
-                  <div className="rounded-[var(--radius-md)] border border-slate-200 bg-[var(--surface-muted)] p-3 sm:p-3.5 space-y-1.5">
+                  <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] p-3 sm:p-3.5 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-[var(--color-brand-blue)] font-semibold gap-2">
                       <span className="flex items-center gap-1 truncate">
                         <BookOpen className="h-3 w-3 shrink-0" />

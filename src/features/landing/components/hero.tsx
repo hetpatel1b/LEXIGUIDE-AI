@@ -20,7 +20,7 @@ export function Hero() {
             {/* 2. Responsive Fluid Headline */}
             <h1
               style={{
-                fontSize: "clamp(2.35rem, 4.4vw + 1.25rem, 4.35rem)",
+                fontSize: "clamp(2rem, 5vw + 0.85rem, 4.35rem)",
                 lineHeight: 1.12,
               }}
               className="font-bold tracking-tight text-[var(--foreground)]"
@@ -60,7 +60,7 @@ export function Hero() {
             </div>
 
             {/* 6. Trust Micro-signals (Fluid natural wrapping) */}
-            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 sm:gap-x-4 pt-4 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-2.5 sm:gap-x-4 pt-4 border-t border-[var(--border-muted)] text-xs text-[var(--foreground-muted)]">
               <span className="flex items-center gap-1.5 font-medium text-[var(--foreground-secondary)]">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
                 Confidential &amp; Private
@@ -83,10 +83,10 @@ export function Hero() {
 
               {/* Responsive Preview Card */}
               <Card className="relative w-full border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-raised)] overflow-hidden">
-                <div className="bg-slate-100 px-3.5 sm:px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between gap-2 text-xs text-[var(--foreground-muted)]">
+                <div className="bg-slate-100 dark:bg-slate-800/80 px-3.5 sm:px-4 py-2.5 border-b border-[var(--border)] flex items-center justify-between gap-2 text-xs text-[var(--foreground-muted)]">
                   <div className="flex items-center gap-2 min-w-0">
                     <FileText className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" />
-                    <span className="font-medium text-[var(--foreground)] truncate max-w-[150px] sm:max-w-[210px]">
+                    <span className="font-medium text-[var(--foreground)] truncate max-w-[140px] xs:max-w-[180px] sm:max-w-[210px]">
                       Services_Agreement_Draft.pdf
                     </span>
                   </div>

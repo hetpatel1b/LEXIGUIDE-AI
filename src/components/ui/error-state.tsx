@@ -22,7 +22,7 @@ export function ErrorState({
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center justify-center p-8 sm:p-10 text-center rounded-[var(--radius-lg)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)] text-[var(--foreground)]",
+        "flex flex-col items-center justify-center p-6 sm:p-10 text-center rounded-[var(--radius-lg)] border border-[var(--danger)]/30 bg-[var(--danger-subtle)] text-[var(--foreground)]",
         className
       )}
       {...props}
@@ -39,13 +39,14 @@ export function ErrorState({
         {description}
       </p>
 
-      <div className="inline-flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full sm:w-auto">
         {onRetry && (
           <Button
             variant="outline"
             size="sm"
             onClick={onRetry}
             leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+            className="w-full sm:w-auto justify-center"
           >
             Try Again
           </Button>

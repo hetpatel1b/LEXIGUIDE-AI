@@ -73,7 +73,7 @@ export function DocumentPanel({
     <aside
       aria-label="Document Explorer & Navigation"
       className={cn(
-        "w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
+        "w-full lg:w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
         className
       )}
     >
