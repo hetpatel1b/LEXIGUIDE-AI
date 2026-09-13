@@ -1,5 +1,5 @@
 import * as React from "react";
-import { UploadCloud, FileSearch, MessageSquare, GitCompare, CheckSquare } from "lucide-react";
+import { UploadCloud, FileSearch, MessageSquare, GitCompare, CheckSquare, ArrowDown, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui";
 
 export function WorkflowSteps() {
@@ -37,8 +37,8 @@ export function WorkflowSteps() {
   ];
 
   return (
-    <section id="how-it-works" className="w-full py-12 sm:py-16 lg:py-20 border-y border-[var(--border-muted)] bg-[var(--surface-subtle)]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
+    <section id="how-it-works" className="w-full py-10 sm:py-14 lg:py-18 border-y border-[var(--border-muted)] bg-[var(--surface-subtle)]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--primary)]">
@@ -52,43 +52,58 @@ export function WorkflowSteps() {
           </p>
         </div>
 
-        {/* 5-Step Linear Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* 5-Step Workflow: Vertical Timeline on Mobile (< 640px), Grid on Tablet, Horizontal Row on Desktop (>= 1024px) */}
+        <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 max-w-lg sm:max-w-none mx-auto">
           {steps.map((step, idx) => (
-            <Card
-              key={step.num}
-              variant="default"
-              className="relative p-5 text-left bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xl font-mono font-bold text-[var(--primary)]">
-                  {step.num}
-                </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--foreground-muted)]">
-                  {step.icon}
+            <React.Fragment key={step.num}>
+              <Card
+                variant="default"
+                className="relative p-4 sm:p-5 text-left bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all h-full flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-lg sm:text-xl font-mono font-bold text-[var(--primary)]">
+                      {step.num}
+                    </span>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-[var(--foreground-muted)]">
+                      {step.icon}
+                    </div>
+                  </div>
+
+                  <h3 className="text-xs sm:text-sm font-bold tracking-wider text-[var(--foreground)] mb-1">
+                    {step.title}
+                  </h3>
+
+                  <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
-              </div>
 
-              <h4 className="text-sm font-bold tracking-wider text-[var(--foreground)] mb-1">
-                {step.title}
-              </h4>
+                {/* Horizontal flow arrow on desktop */}
+                {idx < steps.length - 1 && (
+                  <div
+                    aria-hidden="true"
+                    className="hidden lg:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-10 h-5 w-5 items-center justify-center rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--primary)] shadow-sm"
+                  >
+                    <ArrowRight className="h-3 w-3" />
+                  </div>
+                )}
+              </Card>
 
-              <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
-                {step.description}
-              </p>
-
+              {/* Downward flow connector on mobile (< 640px) */}
               {idx < steps.length - 1 && (
                 <div
                   aria-hidden="true"
-                  className="hidden lg:block absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-[var(--border-strong)]"
+                  className="sm:hidden flex items-center justify-center py-0.5 text-[var(--primary)]/70"
                 >
-                  &rarr;
+                  <ArrowDown className="h-4 w-4 stroke-[2.5]" />
                 </div>
               )}
-            </Card>
+            </React.Fragment>
           ))}
         </div>
       </div>
     </section>
   );
 }
+

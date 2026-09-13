@@ -50,8 +50,8 @@ export function CapabilityGrid() {
   ];
 
   return (
-    <section id="capabilities" className="w-full py-12 sm:py-16 lg:py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10">
+    <section id="capabilities" className="w-full py-10 sm:py-14 lg:py-18">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[var(--primary)]">
@@ -65,27 +65,25 @@ export function CapabilityGrid() {
           </p>
         </div>
 
-        {/* Exactly Six Capability Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+        {/* Exactly Six Capability Cards: Desktop 3x2, Tablet 2x3, Mobile 1x6 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 text-left">
           {capabilities.map((cap) => (
             <Card
               key={cap.id}
               variant="default"
-              className="transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]"
+              className="h-full flex flex-col justify-start p-5 sm:p-6 transition-all duration-200 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] bg-[var(--surface)]"
             >
-              <CardHeader className="space-y-3 pb-2">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50/80 border border-blue-100">
+              <div className="space-y-3 mb-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50/80 border border-blue-100 shrink-0">
                   {cap.icon}
                 </div>
-                <CardTitle className="text-base sm:text-lg">
+                <h3 className="text-base sm:text-lg font-bold text-[var(--foreground)] tracking-tight">
                   {cap.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed">
-                  {cap.description}
-                </p>
-              </CardContent>
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed flex-1">
+                {cap.description}
+              </p>
             </Card>
           ))}
         </div>

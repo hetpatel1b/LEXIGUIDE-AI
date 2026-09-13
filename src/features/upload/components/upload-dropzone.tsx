@@ -103,7 +103,7 @@ export function UploadDropzone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
+        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-5 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
         isDragging
           ? "border-[var(--primary)] bg-blue-50/70 scale-[1.005]"
           : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-subtle)]",
@@ -126,40 +126,40 @@ export function UploadDropzone({
       {/* Upload Visual Icon */}
       <div
         className={cn(
-          "flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl transition-transform duration-200 mb-4",
+          "flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-2xl transition-transform duration-200 mb-3 sm:mb-4",
           isDragging
             ? "bg-[var(--primary)] text-white scale-110 shadow-[var(--shadow-md)]"
             : "bg-blue-50 text-[var(--primary)] group-hover:scale-105"
         )}
       >
-        <UploadCloud className="h-7 w-7 sm:h-8 sm:w-8 stroke-[1.75]" aria-hidden="true" />
+        <UploadCloud className="h-6 w-6 sm:h-7 sm:w-7 stroke-[1.75]" aria-hidden="true" />
       </div>
 
       {/* Primary Instruction */}
-      <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)] tracking-tight mb-1.5">
+      <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)] tracking-tight mb-1.5 px-2">
         {isDragging ? "Drop your legal document here" : "Drag and drop your legal document"}
       </h3>
 
-      <p className="max-w-md text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed mb-6">
+      <p className="max-w-md text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed mb-5 sm:mb-6 px-2">
         Upload your contract, agreement, or terms to examine key clauses, obligations, and areas warranting attention.
       </p>
 
       {/* Action Button */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-5 sm:mb-6 w-full sm:w-auto px-4 sm:px-0">
         <Button
           type="button"
           variant="primary"
           size="md"
           onClick={triggerBrowse}
           leftIcon={<FileText className="h-4 w-4" />}
-          className="w-full sm:w-auto shadow-[var(--shadow-subtle)]"
+          className="w-full sm:w-auto min-h-[44px] justify-center shadow-[var(--shadow-subtle)]"
         >
           Browse Document
         </Button>
       </div>
 
       {/* Constraints & Supported Formats */}
-      <div className="flex flex-wrap items-center justify-center gap-2 pt-2 border-t border-[var(--border-muted)] w-full max-w-md text-[11px] text-[var(--foreground-muted)]">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-3 border-t border-[var(--border-muted)] w-full max-w-md text-[11px] text-[var(--foreground-muted)] px-2">
         <span className="font-medium text-[var(--foreground-secondary)]">Supported formats:</span>
         <span className="font-mono bg-[var(--surface-muted)] px-1.5 py-0.5 rounded border border-[var(--border-muted)]">
           PDF
@@ -170,12 +170,12 @@ export function UploadDropzone({
         <span className="font-mono bg-[var(--surface-muted)] px-1.5 py-0.5 rounded border border-[var(--border-muted)]">
           TXT
         </span>
-        <span aria-hidden="true">&bull;</span>
+        <span aria-hidden="true" className="hidden xs:inline">&bull;</span>
         <span>Up to {FILE_CONSTRAINTS.maxFileSizeMB}MB</span>
       </div>
 
       {/* Privacy & Confidentiality Micro-signal */}
-      <div className="flex items-center gap-1.5 mt-3 text-[11px] text-[var(--foreground-subtle)]">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5 text-[11px] text-[var(--foreground-subtle)] px-2 text-center">
         <Shield className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
         <span>Confidential document handling &bull; Client-side validation active</span>
       </div>
