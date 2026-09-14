@@ -1,10 +1,11 @@
 import { getAiConfig, type AiRuntimeConfig } from "../config";
 import { AiEngineError } from "../errors";
-import type { AiProvider, ChatMessage, ChatCompletionRequest, ChatCompletionResponse } from "./types";
+import type { AiProvider, ChatMessage, ChatCompletionRequest } from "./types";
 
 /**
- * Server-side client for NVIDIA Nemotron-3-Ultra-550B.
+ * Server-side client for NVIDIA Nemotron document analysis.
  * Strictly communicates from the server runtime; never bundled to the browser.
+ * Supports streaming with TTFT measurement, reasoning token suppression, and intelligent model failover.
  */
 export class NemotronClient implements AiProvider {
   private readonly config: AiRuntimeConfig;
@@ -18,7 +19,8 @@ export class NemotronClient implements AiProvider {
   }
 
   /**
-   * Invokes NVIDIA Nemotron chat completion endpoint and returns the raw assistant response content.
+   * Invokes NVIDIA Nemotron chat completion endpoint with streaming,
+   * measures TTFT, strips reasoning tokens, and returns the assembled JSON content.
    */
   public async generateChatCompletion(messages: ChatMessage[]): Promise<string> {
     if (!this.config.apiKey) {
@@ -29,18 +31,57 @@ export class NemotronClient implements AiProvider {
       );
     }
 
+    try {
+      return await this.executeChatStream(this.config.model, messages);
+    } catch (primaryError) {
+      // If primary model stalls or fails and a distinct fallback is configured, try fallback
+      if (
+        this.config.fallbackModel &&
+        this.config.fallbackModel !== this.config.model &&
+        primaryError instanceof AiEngineError &&
+        (primaryError.code === "AI_TIMEOUT" || primaryError.code === "AI_PROVIDER_ERROR")
+      ) {
+        console.warn(
+          `[AI-DIAG] Primary model (${this.config.model}) failed (${primaryError.code}). Failing over to ${this.config.fallbackModel}...`
+        );
+        return await this.executeChatStream(this.config.fallbackModel, messages);
+      }
+
+      throw primaryError;
+    }
+  }
+
+  private async executeChatStream(
+    modelName: string,
+    messages: ChatMessage[]
+  ): Promise<string> {
     const endpoint = `${this.config.baseURL.replace(/\/$/, "")}/chat/completions`;
     const payload: ChatCompletionRequest = {
-      model: this.config.model,
+      model: modelName,
       messages,
       temperature: this.config.temperature,
       max_tokens: this.config.maxTokens,
-      stream: false,
+      stream: true,
+      reasoning_effort: "none",
+      chat_template_kwargs: {
+        enable_thinking: false,
+      },
       response_format: { type: "json_object" },
     };
 
+    const t0 = Date.now();
+    console.log(`[AI-DIAG] NVIDIA request started for model=${modelName}...`);
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
+
+    let firstTokenTimer: NodeJS.Timeout | null = null;
+    if (this.config.firstTokenTimeoutMs > 0) {
+      firstTokenTimer = setTimeout(() => {
+        console.warn(`[AI-DIAG] First token timeout (${this.config.firstTokenTimeoutMs}ms) exceeded for ${modelName}`);
+        controller.abort();
+      }, this.config.firstTokenTimeoutMs);
+    }
 
     try {
       const response = await fetch(endpoint, {
@@ -53,24 +94,90 @@ export class NemotronClient implements AiProvider {
         signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
+      console.log(
+        `[AI-DIAG] NVIDIA response headers received in ${Date.now() - t0}ms (status: ${response.status})`
+      );
 
       if (!response.ok) {
+        if (firstTokenTimer) clearTimeout(firstTokenTimer);
+        clearTimeout(timeoutId);
         await this.handleHttpError(response);
       }
 
-      const data = (await response.json()) as ChatCompletionResponse;
-
-      if (!data || !data.choices || data.choices.length === 0 || !data.choices[0].message) {
+      if (!response.body) {
+        if (firstTokenTimer) clearTimeout(firstTokenTimer);
+        clearTimeout(timeoutId);
         throw new AiEngineError(
           "AI_INVALID_RESPONSE",
-          "AI provider returned an empty or malformed completion response.",
+          "AI provider returned an empty response stream.",
           502
         );
       }
 
-      return data.choices[0].message.content;
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let firstTokenTime: number | null = null;
+      let accumulatedContent = "";
+      let lineBuffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunkText = decoder.decode(value, { stream: true });
+        lineBuffer += chunkText;
+        const lines = lineBuffer.split("\n");
+        lineBuffer = lines.pop() || "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
+            continue;
+          }
+
+          if (trimmed.startsWith("data:")) {
+            try {
+              const data = JSON.parse(trimmed.slice(5).trim());
+              const delta = data.choices?.[0]?.delta;
+
+              if (delta?.content) {
+                if (!firstTokenTime) {
+                  firstTokenTime = Date.now() - t0;
+                  if (firstTokenTimer) {
+                    clearTimeout(firstTokenTimer);
+                    firstTokenTimer = null;
+                  }
+                  console.log(`[AI-DIAG] FIRST TOKEN RECEIVED (TTFT): ${firstTokenTime}ms`);
+                }
+                accumulatedContent += delta.content;
+              }
+              // delta.reasoning_content is deliberately ignored to protect against leakage
+            } catch {
+              // Ignore partial JSON parse errors in SSE line buffering
+            }
+          }
+        }
+      }
+
+      if (firstTokenTimer) clearTimeout(firstTokenTimer);
+      clearTimeout(timeoutId);
+
+      const totalDuration = Date.now() - t0;
+      console.log(
+        `[AI-DIAG] NVIDIA stream completed in ${totalDuration}ms (TTFT: ${firstTokenTime || totalDuration}ms, chars: ${accumulatedContent.length})`
+      );
+
+      if (!accumulatedContent.trim()) {
+        throw new AiEngineError(
+          "AI_INVALID_RESPONSE",
+          "AI provider returned empty response content.",
+          502
+        );
+      }
+
+      return accumulatedContent;
     } catch (error: unknown) {
+      if (firstTokenTimer) clearTimeout(firstTokenTimer);
       clearTimeout(timeoutId);
 
       if (error instanceof AiEngineError) {
@@ -80,7 +187,7 @@ export class NemotronClient implements AiProvider {
       if (error instanceof Error && error.name === "AbortError") {
         throw new AiEngineError(
           "AI_TIMEOUT",
-          `AI request timed out after ${this.config.timeoutMs}ms.`,
+          `AI request timed out after ${Date.now() - t0}ms while processing.`,
           504
         );
       }
@@ -98,7 +205,6 @@ export class NemotronClient implements AiProvider {
     let safeErrorBody = "";
     try {
       const body = await response.text();
-      // Keep only first 200 chars and avoid leaking sensitive headers or tokens
       safeErrorBody = body.slice(0, 200);
     } catch {
       safeErrorBody = "Unable to parse error body";

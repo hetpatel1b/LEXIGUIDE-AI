@@ -32,6 +32,9 @@ export async function analyzeDocument(
   document: NormalizedDocument,
   provider?: AiProvider
 ): Promise<AnalysisResult> {
+  const t0 = Date.now();
+  console.log(`[AI-DIAG] request received docId=${document?.id}`);
+
   if (!document || !document.id) {
     throw new AiEngineError(
       "AI_INVALID_RESPONSE",
@@ -48,11 +51,16 @@ export async function analyzeDocument(
     );
   }
 
+  console.log(`[AI-DIAG] document validated: sections=${document.sections?.length}, chunks=${document.chunks?.length}`);
+
   // 1. Build bounded model context from Phase 2 NormalizedDocument
   const context = buildAnalysisContext(document);
+  console.log(`[AI-DIAG] context built: chars=${context.contextText.length}, includedChunks=${context.includedChunks}/${context.totalChunks}`);
 
   // 2. Prepare system and user prompt messages
   const userPrompt = buildDocumentAnalysisPrompt(context);
+  console.log(`[AI-DIAG] prompt built: chars=${userPrompt.length}`);
+
   const messages = [
     { role: "system" as const, content: SYSTEM_PROMPT_V1 },
     { role: "user" as const, content: userPrompt },
@@ -61,6 +69,7 @@ export async function analyzeDocument(
   // 3. Invoke Nemotron provider (or custom/mock provider in tests)
   const client = provider || new NemotronClient();
   const rawResponse = await client.generateChatCompletion(messages);
+  console.log(`[AI-DIAG] raw AI response received: chars=${rawResponse.length}`);
 
   // 4. Extract and parse JSON
   const jsonStr = extractJsonString(rawResponse);
@@ -68,6 +77,7 @@ export async function analyzeDocument(
   try {
     parsedJson = JSON.parse(jsonStr);
   } catch (parseErr) {
+    console.error(`[AI-DIAG] JSON parse failure: ${String(parseErr)}`);
     throw new AiEngineError(
       "AI_INVALID_RESPONSE",
       "AI provider response could not be parsed as valid JSON.",
@@ -76,9 +86,12 @@ export async function analyzeDocument(
     );
   }
 
+  console.log(`[AI-DIAG] JSON parsed successfully`);
+
   // 5. Zod Schema Validation
   const validationResult = RawAiAnalysisResponseSchema.safeParse(parsedJson);
   if (!validationResult.success) {
+    console.error(`[AI-DIAG] Zod validation failure: ${JSON.stringify(validationResult.error.format())}`);
     throw new AiEngineError(
       "AI_SCHEMA_ERROR",
       "AI response failed structured schema validation.",
@@ -87,12 +100,19 @@ export async function analyzeDocument(
     );
   }
 
+  console.log(`[AI-DIAG] Zod validation complete`);
+
   // 6. Source & Evidence Verification against Phase 2 chunks/sections
   const modelName = process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
   const verifiedResult = validateAnalysisSources(
     validationResult.data,
     document,
     modelName
+  );
+
+  const totalDuration = Date.now() - t0;
+  console.log(
+    `[AI-DIAG] source validation complete: verifiedClauses=${verifiedResult.keyClauses.length}, verifiedConcerns=${verifiedResult.potentialConcerns.length}, totalDuration=${totalDuration}ms`
   );
 
   return verifiedResult;

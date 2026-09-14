@@ -9,16 +9,28 @@ export interface ChatCompletionRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+  reasoning_effort?: "none" | "medium" | "high";
+  chat_template_kwargs?: {
+    enable_thinking?: boolean;
+    force_nonempty_content?: boolean;
+    medium_effort?: boolean;
+  };
   response_format?: { type: "json_object" };
 }
 
 export interface ChatCompletionChoice {
   index: number;
-  message: {
+  message?: {
     role: string;
     content: string;
+    reasoning_content?: string | null;
   };
-  finish_reason: string;
+  delta?: {
+    role?: string;
+    content?: string;
+    reasoning_content?: string | null;
+  };
+  finish_reason?: string | null;
 }
 
 export interface ChatCompletionResponse {

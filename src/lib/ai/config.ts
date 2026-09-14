@@ -6,21 +6,25 @@ import { AiEngineError } from "./errors";
  */
 export const AI_CONFIG = {
   defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
+  fallbackModel: "nvidia/nemotron-3-super-120b-a12b",
   defaultBaseURL: "https://integrate.api.nvidia.com/v1",
   temperature: 0.1,
-  maxTokens: 4096,
-  timeoutMs: 60000,
-  maxContextChars: 96000, // ~24,000 tokens safe single-pass budget
+  maxTokens: 3500,
+  timeoutMs: 120000,
+  firstTokenTimeoutMs: 60000, // Realistic window for multi-chunk legal document generation
+  maxContextChars: 24000, // ~6,000 tokens safe single-pass budget for fast response
   schemaVersion: "1.0",
 } as const;
 
 export interface AiRuntimeConfig {
   apiKey: string;
   model: string;
+  fallbackModel: string;
   baseURL: string;
   temperature: number;
   maxTokens: number;
   timeoutMs: number;
+  firstTokenTimeoutMs: number;
   maxContextChars: number;
   schemaVersion: string;
 }
@@ -44,15 +48,18 @@ export function getAiConfig(): AiRuntimeConfig {
   }
 
   const model = process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
+  const fallbackModel = process.env.NVIDIA_FALLBACK_MODEL_ID || AI_CONFIG.fallbackModel;
   const baseURL = process.env.NVIDIA_API_BASE_URL || AI_CONFIG.defaultBaseURL;
 
   return {
     apiKey,
     model,
+    fallbackModel,
     baseURL,
     temperature: AI_CONFIG.temperature,
     maxTokens: AI_CONFIG.maxTokens,
     timeoutMs: AI_CONFIG.timeoutMs,
+    firstTokenTimeoutMs: AI_CONFIG.firstTokenTimeoutMs,
     maxContextChars: AI_CONFIG.maxContextChars,
     schemaVersion: AI_CONFIG.schemaVersion,
   };
