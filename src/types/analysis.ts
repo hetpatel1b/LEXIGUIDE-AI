@@ -13,6 +13,7 @@ export interface ClauseItem {
   sectionReference?: string;
   importance?: "critical" | "standard" | "notable";
   evidenceSnippet?: string;
+  verified?: boolean;
 }
 
 export interface RiskItem {
@@ -24,6 +25,7 @@ export interface RiskItem {
   clauseReference?: string;
   pageNumber?: number;
   evidenceSnippet?: string;
+  verified?: boolean;
 }
 
 export interface ObligationItem {
@@ -35,6 +37,7 @@ export interface ObligationItem {
   clauseReference?: string;
   pageNumber?: number;
   status?: "Identified" | "Pending Review";
+  verified?: boolean;
 }
 
 export type ImportantDateType =
@@ -51,6 +54,7 @@ export interface ImportantDateItem {
   sourceSection?: string;
   pageNumber?: number;
   description?: string;
+  verified?: boolean;
 }
 
 export interface DocumentSectionItem {

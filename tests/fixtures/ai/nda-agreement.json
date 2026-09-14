@@ -1,0 +1,68 @@
+{
+  "id": "doc_test_nda_002",
+  "originalFilename": "Mutual_NDA_Agreement.docx",
+  "displayName": "Mutual_NDA_Agreement.docx",
+  "format": "docx",
+  "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "sizeBytes": 45000,
+  "pageCount": null,
+  "characterCount": 1800,
+  "wordCount": 320,
+  "lineCount": 45,
+  "paragraphCount": 8,
+  "uploadedAt": "2026-09-14T08:10:00.000Z",
+  "status": "ready",
+  "extractedMetadata": {},
+  "sections": [
+    {
+      "sectionId": "sec_nda_01",
+      "sectionNumber": "1",
+      "title": "Scope of Confidentiality",
+      "startOffset": 0,
+      "endOffset": 900,
+      "pageReferences": [],
+      "chunkIds": ["chk_doc_test_nda_002_000"],
+      "characterCount": 900
+    },
+    {
+      "sectionId": "sec_nda_02",
+      "sectionNumber": "2",
+      "title": "Term & Return of Materials",
+      "startOffset": 901,
+      "endOffset": 1800,
+      "pageReferences": [],
+      "chunkIds": ["chk_doc_test_nda_002_001"],
+      "characterCount": 899
+    }
+  ],
+  "pages": [],
+  "chunks": [
+    {
+      "chunkId": "chk_doc_test_nda_002_000",
+      "chunkIndex": 0,
+      "sectionId": "sec_nda_01",
+      "sectionNumber": "1",
+      "sectionTitle": "Scope of Confidentiality",
+      "pageNumbers": [],
+      "startOffset": 0,
+      "endOffset": 900,
+      "characterCount": 350,
+      "wordCount": 55,
+      "text": "This Mutual Non-Disclosure Agreement is entered into by Alpha Innovations LLC and Beta Technologies Corp. Neither party shall disclose Confidential Information to any third party for a period of 5 years from disclosure. No arbitration clause is included."
+    },
+    {
+      "chunkId": "chk_doc_test_nda_002_001",
+      "chunkIndex": 1,
+      "sectionId": "sec_nda_02",
+      "sectionNumber": "2",
+      "sectionTitle": "Term & Return of Materials",
+      "pageNumbers": [],
+      "startOffset": 901,
+      "endOffset": 1800,
+      "characterCount": 320,
+      "wordCount": 50,
+      "text": "Upon written request from the Disclosing Party, the Receiving Party shall return or destroy all physical materials within 14 calendar days. Governing Law: State of Delaware."
+    }
+  ],
+  "normalizedContent": "This Mutual Non-Disclosure Agreement..."
+}

@@ -1,13 +1,32 @@
 "use client";
 
 import * as React from "react";
-import { Calendar, Clock, RotateCcw, AlertCircle } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { IMPORTANT_DATES } from "../../fixtures/analysis-fixture";
 import type { ImportantDateType } from "@/types";
+import type { AnalysisResult } from "@/lib/ai/types";
 
-export function DatesTab() {
+export interface DatesTabProps {
+  analysisResult?: AnalysisResult | null;
+}
+
+export function DatesTab({ analysisResult }: DatesTabProps) {
+  const dates = React.useMemo(() => {
+    if (!analysisResult) return IMPORTANT_DATES;
+    return analysisResult.importantDates.map((dt) => ({
+      id: dt.id,
+      event: dt.label,
+      dateOrDuration: dt.dateOrDuration,
+      type: dt.type as ImportantDateType,
+      sourceSection: dt.source.sectionTitle || dt.source.sectionId || "Agreement",
+      pageNumber: dt.source.pageNumber || 1,
+      description: dt.source.quote ? `Referenced text: "${dt.source.quote}"` : undefined,
+      verified: dt.verified,
+    }));
+  }, [analysisResult]);
+
   const renderTypeBadge = (type: ImportantDateType) => {
     switch (type) {
       case "calendar_date":
@@ -36,49 +55,55 @@ export function DatesTab() {
           </p>
         </div>
 
-        <Badge variant="neutral" size="sm">
-          4 Identified Milestones
+        <Badge variant={analysisResult ? "brand" : "neutral"} size="sm">
+          {dates.length} Identified Milestones
         </Badge>
       </div>
 
       {/* Dates Grid / Table Cards */}
       <div className="space-y-3.5">
-        {IMPORTANT_DATES.map((dateItem) => (
-          <Card
-            key={dateItem.id}
-            density="compact"
-            className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-lg bg-[var(--surface-muted)] text-[var(--primary)] shrink-0">
-                  <Calendar className="h-4 w-4" aria-hidden="true" />
+        {dates.length === 0 ? (
+          <div className="p-8 text-center rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground-muted)] text-xs">
+            No specific dates or notice periods identified in this document.
+          </div>
+        ) : (
+          dates.map((dateItem) => (
+            <Card
+              key={dateItem.id}
+              density="compact"
+              className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-[var(--surface-muted)] text-[var(--primary)] shrink-0">
+                    <Calendar className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                      {dateItem.event}
+                    </h3>
+                    <p className="font-mono text-[11px] text-[var(--foreground-muted)]">
+                      {dateItem.sourceSection} · Page {dateItem.pageNumber}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                    {dateItem.event}
-                  </h3>
-                  <p className="font-mono text-[11px] text-[var(--foreground-muted)]">
-                    {dateItem.sourceSection} · Page {dateItem.pageNumber}
-                  </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {renderTypeBadge(dateItem.type)}
+                  <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 text-[var(--primary)] whitespace-nowrap">
+                    {dateItem.dateOrDuration}
+                  </span>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                {renderTypeBadge(dateItem.type)}
-                <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-md bg-[var(--color-brand-blue)]/10 text-[var(--primary)] whitespace-nowrap">
-                  {dateItem.dateOrDuration}
-                </span>
-              </div>
-            </div>
-
-            {dateItem.description && (
-              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-10 mt-1">
-                {dateItem.description}
-              </p>
-            )}
-          </Card>
-        ))}
+              {dateItem.description && (
+                <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed pl-0 sm:pl-10 mt-1">
+                  {dateItem.description}
+                </p>
+              )}
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Guidance Note */}
@@ -87,7 +112,7 @@ export function DatesTab() {
           Distinguishing Calendar Dates vs. Relative Durations
         </p>
         <p className="leading-relaxed">
-          LexiGuide AI explicitly separates fixed calendar milestones (such as the Effective Date of 01 April 2026) from conditional relative durations (such as the 90-day resignation notice period). Ensure your notification schedules take contractual calculation rules into account (e.g. business days vs calendar days).
+          LexiGuide AI explicitly separates fixed calendar milestones from conditional relative durations (such as 30-day or 90-day notification periods). Ensure notice calculations account for contractual business-day definitions.
         </p>
       </div>
     </div>

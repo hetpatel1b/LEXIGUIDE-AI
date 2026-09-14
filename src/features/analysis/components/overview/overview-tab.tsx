@@ -28,7 +28,10 @@ import {
 } from "../../fixtures/analysis-fixture";
 import type { AnalysisTabId } from "../analysis-tabs";
 
+import type { AnalysisResult } from "@/lib/ai/types";
+
 export interface OverviewTabProps {
+  analysisResult?: AnalysisResult | null;
   onNavigateTab: (tabId: AnalysisTabId) => void;
   onViewEvidence: (evidence: EvidenceDetail) => void;
 }
@@ -42,7 +45,128 @@ const ICON_MAP = {
   CheckSquare,
 };
 
-export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps) {
+export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: OverviewTabProps) {
+  // Dynamically derive metric cards from real analysis or fallback to demo fixture
+  const metrics = React.useMemo(() => {
+    if (!analysisResult) return METADATA_SUMMARY_CARDS;
+
+    const partiesStr =
+      analysisResult.metadata.parties.length > 0
+        ? analysisResult.metadata.parties.map((p) => p.name).join(" & ")
+        : "Not found in uploaded document";
+
+    return [
+      {
+        id: "doc-type",
+        label: "Document Type",
+        value: analysisResult.metadata.documentType || "Legal Document",
+        secondary: analysisResult.documentName,
+        iconName: "FileText",
+      },
+      {
+        id: "parties",
+        label: "Identified Parties",
+        value: `${analysisResult.metadata.parties.length} Parties Identified`,
+        secondary: partiesStr,
+        iconName: "Users",
+      },
+      {
+        id: "effective-date",
+        label: "Effective Date",
+        value: analysisResult.metadata.effectiveDate || "Not found in document",
+        secondary: analysisResult.metadata.governingLaw ? `Governing: ${analysisResult.metadata.governingLaw}` : "Governing law not specified",
+        iconName: "Calendar",
+      },
+      {
+        id: "clauses-count",
+        label: "Analyzed Clauses",
+        value: `${analysisResult.keyClauses.length} Clauses Extracted`,
+        secondary: "Structured legal terms",
+        iconName: "Scale",
+      },
+      {
+        id: "concerns-count",
+        label: "Review Priorities",
+        value: `${analysisResult.potentialConcerns.length} Review Points`,
+        secondary: "Areas warranting attention",
+        iconName: "AlertTriangle",
+      },
+      {
+        id: "obligations-count",
+        label: "Tracked Obligations",
+        value: `${analysisResult.obligations.length} Duties Identified`,
+        secondary: "Actionable contractual duties",
+        iconName: "CheckSquare",
+      },
+    ];
+  }, [analysisResult]);
+
+  const execSummary = React.useMemo(() => {
+    if (!analysisResult) return EXECUTIVE_SUMMARY;
+    return {
+      overview: analysisResult.executiveSummary.overview,
+      bulletPoints:
+        analysisResult.executiveSummary.keyThemes.length > 0
+          ? analysisResult.executiveSummary.keyThemes
+          : analysisResult.executiveSummary.reviewPriorities,
+    };
+  }, [analysisResult]);
+
+  const displayConcerns = React.useMemo(() => {
+    if (!analysisResult) return POTENTIAL_CONCERNS.slice(0, 3);
+    return analysisResult.potentialConcerns.slice(0, 3).map((c) => ({
+      id: c.id,
+      title: c.title,
+      severity: c.severity,
+      description: c.explanation,
+      clauseReference: c.source.sectionTitle || c.source.sectionId || "Section",
+      pageNumber: c.source.pageNumber || 1,
+      evidenceSnippet: c.source.quote,
+      verified: c.verified,
+    }));
+  }, [analysisResult]);
+
+  const displayClauses = React.useMemo(() => {
+    if (!analysisResult) return KEY_CLAUSES.slice(0, 3);
+    return analysisResult.keyClauses.slice(0, 3).map((cl) => ({
+      id: cl.id,
+      title: cl.title,
+      sectionReference: cl.source.sectionTitle || cl.source.sectionId || cl.category,
+      category: cl.category,
+      summary: cl.summary,
+      importance: cl.importance,
+      pageNumber: cl.source.pageNumber || 1,
+      evidenceSnippet: cl.source.quote,
+      verified: cl.verified,
+    }));
+  }, [analysisResult]);
+
+  const displayObligations = React.useMemo(() => {
+    if (!analysisResult) return IMPORTANT_OBLIGATIONS.slice(0, 3);
+    return analysisResult.obligations.slice(0, 3).map((ob) => ({
+      id: ob.id,
+      party: ob.party,
+      duty: ob.description,
+      clauseReference: ob.source.sectionTitle || ob.source.sectionId || "Section",
+      pageNumber: ob.source.pageNumber || 1,
+      evidenceSnippet: ob.source.quote,
+      verified: ob.verified,
+    }));
+  }, [analysisResult]);
+
+  const displayDates = React.useMemo(() => {
+    if (!analysisResult) return IMPORTANT_DATES;
+    return analysisResult.importantDates.slice(0, 4).map((dt) => ({
+      id: dt.id,
+      event: dt.label,
+      dateOrDuration: dt.dateOrDuration,
+      type: dt.type,
+      sourceSection: dt.source.sectionTitle || dt.source.sectionId || "Agreement",
+      pageNumber: dt.source.pageNumber || 1,
+      evidenceSnippet: dt.source.quote,
+      verified: dt.verified,
+    }));
+  }, [analysisResult]);
   return (
     <div className="space-y-5 sm:space-y-6 text-left w-full">
       {/* 1. Metric Summary Cards (6 Cards: Desktop 3x2, Tablet 2x3, Mobile 1-2 Col) */}
@@ -51,7 +175,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
           Document Intelligence Metrics
         </h2>
         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-          {METADATA_SUMMARY_CARDS.map((metric) => {
+          {metrics.map((metric) => {
             const Icon = ICON_MAP[metric.iconName as keyof typeof ICON_MAP] || FileText;
             return (
               <Card
@@ -105,14 +229,14 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="neutral" size="sm" dot>
-                  Illustrative analysis &bull; Dev preview
+                <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
+                  {analysisResult ? "Real AI Analysis • NVIDIA Nemotron" : "Illustrative analysis • Dev preview"}
                 </Badge>
               </div>
             </div>
 
             <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed">
-              {EXECUTIVE_SUMMARY.overview}
+              {execSummary.overview}
             </p>
 
             <div className="pt-2.5 border-t border-[var(--border-muted)]">
@@ -120,7 +244,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                 Plain-Language Takeaways
               </h3>
               <ul className="space-y-1.5">
-                {EXECUTIVE_SUMMARY.bulletPoints.map((point, index) => (
+                {execSummary.bulletPoints.map((point, index) => (
                   <li key={index} className="flex items-start gap-2 text-xs text-[var(--foreground-secondary)] leading-relaxed">
                     <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" aria-hidden="true" />
                     <span>{point}</span>
@@ -158,7 +282,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                   </h2>
                 </div>
                 <Badge variant="warning" size="sm">
-                  5 Flagged
+                  {analysisResult ? `${analysisResult.potentialConcerns.length} Review Points` : "5 Flagged"}
                 </Badge>
               </div>
 
@@ -167,7 +291,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
               </p>
 
               <div className="space-y-2.5">
-                {POTENTIAL_CONCERNS.slice(0, 3).map((concern) => (
+                {displayConcerns.map((concern) => (
                   <div
                     key={concern.id}
                     className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
@@ -192,10 +316,11 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                         onClick={() =>
                           onViewEvidence({
                             id: concern.id,
-                            documentTitle: "Employment_Agreement_2026.pdf",
+                            documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
                             sectionReference: concern.clauseReference || "Clause",
                             pageNumber: concern.pageNumber || 1,
                             excerpt: concern.evidenceSnippet || "",
+                            contextNote: concern.verified ? "✓ Verified against source text" : "Unverified citation",
                           })
                         }
                         className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
@@ -217,7 +342,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                 onClick={() => onNavigateTab("concerns")}
                 className="text-xs"
               >
-                View All 5 Concerns
+                View All {analysisResult ? analysisResult.potentialConcerns.length : 5} Concerns
               </Button>
             </div>
           </Card>
@@ -235,7 +360,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  12 Identified
+                  {analysisResult ? `${analysisResult.keyClauses.length} Extracted` : "12 Identified"}
                 </Badge>
               </div>
 
@@ -244,7 +369,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
               </p>
 
               <div className="space-y-2.5">
-                {KEY_CLAUSES.slice(0, 3).map((clause) => (
+                {displayClauses.map((clause) => (
                   <div
                     key={clause.id}
                     className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
@@ -271,10 +396,11 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                         onClick={() =>
                           onViewEvidence({
                             id: clause.id,
-                            documentTitle: "Employment_Agreement_2026.pdf",
+                            documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
                             sectionReference: clause.sectionReference || "Clause",
                             pageNumber: clause.pageNumber || 1,
                             excerpt: clause.evidenceSnippet || "",
+                            contextNote: clause.verified ? "✓ Verified against source text" : "Unverified citation",
                           })
                         }
                         className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
@@ -296,7 +422,7 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                 onClick={() => onNavigateTab("clauses")}
                 className="text-xs"
               >
-                View All Key Clauses
+                View All {analysisResult ? analysisResult.keyClauses.length : 12} Key Clauses
               </Button>
             </div>
           </Card>
@@ -317,12 +443,12 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  8 Identified
+                  {analysisResult ? `${analysisResult.obligations.length} Duties` : "8 Identified"}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                {IMPORTANT_OBLIGATIONS.slice(0, 3).map((ob) => (
+                {displayObligations.map((ob) => (
                   <div
                     key={ob.id}
                     className="p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1"
@@ -369,12 +495,12 @@ export function OverviewTab({ onNavigateTab, onViewEvidence }: OverviewTabProps)
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  4 Identified
+                  {analysisResult ? `${analysisResult.importantDates.length} Dates` : "4 Identified"}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                {IMPORTANT_DATES.map((dt) => (
+                {displayDates.map((dt) => (
                   <div
                     key={dt.id}
                     className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] gap-2"

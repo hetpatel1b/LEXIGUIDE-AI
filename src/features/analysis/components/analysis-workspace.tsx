@@ -22,6 +22,7 @@ import type { DocumentSectionItem } from "@/types";
 import type { NormalizedDocument } from "@/types/document";
 import { getActiveDocument } from "@/lib/document-storage";
 import { Badge } from "@/components/ui/badge";
+import { useDocumentAnalysis } from "../hooks/use-document-analysis";
 
 export type WorkspacePreviewState = "normal" | "loading" | "empty" | "error";
 
@@ -37,6 +38,22 @@ export function AnalysisWorkspace() {
   // Real Uploaded Document vs Demo Mode
   const [uploadedDoc, setUploadedDoc] = React.useState<NormalizedDocument | null>(() => getActiveDocument());
   const [useDemoFixture, setUseDemoFixture] = React.useState<boolean>(false);
+
+  // AI Analysis State Machine
+  const {
+    status: analysisStatus,
+    isAnalyzing,
+    analysis,
+    errorMessage: analysisError,
+    runAnalysis,
+  } = useDocumentAnalysis(useDemoFixture ? null : uploadedDoc);
+
+  // Auto-trigger analysis for freshly uploaded real document
+  React.useEffect(() => {
+    if (uploadedDoc && !useDemoFixture && analysisStatus === "idle" && !analysis) {
+      runAnalysis(uploadedDoc);
+    }
+  }, [uploadedDoc, useDemoFixture, analysisStatus, analysis, runAnalysis]);
 
   // Analysis State
   const [activeTab, setActiveTab] = React.useState<AnalysisTabId>("overview");
@@ -201,6 +218,10 @@ export function AnalysisWorkspace() {
             {/* Center: Primary Analysis Workspace */}
             <AnalysisMain
               realDocument={activeDoc}
+              analysisResult={useDemoFixture ? null : analysis}
+              isAnalyzing={isAnalyzing}
+              analysisError={analysisError}
+              onTriggerAnalysis={() => runAnalysis(activeDoc)}
               activeTab={activeTab}
               onSelectTab={setActiveTab}
               selectedSection={selectedSection}

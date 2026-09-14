@@ -1,0 +1,144 @@
+{
+  "id": "doc_test_employment_001",
+  "originalFilename": "Employment_Agreement_2026.pdf",
+  "displayName": "Employment_Agreement_2026.pdf",
+  "format": "pdf",
+  "mimeType": "application/pdf",
+  "sizeBytes": 102400,
+  "pageCount": 3,
+  "characterCount": 3500,
+  "wordCount": 600,
+  "lineCount": 90,
+  "paragraphCount": 15,
+  "uploadedAt": "2026-09-14T08:00:00.000Z",
+  "status": "ready",
+  "extractedMetadata": {
+    "title": "Executive Employment Agreement"
+  },
+  "sections": [
+    {
+      "sectionId": "sec_01",
+      "sectionNumber": "1.0",
+      "title": "Definitions & Engagement",
+      "startOffset": 0,
+      "endOffset": 600,
+      "pageReferences": [1],
+      "chunkIds": ["chk_doc_test_employment_001_000"],
+      "characterCount": 600
+    },
+    {
+      "sectionId": "sec_02",
+      "sectionNumber": "2.0",
+      "title": "Compensation & Benefits",
+      "startOffset": 601,
+      "endOffset": 1500,
+      "pageReferences": [1, 2],
+      "chunkIds": ["chk_doc_test_employment_001_001"],
+      "characterCount": 899
+    },
+    {
+      "sectionId": "sec_03",
+      "sectionNumber": "3.0",
+      "title": "Confidentiality & Non-Compete",
+      "startOffset": 1501,
+      "endOffset": 2400,
+      "pageReferences": [2],
+      "chunkIds": ["chk_doc_test_employment_001_002"],
+      "characterCount": 899
+    },
+    {
+      "sectionId": "sec_04",
+      "sectionNumber": "4.0",
+      "title": "Term & Termination",
+      "startOffset": 2401,
+      "endOffset": 3500,
+      "pageReferences": [3],
+      "chunkIds": ["chk_doc_test_employment_001_003"],
+      "characterCount": 1099
+    }
+  ],
+  "pages": [
+    {
+      "pageId": "page_1",
+      "pageNumber": 1,
+      "text": "EXECUTIVE EMPLOYMENT AGREEMENT\nThis Executive Employment Agreement is entered into on 01 April 2026 between Acme Technologies Pvt. Ltd. (Employer) and Rahul Mehta (Employee). Jurisdiction: Laws of India, Bengaluru, Karnataka.\n1.0 Definitions & Engagement. The Employee shall serve as Principal Systems Engineer.\n2.0 Compensation & Benefits. Base salary shall be INR 45,00,000 per annum, paid monthly on the last working day.",
+      "startOffset": 0,
+      "endOffset": 1100,
+      "characterCount": 425,
+      "wordCount": 65
+    },
+    {
+      "pageId": "page_2",
+      "pageNumber": 2,
+      "text": "3.0 Confidentiality & Non-Compete. The Employee agrees not to disclose any Proprietary Information during or after employment.\nFurthermore, for a period of 12 months following termination, the Employee shall not directly or indirectly engage in competitive business within Bengaluru, Karnataka.",
+      "startOffset": 1101,
+      "endOffset": 2200,
+      "characterCount": 300,
+      "wordCount": 45
+    },
+    {
+      "pageId": "page_3",
+      "pageNumber": 3,
+      "text": "4.0 Term & Termination. Either party may terminate this agreement by providing a 90-day prior written notice.\nIn case of immediate termination without cause, the Employer shall pay 3 months of salary in lieu of notice. The agreement expires on 31 March 2029 unless renewed in writing.",
+      "startOffset": 2201,
+      "endOffset": 3500,
+      "characterCount": 290,
+      "wordCount": 46
+    }
+  ],
+  "chunks": [
+    {
+      "chunkId": "chk_doc_test_employment_001_000",
+      "chunkIndex": 0,
+      "sectionId": "sec_01",
+      "sectionNumber": "1.0",
+      "sectionTitle": "Definitions & Engagement",
+      "pageNumbers": [1],
+      "startOffset": 0,
+      "endOffset": 600,
+      "characterCount": 300,
+      "wordCount": 50,
+      "text": "This Executive Employment Agreement is entered into on 01 April 2026 between Acme Technologies Pvt. Ltd. (Employer) and Rahul Mehta (Employee). Jurisdiction: Laws of India, Bengaluru, Karnataka. 1.0 Definitions & Engagement. The Employee shall serve as Principal Systems Engineer."
+    },
+    {
+      "chunkId": "chk_doc_test_employment_001_001",
+      "chunkIndex": 1,
+      "sectionId": "sec_02",
+      "sectionNumber": "2.0",
+      "sectionTitle": "Compensation & Benefits",
+      "pageNumbers": [1, 2],
+      "startOffset": 601,
+      "endOffset": 1500,
+      "characterCount": 200,
+      "wordCount": 35,
+      "text": "2.0 Compensation & Benefits. Base salary shall be INR 45,00,000 per annum, paid monthly on the last working day."
+    },
+    {
+      "chunkId": "chk_doc_test_employment_001_002",
+      "chunkIndex": 2,
+      "sectionId": "sec_03",
+      "sectionNumber": "3.0",
+      "sectionTitle": "Confidentiality & Non-Compete",
+      "pageNumbers": [2],
+      "startOffset": 1501,
+      "endOffset": 2400,
+      "characterCount": 285,
+      "wordCount": 42,
+      "text": "3.0 Confidentiality & Non-Compete. The Employee agrees not to disclose any Proprietary Information during or after employment. Furthermore, for a period of 12 months following termination, the Employee shall not directly or indirectly engage in competitive business within Bengaluru, Karnataka."
+    },
+    {
+      "chunkId": "chk_doc_test_employment_001_003",
+      "chunkIndex": 3,
+      "sectionId": "sec_04",
+      "sectionNumber": "4.0",
+      "sectionTitle": "Term & Termination",
+      "pageNumbers": [3],
+      "startOffset": 2401,
+      "endOffset": 3500,
+      "characterCount": 280,
+      "wordCount": 44,
+      "text": "4.0 Term & Termination. Either party may terminate this agreement by providing a 90-day prior written notice. In case of immediate termination without cause, the Employer shall pay 3 months of salary in lieu of notice. The agreement expires on 31 March 2029 unless renewed in writing."
+    }
+  ],
+  "normalizedContent": "EXECUTIVE EMPLOYMENT AGREEMENT..."
+}

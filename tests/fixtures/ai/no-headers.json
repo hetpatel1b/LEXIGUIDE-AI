@@ -1,0 +1,45 @@
+{
+  "id": "doc_test_prose_003",
+  "originalFilename": "informal_mou.txt",
+  "displayName": "informal_mou.txt",
+  "format": "txt",
+  "mimeType": "text/plain",
+  "sizeBytes": 1200,
+  "pageCount": null,
+  "characterCount": 850,
+  "wordCount": 140,
+  "lineCount": 20,
+  "paragraphCount": 3,
+  "uploadedAt": "2026-09-14T08:15:00.000Z",
+  "status": "ready",
+  "extractedMetadata": {},
+  "sections": [
+    {
+      "sectionId": "sec_default_01",
+      "sectionNumber": null,
+      "title": "Document Content",
+      "startOffset": 0,
+      "endOffset": 850,
+      "pageReferences": [],
+      "chunkIds": ["chk_doc_test_prose_003_000"],
+      "characterCount": 850
+    }
+  ],
+  "pages": [],
+  "chunks": [
+    {
+      "chunkId": "chk_doc_test_prose_003_000",
+      "chunkIndex": 0,
+      "sectionId": "sec_default_01",
+      "sectionNumber": null,
+      "sectionTitle": "Document Content",
+      "pageNumbers": [],
+      "startOffset": 0,
+      "endOffset": 850,
+      "characterCount": 420,
+      "wordCount": 70,
+      "text": "The parties agree in principle to collaborate on pilot testing. Acme agrees to provide technical access. Partner agrees to provide feedback within 30 days. No formal legal representation or financial terms have been established."
+    }
+  ],
+  "normalizedContent": "The parties agree in principle to collaborate..."
+}

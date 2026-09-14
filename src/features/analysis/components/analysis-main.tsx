@@ -4,9 +4,11 @@ import * as React from "react";
 import {
   PanelLeftOpen,
   Sparkles,
-  Bot,
   Layers,
   X,
+  FileText,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,10 +22,15 @@ import { DatesTab } from "./overview/dates-tab";
 import type { EvidenceDetail } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
 import type { NormalizedDocument } from "@/types/document";
+import type { AnalysisResult } from "@/lib/ai/types";
 import { RealDocumentView } from "./real-document-view";
 
 export interface AnalysisMainProps {
   realDocument?: NormalizedDocument | null;
+  analysisResult?: AnalysisResult | null;
+  isAnalyzing?: boolean;
+  analysisError?: string | null;
+  onTriggerAnalysis?: () => void;
   activeTab: AnalysisTabId;
   onSelectTab: (tab: AnalysisTabId) => void;
   selectedSection?: DocumentSectionItem | null;
@@ -39,6 +46,10 @@ export interface AnalysisMainProps {
 
 export function AnalysisMain({
   realDocument,
+  analysisResult,
+  isAnalyzing = false,
+  analysisError,
+  onTriggerAnalysis,
   activeTab,
   onSelectTab,
   selectedSection,
@@ -49,15 +60,16 @@ export function AnalysisMain({
   onOpenCopilotDrawer,
   onViewEvidence,
   onSwitchToDemo,
-  className,
 }: AnalysisMainProps) {
+  const [showRawStructureView, setShowRawStructureView] = React.useState(false);
+
   return (
     <main
       id="analysis-workspace-main"
       aria-label="Document Analysis Workspace"
       className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--background)] min-w-0"
     >
-      {/* 1. Inner Workspace Titlebar (Independent Layout Layer) */}
+      {/* 1. Inner Workspace Titlebar */}
       <div className="flex items-center justify-between gap-2 px-2.5 sm:px-5 lg:px-6 py-2 sm:py-2.5 bg-[var(--surface)] border-b border-[var(--border)] shrink-0 min-h-[44px]">
         {/* Left: Heading + Mobile/Tablet Document Trigger + Active Section Tag */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -91,7 +103,7 @@ export function AnalysisMain({
                   <button
                     type="button"
                     onClick={onClearSection}
-                    className="hover:text-[var(--danger)] text-[var(--foreground-muted)] ml-0.5 p-0.5 rounded"
+                    className="hover:text-[var(--danger)] text-[var(--foreground-muted)] ml-0.5 p-0.5 rounded cursor-pointer"
                     aria-label="Clear active section filter"
                   >
                     <X className="h-3 w-3" />
@@ -102,15 +114,30 @@ export function AnalysisMain({
           </div>
         </div>
 
-        {/* Right: Illustrative Analysis Badge + Mobile/Tablet Copilot Trigger */}
+        {/* Right: Badge + Action / Copilot Trigger */}
         <div className="flex items-center gap-2 shrink-0">
+          {realDocument && (
+            <button
+              type="button"
+              onClick={() => setShowRawStructureView(!showRawStructureView)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)] text-[var(--foreground-secondary)] font-medium transition-colors cursor-pointer"
+            >
+              <FileText className="h-3.5 w-3.5 text-[var(--primary)]" />
+              <span>{showRawStructureView ? "View AI Analysis" : "View Extracted Text"}</span>
+            </button>
+          )}
+
           <Badge
             variant={realDocument ? "brand" : "neutral"}
             size="sm"
             dot
             className="hidden xs:inline-flex shrink-0"
           >
-            {realDocument ? "Real Ingested Document" : "Illustrative Analysis"}
+            {realDocument
+              ? analysisResult
+                ? "NVIDIA Nemotron Analysis"
+                : "Real Ingested Document"
+              : "Illustrative Analysis"}
           </Badge>
 
           {onOpenCopilotDrawer && (
@@ -128,10 +155,10 @@ export function AnalysisMain({
         </div>
       </div>
 
-      {/* 2. Primary 6 Analysis Tabs (Full Workspace Width) */}
+      {/* 2. Primary 6 Analysis Tabs */}
       <AnalysisTabs activeTab={activeTab} onSelectTab={onSelectTab} />
 
-      {/* 3. Active Tab View Body (Fluid Layout with Consistent Gutter) */}
+      {/* 3. Active Tab View Body */}
       <div
         id={`panel-${activeTab}`}
         role="tabpanel"
@@ -139,70 +166,139 @@ export function AnalysisMain({
         className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
       >
         <div className="w-full max-w-[1600px] mx-auto space-y-6">
-          {realDocument ? (
-            activeTab === "overview" ? (
-              <RealDocumentView
-                document={realDocument}
-                selectedSection={selectedSection}
-                selectedPage={selectedPage}
-                onSelectSection={onSelectSection}
-                onSwitchToDemo={onSwitchToDemo || (() => {})}
-              />
-            ) : (
-              <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-8 text-center max-w-xl mx-auto space-y-4 my-8 shadow-sm">
-                <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] flex items-center justify-center mx-auto">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Analysis is Phase 3
-                </h3>
-                <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
-                  AI-powered clause identification, risk assessment, and obligation synthesis will be powered by NVIDIA Nemotron in Phase 3. Real document extraction and section mapping for &ldquo;{realDocument.displayName}&rdquo; are complete.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          {/* A. If viewing raw extracted document view */}
+          {realDocument && showRawStructureView ? (
+            <RealDocumentView
+              document={realDocument}
+              selectedSection={selectedSection}
+              selectedPage={selectedPage}
+              onSelectSection={onSelectSection}
+              onSwitchToDemo={onSwitchToDemo || (() => {})}
+            />
+          ) : realDocument && isAnalyzing ? (
+            /* B. Loading State during Nemotron AI execution */
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-8 sm:p-12 text-center max-w-lg mx-auto space-y-4 my-12 shadow-sm">
+              <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] flex items-center justify-center mx-auto">
+                <Sparkles className="h-6 w-6 animate-pulse text-[var(--primary)]" />
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)]">
+                Analyzing your document…
+              </h3>
+              <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
+                LexiGuide is reviewing the document with NVIDIA Nemotron and organizing key clauses, obligations, and potential review points.
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-muted)] text-[11px] font-mono text-[var(--foreground-muted)]">
+                <RefreshCw className="h-3 w-3 animate-spin text-[var(--primary)]" />
+                <span>Streaming verified analysis schema…</span>
+              </div>
+            </div>
+          ) : realDocument && analysisError ? (
+            /* C. Error state during AI execution */
+            <div className="rounded-[var(--radius-xl)] border border-red-200 dark:border-red-900/60 bg-red-50/50 dark:bg-red-950/20 p-6 sm:p-8 text-center max-w-lg mx-auto space-y-4 my-8">
+              <div className="h-10 w-10 rounded-xl bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--foreground)]">
+                AI Analysis Could Not Complete
+              </h3>
+              <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
+                {analysisError}
+              </p>
+              <div className="flex items-center justify-center gap-3 pt-2">
+                {onTriggerAnalysis && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={onTriggerAnalysis}
+                    leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                  >
+                    Retry AI Analysis
+                  </Button>
+                )}
+                {onSwitchToDemo && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => onSelectTab("overview")}
+                    onClick={onSwitchToDemo}
                   >
-                    Return to Document Overview
+                    View Demo Fixture
                   </Button>
-                  {onSwitchToDemo && (
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="sm"
-                      onClick={onSwitchToDemo}
-                    >
-                      View Phase 1 Demo Data
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
-            )
+            </div>
+          ) : realDocument && !analysisResult ? (
+            /* D. Document loaded but not yet analyzed */
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-8 text-center max-w-lg mx-auto space-y-4 my-8 shadow-sm">
+              <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] flex items-center justify-center mx-auto">
+                <Sparkles className="h-6 w-6 text-[var(--primary)]" />
+              </div>
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                Ready for AI Analysis
+              </h3>
+              <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
+                Real document &ldquo;{realDocument.displayName}&rdquo; is ready for analysis. Run NVIDIA Nemotron to generate grounded clause breakdowns, obligations, and review priorities.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                {onTriggerAnalysis && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    onClick={onTriggerAnalysis}
+                    leftIcon={<Sparkles className="h-3.5 w-3.5" />}
+                  >
+                    Analyze with NVIDIA Nemotron
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowRawStructureView(true)}
+                  leftIcon={<FileText className="h-3.5 w-3.5" />}
+                >
+                  View Extracted Text
+                </Button>
+              </div>
+            </div>
           ) : (
+            /* E. Standard Tab Views (Consumes real analysisResult or demo fixture) */
             <>
               {activeTab === "overview" && (
                 <OverviewTab
+                  analysisResult={realDocument ? analysisResult : null}
                   onNavigateTab={onSelectTab}
                   onViewEvidence={onViewEvidence}
                 />
               )}
 
-              {activeTab === "summary" && <SummaryTab />}
+              {activeTab === "summary" && (
+                <SummaryTab analysisResult={realDocument ? analysisResult : null} />
+              )}
 
               {activeTab === "clauses" && (
-                <ClausesTab onViewEvidence={onViewEvidence} />
+                <ClausesTab
+                  analysisResult={realDocument ? analysisResult : null}
+                  onViewEvidence={onViewEvidence}
+                />
               )}
 
               {activeTab === "concerns" && (
-                <ConcernsTab onViewEvidence={onViewEvidence} />
+                <ConcernsTab
+                  analysisResult={realDocument ? analysisResult : null}
+                  onViewEvidence={onViewEvidence}
+                />
               )}
 
-              {activeTab === "obligations" && <ObligationsTab />}
+              {activeTab === "obligations" && (
+                <ObligationsTab analysisResult={realDocument ? analysisResult : null} />
+              )}
 
-              {activeTab === "dates" && <DatesTab />}
+              {activeTab === "dates" && (
+                <DatesTab analysisResult={realDocument ? analysisResult : null} />
+              )}
             </>
           )}
         </div>

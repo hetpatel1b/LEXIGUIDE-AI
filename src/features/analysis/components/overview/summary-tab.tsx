@@ -15,8 +15,34 @@ import {
   EXECUTIVE_SUMMARY,
   DOCUMENT_METADATA_DETAILS,
 } from "../../fixtures/analysis-fixture";
+import type { AnalysisResult } from "@/lib/ai/types";
 
-export function SummaryTab() {
+export interface SummaryTabProps {
+  analysisResult?: AnalysisResult | null;
+}
+
+export function SummaryTab({ analysisResult }: SummaryTabProps) {
+  const summary = React.useMemo(() => {
+    if (!analysisResult) return EXECUTIVE_SUMMARY;
+
+    const bulletPoints = [
+      ...analysisResult.executiveSummary.keyThemes,
+      ...analysisResult.executiveSummary.majorObligationsSummary,
+      ...analysisResult.executiveSummary.reviewPriorities,
+    ];
+
+    return {
+      overview: analysisResult.executiveSummary.overview,
+      bulletPoints: bulletPoints.length > 0 ? bulletPoints : ["Standard contractual clauses identified."],
+      documentContext: {
+        jurisdiction: analysisResult.metadata.jurisdiction || "Not found in the uploaded document.",
+        governingLaw: analysisResult.metadata.governingLaw || "Not found in the uploaded document.",
+        effectiveDate: analysisResult.metadata.effectiveDate || "Not specified",
+        documentType: analysisResult.metadata.documentType || "Legal Document",
+      },
+    };
+  }, [analysisResult]);
+
   return (
     <div className="space-y-6 text-left w-full">
       {/* Header & Subtitle */}
@@ -30,8 +56,8 @@ export function SummaryTab() {
           </p>
         </div>
 
-        <Badge variant="neutral" size="sm" dot>
-          Illustrative analysis · Development preview
+        <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
+          {analysisResult ? "Real AI Analysis · NVIDIA Nemotron" : "Illustrative analysis · Development preview"}
         </Badge>
       </div>
 
@@ -43,7 +69,7 @@ export function SummaryTab() {
         </div>
 
         <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed">
-          {EXECUTIVE_SUMMARY.overview}
+          {summary.overview}
         </p>
 
         <div className="p-3 sm:p-4 rounded-[var(--radius-lg)] bg-[var(--surface-subtle)] border border-[var(--border)] space-y-2.5">
@@ -52,7 +78,7 @@ export function SummaryTab() {
           </h3>
 
           <ul className="space-y-2">
-            {EXECUTIVE_SUMMARY.bulletPoints.map((point, index) => (
+            {summary.bulletPoints.map((point, index) => (
               <li key={index} className="flex items-start gap-2 text-xs text-[var(--foreground-secondary)] leading-relaxed">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--primary)] mt-1.5 shrink-0" aria-hidden="true" />
                 <span>{point}</span>
@@ -72,13 +98,13 @@ export function SummaryTab() {
 
           <div className="space-y-1 text-xs">
             <p className="font-medium text-[var(--foreground)]">
-              {EXECUTIVE_SUMMARY.documentContext.jurisdiction}
+              {summary.documentContext.jurisdiction}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Governing Law: {EXECUTIVE_SUMMARY.documentContext.governingLaw}
+              Governing Law: {summary.documentContext.governingLaw}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Arbitration Seat: Bengaluru, Karnataka (Sole Arbitrator)
+              {analysisResult ? "Jurisdiction identified from document text" : "Arbitration Seat: Bengaluru, Karnataka (Sole Arbitrator)"}
             </p>
           </div>
         </Card>
@@ -91,13 +117,15 @@ export function SummaryTab() {
 
           <div className="space-y-1 text-xs">
             <p className="font-medium text-[var(--foreground)]">
-              Effective from {EXECUTIVE_SUMMARY.documentContext.effectiveDate}
+              {summary.documentContext.effectiveDate !== "Not specified"
+                ? `Effective from ${summary.documentContext.effectiveDate}`
+                : "Effective date not stated"}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Agreement Type: {EXECUTIVE_SUMMARY.documentContext.documentType}
+              Agreement Type: {summary.documentContext.documentType}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Review Status: {DOCUMENT_METADATA_DETAILS.reviewStatus}
+              Review Status: {analysisResult ? "AI Analysis Completed by Nemotron" : DOCUMENT_METADATA_DETAILS.reviewStatus}
             </p>
           </div>
         </Card>
@@ -111,7 +139,9 @@ export function SummaryTab() {
         </div>
 
         <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-          The document contains 10 structured substantive sections across 18 pages. The main legal commitments are centered in Section 3 (Compensation), Section 5 (Confidentiality &amp; Non-Compete), Section 6 (Intellectual Property Assignment), and Section 7 (Termination &amp; Notice).
+          {analysisResult && analysisResult.analysisNotes.length > 0
+            ? analysisResult.analysisNotes.join(" ")
+            : "The document contains structured substantive sections. The key legal commitments are highlighted across compensation, confidentiality, restrictive covenants, and termination procedures."}
         </p>
       </Card>
     </div>
