@@ -1,13 +1,18 @@
 import type { NormalizedDocument, DocumentChunk } from "@/lib/document-engine/types";
 import { AI_CONFIG } from "../config";
 import type { AnalysisContext } from "../types";
+import {
+  buildDocumentAnalysisIndex,
+  LEGAL_CATEGORIES,
+  type LegalCategory,
+  type DocumentAnalysisIndex,
+} from "./document-index";
 
 /**
  * Neutralizes potential prompt injection markers inside untrusted document text.
  * Wraps or clarifies that text is literal data.
  */
 function sanitizeDocumentText(text: string): string {
-  // Replace obvious instruction override markers with safe literals
   return text
     .replace(/<\|im_start\|>/gi, "[im_start]")
     .replace(/<\|im_end\|>/gi, "[im_end]")
@@ -38,106 +43,137 @@ ${safeText}
 ---`;
 }
 
-const LEGAL_PRIORITY_KEYWORDS = [
-  "parties", "title", "preamble", "recital", "definition",
-  "term", "termination", "compensation", "salary", "incentive", "retention", "bonus", "payment",
-  "confidential", "intellectual property", "ip", "invention", "ownership",
-  "non-compete", "restrictive", "non-solicit", "security", "data protection",
-  "liability", "indemnif", "governing law", "dispute", "arbitration", "jurisdiction",
-  "notice", "schedule", "exhibit"
-];
+export interface CoverageReport {
+  categories: Record<LegalCategory, boolean>;
+  coveredCount: number;
+  totalCategories: number;
+  summary: string;
+}
 
 /**
- * Selects chunks deterministically using legal priority heuristics when document
- * exceeds single-pass context budget.
+ * Evaluates category coverage across a set of selected chunks.
  */
-function selectBoundedChunks(chunks: DocumentChunk[], maxChars: number): DocumentChunk[] {
-  // Approximate chunk block size including header formatting (~90 chars overhead per chunk)
+export function evaluateCoverage(
+  selectedChunks: DocumentChunk[],
+  index: DocumentAnalysisIndex
+): CoverageReport {
+  const selectedIds = new Set(selectedChunks.map((c) => c.chunkId));
+  const categories = {} as Record<LegalCategory, boolean>;
+  let coveredCount = 0;
+
+  for (const cat of LEGAL_CATEGORIES) {
+    const chunksInCat = index.categoryChunks.get(cat) || [];
+    const isCovered = chunksInCat.some((c) => selectedIds.has(c.chunkId));
+    categories[cat] = isCovered;
+    if (isCovered) coveredCount++;
+  }
+
+  const summary = LEGAL_CATEGORIES.map((cat) => `${cat}: ${categories[cat] ? "yes" : "no"}`).join(", ");
+
+  return {
+    categories,
+    coveredCount,
+    totalCategories: LEGAL_CATEGORIES.length,
+    summary,
+  };
+}
+
+/**
+ * Coverage-Aware Context Selector:
+ * Selects chunks deterministically ensuring all 12 key legal categories are represented
+ * without exceeding the target character budget.
+ */
+function selectCoverageAwareChunks(
+  document: NormalizedDocument,
+  maxChars: number,
+  index?: DocumentAnalysisIndex
+): { selectedChunks: DocumentChunk[]; coverage: CoverageReport } {
+  const docIndex = index || buildDocumentAnalysisIndex(document);
+  const chunks = document.chunks || [];
+
   const getChunkFormattedSize = (c: DocumentChunk) => c.text.length + 95;
 
   let totalEstimatedChars = chunks.reduce((acc, c) => acc + getChunkFormattedSize(c), 0);
   if (totalEstimatedChars <= maxChars) {
-    return chunks;
+    const coverage = evaluateCoverage(chunks, docIndex);
+    return { selectedChunks: chunks, coverage };
   }
 
   const selected: DocumentChunk[] = [];
   const selectedIds = new Set<string>();
   let currentChars = 0;
 
-  const addChunk = (chunk: DocumentChunk) => {
-    if (!selectedIds.has(chunk.chunkId)) {
-      const size = getChunkFormattedSize(chunk);
-      if (currentChars + size <= maxChars) {
-        selected.push(chunk);
-        selectedIds.add(chunk.chunkId);
-        currentChars += size;
-        return true;
-      }
+  const tryAddChunk = (chunk: DocumentChunk | undefined) => {
+    if (!chunk || selectedIds.has(chunk.chunkId)) return false;
+    const size = getChunkFormattedSize(chunk);
+    if (currentChars + size <= maxChars) {
+      selected.push(chunk);
+      selectedIds.add(chunk.chunkId);
+      currentChars += size;
+      return true;
     }
     return false;
   };
 
-  // 1. Mandatory Identity Chunks: First 3 chunks (Preamble, parties, recitals, effective date)
+  // 1. Mandatory Identity Chunks: Preamble, parties, recitals, effective date (first 2-3 chunks)
   for (let i = 0; i < Math.min(3, chunks.length); i++) {
-    addChunk(chunks[i]);
+    tryAddChunk(chunks[i]);
   }
 
-  // 2. High-Priority Legal Headings: compensation, term, termination, IP, restrictive covenants, governing law
-  for (const chunk of chunks) {
-    const titleLower = (chunk.sectionTitle || "").toLowerCase();
-    const isPriority = LEGAL_PRIORITY_KEYWORDS.some((kw) => titleLower.includes(kw));
-    if (isPriority) {
-      addChunk(chunk);
+  // 2. Guaranteed Category Coverage: 1-2 highest-relevance chunks for each of the 12 legal categories
+  for (const cat of LEGAL_CATEGORIES) {
+    const catChunks = docIndex.categoryChunks.get(cat) || [];
+    for (let i = 0; i < Math.min(2, catChunks.length); i++) {
+      tryAddChunk(catChunks[i]);
     }
   }
 
-  // 3. Structural Distribution: First chunk of each remaining section to preserve document architecture
-  const sectionMap = new Map<string, DocumentChunk[]>();
-  for (const chunk of chunks) {
-    const list = sectionMap.get(chunk.sectionId) || [];
-    list.push(chunk);
-    sectionMap.set(chunk.sectionId, list);
-  }
-
-  for (const [, sChunks] of sectionMap.entries()) {
+  // 3. Structural Distribution: First chunk of each section
+  for (const [, sChunks] of docIndex.chunksBySectionId.entries()) {
     if (sChunks.length > 0) {
-      addChunk(sChunks[0]);
+      tryAddChunk(sChunks[0]);
     }
   }
 
-  // 4. Fill remaining budget with sequential chunks in document order
+  // 4. Fill remaining budget with sequential document order chunks
   for (const chunk of chunks) {
-    if (!addChunk(chunk) && currentChars >= maxChars) {
+    if (!tryAddChunk(chunk) && currentChars >= maxChars) {
       break;
     }
   }
 
   // Sort selected chunks back to original document order
-  return selected.sort((a, b) => a.chunkIndex - b.chunkIndex);
+  const sorted = selected.sort((a, b) => a.chunkIndex - b.chunkIndex);
+  const coverage = evaluateCoverage(sorted, docIndex);
+
+  return { selectedChunks: sorted, coverage };
 }
 
 /**
  * Builds the bounded analysis context from a Phase 2 NormalizedDocument.
- * Acts as the clean interface separating document structure from AI prompting,
- * ready for Phase 4 retrieval integration without refactoring the AI provider.
+ * Emits structured [CONTEXT] diagnostics with deterministic category coverage.
  */
 export function buildAnalysisContext(
   document: NormalizedDocument,
-  maxChars: number = AI_CONFIG.maxContextChars
+  maxChars: number = AI_CONFIG.maxContextChars,
+  index?: DocumentAnalysisIndex
 ): AnalysisContext {
-  const allChunks = document.chunks || [];
-  const selectedChunks = selectBoundedChunks(allChunks, maxChars);
+  const { selectedChunks, coverage } = selectCoverageAwareChunks(document, maxChars, index);
 
   const formattedBlocks = selectedChunks.map(formatChunkForPrompt);
   const contextText = formattedBlocks.join("\n\n");
-
   const estimatedTokens = Math.ceil(contextText.length / 4);
+
+  console.log(
+    `[CONTEXT] chunks=${selectedChunks.length}/${document.chunks?.length || 0} chars=${contextText.length} estimated_tokens=${estimatedTokens} coverage=${coverage.coveredCount}/${coverage.totalCategories} categories`
+  );
+  console.log(`[CONTEXT] ${coverage.summary}`);
 
   return {
     documentId: document.id,
     displayName: document.displayName,
     format: document.format,
-    totalChunks: allChunks.length,
+    totalChunks: document.chunks?.length || 0,
     includedChunks: selectedChunks.length,
     estimatedTokens,
     contextText,

@@ -9,9 +9,11 @@ import {
   FileText,
   AlertCircle,
   RefreshCw,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { AnalysisTabs, type AnalysisTabId } from "./analysis-tabs";
 import { OverviewTab } from "./overview/overview-tab";
 import { SummaryTab } from "./overview/summary-tab";
@@ -62,6 +64,21 @@ export function AnalysisMain({
   onSwitchToDemo,
 }: AnalysisMainProps) {
   const [showRawStructureView, setShowRawStructureView] = React.useState(false);
+  const [elapsedSec, setElapsedSec] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!isAnalyzing) return;
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      setElapsedSec(0);
+    };
+  }, [isAnalyzing]);
 
   return (
     <main
@@ -103,8 +120,8 @@ export function AnalysisMain({
                   <button
                     type="button"
                     onClick={onClearSection}
-                    className="hover:text-[var(--danger)] text-[var(--foreground-muted)] ml-0.5 p-0.5 rounded cursor-pointer"
-                    aria-label="Clear active section filter"
+                    className="text-[var(--foreground-muted)] hover:text-[var(--foreground)] transition-colors"
+                    aria-label="Clear section filter"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -114,17 +131,21 @@ export function AnalysisMain({
           </div>
         </div>
 
-        {/* Right: Badge + Action / Copilot Trigger */}
+        {/* Right: Structure View Switcher + Badge + Copilot Trigger */}
         <div className="flex items-center gap-2 shrink-0">
           {realDocument && (
-            <button
-              type="button"
-              onClick={() => setShowRawStructureView(!showRawStructureView)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-subtle)] text-[var(--foreground-secondary)] font-medium transition-colors cursor-pointer"
+            <Button
+              variant={showRawStructureView ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setShowRawStructureView((prev) => !prev)}
+              leftIcon={<Layers className="h-3.5 w-3.5" />}
+              className="text-xs min-h-[36px]"
+              aria-label="Toggle document structure view"
             >
-              <FileText className="h-3.5 w-3.5 text-[var(--primary)]" />
-              <span>{showRawStructureView ? "View AI Analysis" : "View Extracted Text"}</span>
-            </button>
+              <span className="hidden sm:inline">
+                {showRawStructureView ? "Analysis View" : "Structure View"}
+              </span>
+            </Button>
           )}
 
           <Badge
@@ -155,8 +176,21 @@ export function AnalysisMain({
         </div>
       </div>
 
-      {/* 2. Primary 6 Analysis Tabs */}
-      <AnalysisTabs activeTab={activeTab} onSelectTab={onSelectTab} />
+      {/* 2. Primary 6 Analysis Tabs with Live Dynamic Counts */}
+      <AnalysisTabs
+        activeTab={activeTab}
+        onSelectTab={onSelectTab}
+        counts={
+          analysisResult
+            ? {
+                clauses: analysisResult.keyClauses.length,
+                concerns: analysisResult.potentialConcerns.length,
+                obligations: analysisResult.obligations.length,
+                dates: analysisResult.importantDates.length,
+              }
+            : undefined
+        }
+      />
 
       {/* 3. Active Tab View Body */}
       <div
@@ -176,20 +210,61 @@ export function AnalysisMain({
               onSwitchToDemo={onSwitchToDemo || (() => {})}
             />
           ) : realDocument && isAnalyzing ? (
-            /* B. Loading State during Nemotron AI execution */
-            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-8 sm:p-12 text-center max-w-lg mx-auto space-y-4 my-12 shadow-sm">
+            /* B. Loading State during Nemotron AI execution with phased feedback */
+            <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-10 text-center max-w-lg mx-auto space-y-6 my-8 shadow-sm">
               <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] flex items-center justify-center mx-auto">
                 <Sparkles className="h-6 w-6 animate-pulse text-[var(--primary)]" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)]">
-                Analyzing your document…
-              </h3>
-              <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
-                LexiGuide is reviewing the document with NVIDIA Nemotron and organizing key clauses, obligations, and potential review points.
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)]">
+                  Analyzing your document…
+                </h3>
+                <p className="text-xs sm:text-sm text-[var(--foreground-muted)]">
+                  Extracting and verifying legal provisions with NVIDIA Nemotron
+                </p>
+              </div>
+
+              {/* Phased Progress Stepper */}
+              <div className="text-left space-y-2.5 bg-[var(--surface-subtle)] p-4 rounded-xl border border-[var(--border)]">
+                {[
+                  { label: "Preparing document and indexing sections", minSec: 0 },
+                  { label: "Selecting key clauses across 12 legal categories", minSec: 2 },
+                  { label: "Analyzing contract terms with NVIDIA Nemotron", minSec: 5 },
+                  { label: "Verifying citations against document text", minSec: 22 },
+                  { label: "Finalizing structured legal review", minSec: 28 },
+                ].map((step, sIdx, arr) => {
+                  const isPast = elapsedSec >= (arr[sIdx + 1]?.minSec ?? 35);
+                  const isCurrent = elapsedSec >= step.minSec && !isPast;
+                  return (
+                    <div key={sIdx} className="flex items-center gap-2.5 text-xs">
+                      {isPast ? (
+                        <div className="h-4 w-4 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-[10px] font-bold shrink-0">
+                          <Check className="h-3 w-3" />
+                        </div>
+                      ) : isCurrent ? (
+                        <RefreshCw className="h-4 w-4 animate-spin text-[var(--primary)] shrink-0" />
+                      ) : (
+                        <div className="h-4 w-4 rounded-full border border-[var(--border)] shrink-0" />
+                      )}
+                      <span
+                        className={cn(
+                          "transition-colors",
+                          isCurrent
+                            ? "font-medium text-[var(--foreground)]"
+                            : isPast
+                            ? "text-[var(--foreground-muted)]"
+                            : "text-[var(--foreground-muted)] opacity-60"
+                        )}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--surface-muted)] text-[11px] font-mono text-[var(--foreground-muted)]">
-                <RefreshCw className="h-3 w-3 animate-spin text-[var(--primary)]" />
-                <span>Streaming verified analysis schema…</span>
+                <span>Elapsed: {elapsedSec}s</span>
               </div>
             </div>
           ) : realDocument && analysisError ? (

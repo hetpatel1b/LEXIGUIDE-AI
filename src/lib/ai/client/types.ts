@@ -9,11 +9,10 @@ export interface ChatCompletionRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
-  reasoning_effort?: "none" | "medium" | "high";
+  reasoning_effort?: "none" | "low" | "high";
   chat_template_kwargs?: {
     enable_thinking?: boolean;
     force_nonempty_content?: boolean;
-    medium_effort?: boolean;
   };
   response_format?: { type: "json_object" };
 }
@@ -54,12 +53,17 @@ export interface ChatCompletionResult {
   ttftMs: number;
   totalDurationMs: number;
   model: string;
+  estimatedOutputTokens?: number;
 }
 
 export interface ChatCompletionOptions {
   maxTokens?: number;
   temperature?: number;
   requestId?: string;
+  reasoningEffort?: "none" | "low" | "high";
+  enableThinking?: boolean;
+  stream?: boolean;
+  model?: string;
 }
 
 /**

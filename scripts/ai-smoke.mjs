@@ -13,7 +13,10 @@ if (fs.existsSync(envPath)) {
     if (trimmed.startsWith("NVIDIA_API_KEY=")) {
       apiKey = trimmed.substring("NVIDIA_API_KEY=".length).trim().replace(/^["']|["']$/g, "");
     }
-    if (trimmed.startsWith("NVIDIA_MODEL_ID=")) {
+    if (trimmed.startsWith("AI_MODEL=")) {
+      modelId = trimmed.substring("AI_MODEL=".length).trim().replace(/^["']|["']$/g, "");
+    }
+    if (trimmed.startsWith("NVIDIA_MODEL_ID=") && !trimmed.startsWith("AI_MODEL=")) {
       modelId = trimmed.substring("NVIDIA_MODEL_ID=".length).trim().replace(/^["']|["']$/g, "");
     }
   }

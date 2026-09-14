@@ -2,6 +2,7 @@ import type { NormalizedDocument } from "@/lib/document-engine/types";
 import { NemotronClient } from "../client/nemotron-client";
 import type { AiProvider, ChatCompletionResult } from "../client/types";
 import { buildAnalysisContext } from "../context/context-builder";
+import { buildDocumentAnalysisIndex } from "../context/document-index";
 import { SYSTEM_PROMPT_V1, SYSTEM_PROMPT_RETRY_V1 } from "../prompts/analysis-system";
 import { buildDocumentAnalysisPrompt, buildDocumentAnalysisRetryPrompt } from "../prompts/document-analysis";
 import { RawAiAnalysisResponseSchema } from "../schemas/analysis-schema";
@@ -91,6 +92,7 @@ export async function analyzeDocument(
   const t0 = Date.now();
   console.log(`[AI-DIAG]${reqTag} analyzeDocument started docId=${document?.id}`);
 
+  const tDoc0 = Date.now();
   if (!document || !document.id) {
     throw new AiEngineError(
       "AI_INVALID_RESPONSE",
@@ -107,24 +109,38 @@ export async function analyzeDocument(
     );
   }
 
+  const docIndex = buildDocumentAnalysisIndex(document);
+  const documentValidationMs = Date.now() - tDoc0;
+
   console.log(
-    `[AI-DIAG]${reqTag} document validated: sections=${document.sections?.length}, chunks=${document.chunks?.length}`
+    `[AI-DIAG]${reqTag} document validated and indexed in ${documentValidationMs}ms: sections=${document.sections?.length}, chunks=${document.chunks?.length}`
   );
 
   const client = provider || new NemotronClient();
 
+  let lastContextSelectionMs = 0;
+  let lastPromptConstructionMs = 0;
+  let lastJsonParseMs = 0;
+  let lastTtftMs = 0;
+  let lastGenMs = 0;
+
   // Helper to execute a single generation pass
   const executePass = async (isRetry: boolean): Promise<{ rawResult: ChatCompletionResult; parsed: unknown }> => {
     const passBudget = isRetry ? 12000 : AI_CONFIG.maxContextChars;
-    const context = buildAnalysisContext(document, passBudget);
+    const tCtx0 = Date.now();
+    const context = buildAnalysisContext(document, passBudget, docIndex);
+    lastContextSelectionMs = Date.now() - tCtx0;
+
     console.log(
       `[AI-DIAG]${reqTag} ${isRetry ? "RETRY " : ""}context built: chars=${context.contextText.length}, includedChunks=${context.includedChunks}/${context.totalChunks}`
     );
 
+    const tPr0 = Date.now();
     const userPrompt = isRetry
       ? buildDocumentAnalysisRetryPrompt(context)
       : buildDocumentAnalysisPrompt(context);
     const systemPrompt = isRetry ? SYSTEM_PROMPT_RETRY_V1 : SYSTEM_PROMPT_V1;
+    lastPromptConstructionMs = Date.now() - tPr0;
 
     console.log(`[AI-DIAG]${reqTag} ${isRetry ? "RETRY " : ""}prompt built: chars=${userPrompt.length}`);
 
@@ -136,12 +152,12 @@ export async function analyzeDocument(
     let genResult: ChatCompletionResult;
     if (client.generateChatCompletionDetailed) {
       genResult = await client.generateChatCompletionDetailed(messages, {
-        maxTokens: isRetry ? 4000 : AI_CONFIG.maxTokens,
+        maxTokens: isRetry ? 1800 : AI_CONFIG.maxTokens,
         requestId: reqId,
       });
     } else {
       const content = await client.generateChatCompletion(messages, {
-        maxTokens: isRetry ? 4000 : AI_CONFIG.maxTokens,
+        maxTokens: isRetry ? 1800 : AI_CONFIG.maxTokens,
         requestId: reqId,
       });
       genResult = {
@@ -153,10 +169,14 @@ export async function analyzeDocument(
       };
     }
 
+    lastTtftMs = genResult.ttftMs;
+    lastGenMs = Math.max(0, genResult.totalDurationMs - genResult.ttftMs);
+
     console.log(
       `[AI-DIAG]${reqTag} ${isRetry ? "RETRY " : ""}AI response received: chars=${genResult.content.length}, finish_reason=${genResult.finishReason}, TTFT=${genResult.ttftMs}ms, duration=${genResult.totalDurationMs}ms`
     );
 
+    const tJ0 = Date.now();
     const cleaned = safeCleanJsonString(genResult.content);
 
     if (isTruncatedOrIncomplete(cleaned, genResult.finishReason)) {
@@ -179,6 +199,7 @@ export async function analyzeDocument(
 
     try {
       const parsed = JSON.parse(cleaned);
+      lastJsonParseMs = Date.now() - tJ0;
       return { rawResult: genResult, parsed };
     } catch (parseErr) {
       console.error(`[AI-DIAG]${reqTag} ${isRetry ? "RETRY " : ""}JSON.parse failure: ${String(parseErr)}`);
@@ -198,9 +219,11 @@ export async function analyzeDocument(
 
   // Attempt Pass 1
   let parsedJson: unknown;
+  let lastRawResult: ChatCompletionResult | undefined;
   try {
     const pass1 = await executePass(false);
     parsedJson = pass1.parsed;
+    lastRawResult = pass1.rawResult;
     console.log(`[AI-DIAG]${reqTag} Pass 1 JSON parsed successfully`);
   } catch (pass1Error) {
     // Step 14: Safe single retry ONLY for invalid/truncated JSON (not auth/rate-limit/timeout)
@@ -214,6 +237,7 @@ export async function analyzeDocument(
       );
       const pass2 = await executePass(true);
       parsedJson = pass2.parsed;
+      lastRawResult = pass2.rawResult;
       console.log(`[AI-DIAG]${reqTag} Pass 2 recovery retry parsed successfully!`);
     } else {
       throw pass1Error;
@@ -221,6 +245,7 @@ export async function analyzeDocument(
   }
 
   // Zod Schema Validation
+  const tZod0 = Date.now();
   const validationResult = RawAiAnalysisResponseSchema.safeParse(parsedJson);
   if (!validationResult.success) {
     console.error(
@@ -233,20 +258,30 @@ export async function analyzeDocument(
       { errors: validationResult.error.format() }
     );
   }
-
-  console.log(`[AI-DIAG]${reqTag} Zod validation complete`);
+  const zodValidationMs = Date.now() - tZod0;
+  console.log(`[AI-DIAG]${reqTag} Zod validation complete in ${zodValidationMs}ms`);
 
   // Source & Evidence Verification against Phase 2 chunks/sections
-  const modelName = process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
+  const tSrc0 = Date.now();
+  const modelName = process.env.AI_MODEL || process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
   const verifiedResult = validateAnalysisSources(
     validationResult.data,
     document,
-    modelName
+    modelName,
+    docIndex
   );
+  const sourceValidationMs = Date.now() - tSrc0;
 
-  const totalDuration = Date.now() - t0;
+  const totalApiMs = Date.now() - t0;
+  const usageTokens = lastRawResult?.usage
+    ? ` input_tokens=${lastRawResult.usage.promptTokens ?? "N/A"} output_tokens=${lastRawResult.usage.completionTokens ?? "N/A"} total_tokens=${lastRawResult.usage.totalTokens ?? "N/A"}`
+    : "";
+
   console.log(
-    `[AI-DIAG]${reqTag} source validation complete: verifiedClauses=${verifiedResult.keyClauses.length}, verifiedConcerns=${verifiedResult.potentialConcerns.length}, totalDuration=${totalDuration}ms`
+    `[PERF] request_id=${reqId} provider=nvidia model=${modelName} doc_val_ms=${documentValidationMs} ctx_sel_ms=${lastContextSelectionMs} prompt_ms=${lastPromptConstructionMs} ttft_ms=${lastTtftMs} gen_ms=${lastGenMs} provider_total_ms=${lastRawResult?.totalDurationMs ?? 0} json_parse_ms=${lastJsonParseMs} zod_val_ms=${zodValidationMs} src_val_ms=${sourceValidationMs} total_api_ms=${totalApiMs} finish_reason=${lastRawResult?.finishReason ?? "stop"} output_chars=${lastRawResult?.content.length ?? 0} estimated_output_tokens=${lastRawResult?.estimatedOutputTokens ?? Math.ceil((lastRawResult?.content.length ?? 0) / 4)}${usageTokens}`
+  );
+  console.log(
+    `[AI-DIAG]${reqTag} source validation complete: verifiedClauses=${verifiedResult.keyClauses.length}, verifiedConcerns=${verifiedResult.potentialConcerns.length}, totalDuration=${totalApiMs}ms`
   );
 
   return verifiedResult;

@@ -477,7 +477,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("obligations")}
                 className="text-xs"
               >
-                View Full Obligations Matrix
+                View All {analysisResult ? analysisResult.obligations.length : 8} Obligations
               </Button>
             </div>
           </Card>
@@ -530,7 +530,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("dates")}
                 className="text-xs"
               >
-                View All Key Dates
+                View All {analysisResult ? analysisResult.importantDates.length : 4} Key Dates
               </Button>
             </div>
           </Card>

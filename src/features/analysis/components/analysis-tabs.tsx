@@ -21,9 +21,17 @@ export type AnalysisTabId =
   | "obligations"
   | "dates";
 
+export interface TabCounts {
+  clauses?: number;
+  concerns?: number;
+  obligations?: number;
+  dates?: number;
+}
+
 export interface AnalysisTabsProps {
   activeTab: AnalysisTabId;
   onSelectTab: (tabId: AnalysisTabId) => void;
+  counts?: TabCounts;
   className?: string;
 }
 
@@ -46,6 +54,7 @@ export const TAB_ITEMS: Array<{
 export function AnalysisTabs({
   activeTab,
   onSelectTab,
+  counts,
   className,
 }: AnalysisTabsProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -220,18 +229,23 @@ export function AnalysisTabs({
               <span className="truncate">{displayText}</span>
 
               {/* Count Badge */}
-              {tab.countBadge && (
-                <span
-                  className={cn(
-                    "ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold shrink-0 transition-colors",
-                    isActive
-                      ? "bg-[var(--primary)]/10 text-[var(--primary)]"
-                      : "bg-[var(--surface-muted)] text-[var(--foreground-muted)]"
-                  )}
-                >
-                  {tab.countBadge}
-                </span>
-              )}
+              {(() => {
+                const countVal = counts ? counts[tab.id as keyof TabCounts] : undefined;
+                const displayBadge = countVal !== undefined ? String(countVal) : tab.countBadge;
+                if (!displayBadge) return null;
+                return (
+                  <span
+                    className={cn(
+                      "ml-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-mono font-semibold shrink-0 transition-colors",
+                      isActive
+                        ? "bg-[var(--primary)]/10 text-[var(--primary)]"
+                        : "bg-[var(--surface-muted)] text-[var(--foreground-muted)]"
+                    )}
+                  >
+                    {displayBadge}
+                  </span>
+                );
+              })()}
             </button>
           );
         })}

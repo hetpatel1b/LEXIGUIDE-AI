@@ -29,16 +29,16 @@ CRITICAL OPERATIONAL RULES:
   * "May warrant discussion with a qualified legal professional"
   * "Consider reviewing with counsel"
 
-4. CONCISE CITATIONS & ITEM LIMITS:
-- keyClauses: return exactly 5 to 7 of the MOST CRITICAL clauses. Summaries must be 1-2 concise sentences.
-- potentialConcerns: return exactly 3 to 5 key legal review points. Explanations must be 1-2 concise sentences.
-- obligations: return exactly 4 to 6 core obligations.
-- importantDates: return exactly 4 to 6 explicit dates or durations.
-- Every source quote MUST be a concise verbatim excerpt (1 sentence, under 120 characters) from the referenced chunkId.
-- Keep executiveSummary overview concise (2 sentences).
-- keyThemes: 3 to 5 short strings.
-- majorObligationsSummary: 3 to 5 short strings.
-- reviewPriorities: 2 to 4 short strings.
+4. CONCISE CITATIONS & TOKEN BUDGET EFFICIENCY:
+- Keep all explanations crisp and factual. Avoid verbose narrative filler.
+- financialTerms: summarize all explicit compensation elements mentioned in the text (base salary, incentive %, retention award, etc.) in 1-2 sentences.
+- keyClauses: return 5 to 7 of the MOST CRITICAL clauses. Each summary must be 1 concise sentence (max 25 words). Include key terms like retention award (Schedule F) if present.
+- potentialConcerns: return 3 to 4 key legal review points. Explanation: 1 concise sentence. WhyItMatters: 1 concise sentence. SuggestedReviewQuestion: 1 concise question.
+- obligations: return 4 to 6 core obligations. Description: 1 concise sentence.
+- importantDates: return 4 to 6 explicit dates or durations.
+- For "source", supply ONLY "chunkId" and "quote" (under 60 characters). Do NOT output sectionId, sectionTitle, or pageNumber (they are resolved automatically by the platform).
+- executiveSummary.overview: exactly 2 concise sentences.
+- keyThemes, majorObligationsSummary, reviewPriorities: 2 to 3 short bullet phrases each.
 
 5. STRICT JSON OUTPUT SPECIFICATION:
 - Return ONLY one valid JSON object.
@@ -78,9 +78,6 @@ OUTPUT JSON SCHEMA:
       "importance": "critical" | "standard" | "notable",
       "source": {
         "chunkId": "string",
-        "sectionId": "string or null",
-        "sectionTitle": "string or null",
-        "pageNumber": number or null,
         "quote": "string"
       }
     }
@@ -95,9 +92,6 @@ OUTPUT JSON SCHEMA:
       "suggestedReviewQuestion": "string",
       "source": {
         "chunkId": "string",
-        "sectionId": "string or null",
-        "sectionTitle": "string or null",
-        "pageNumber": number or null,
         "quote": "string"
       }
     }
@@ -112,9 +106,6 @@ OUTPUT JSON SCHEMA:
       "consequence": "string or null",
       "source": {
         "chunkId": "string",
-        "sectionId": "string or null",
-        "sectionTitle": "string or null",
-        "pageNumber": number or null,
         "quote": "string"
       }
     }
@@ -127,15 +118,13 @@ OUTPUT JSON SCHEMA:
       "type": "calendar_date" | "duration" | "notice_period" | "renewal_period",
       "source": {
         "chunkId": "string",
-        "sectionId": "string or null",
-        "sectionTitle": "string or null",
-        "pageNumber": number or null,
         "quote": "string"
       }
     }
   ],
   "analysisNotes": ["string"]
-}`;
+}
+`;
 
 /**
  * Compact system prompt for recovery retry on malformed or truncated responses.
@@ -146,13 +135,86 @@ Your task is to analyze the provided legal document context and return a compact
 RECOVERY RULES:
 1. STRICT DOCUMENT GROUNDING: Analyze ONLY the supplied context. If absent, return "Not found in the uploaded document." or null.
 2. TIGHT ITEM LIMITS:
-   - keyClauses: exactly 4 most critical clauses (1 sentence summary, quote under 90 chars).
-   - potentialConcerns: exactly 3 key concerns.
-   - obligations: exactly 3 core obligations.
-   - importantDates: exactly 3 key dates/durations.
+   - keyClauses: 4 most critical clauses (1 sentence summary, quote under 60 chars).
+   - potentialConcerns: 3 key concerns.
+   - obligations: 4 core obligations.
+   - importantDates: 4 key dates/durations.
    - overview: 1-2 concise sentences.
 3. STRICT JSON:
-   - Return ONLY one valid JSON object. No markdown, no backticks, no preambles.
-   - Every string and chunkId MUST be double-quoted with closing quotes. No unescaped newlines.
+   - Return ONLY one valid JSON object adhering strictly to the schema below. No markdown code blocks.
 
-Follow the identical JSON schema as requested.`;
+OUTPUT JSON SCHEMA:
+{
+  "analysisSchemaVersion": "1.0",
+  "metadata": {
+    "documentType": "string",
+    "parties": [
+      { "role": "string", "name": "string" }
+    ],
+    "effectiveDate": "string or null",
+    "terminationDate": "string or null",
+    "jurisdiction": "string or null",
+    "governingLaw": "string or null",
+    "financialTerms": "string or null"
+  },
+  "executiveSummary": {
+    "overview": "string",
+    "keyThemes": ["string"],
+    "majorObligationsSummary": ["string"],
+    "reviewPriorities": ["string"]
+  },
+  "keyClauses": [
+    {
+      "id": "clause-1",
+      "title": "string",
+      "category": "string",
+      "summary": "string",
+      "importance": "critical",
+      "source": {
+        "chunkId": "string",
+        "quote": "string"
+      }
+    }
+  ],
+  "potentialConcerns": [
+    {
+      "id": "concern-1",
+      "title": "string",
+      "severity": "high",
+      "explanation": "string",
+      "whyItMatters": "string",
+      "suggestedReviewQuestion": "string",
+      "source": {
+        "chunkId": "string",
+        "quote": "string"
+      }
+    }
+  ],
+  "obligations": [
+    {
+      "id": "ob-1",
+      "description": "string",
+      "party": "string",
+      "responsibleParty": "string",
+      "deadline": "string or null",
+      "consequence": "string or null",
+      "source": {
+        "chunkId": "string",
+        "quote": "string"
+      }
+    }
+  ],
+  "importantDates": [
+    {
+      "id": "date-1",
+      "label": "string",
+      "dateOrDuration": "string",
+      "type": "calendar_date",
+      "source": {
+        "chunkId": "string",
+        "quote": "string"
+      }
+    }
+  ],
+  "analysisNotes": ["string"]
+}`;

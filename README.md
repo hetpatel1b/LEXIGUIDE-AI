@@ -11,28 +11,51 @@ The product is architected with an **India-first + international/general contrac
 
 ---
 
-## Current Development State: Phase 1 Complete (FROZEN)
+## Development State: Phase 3 Nemotron 3 Super 120B Engine (ACTIVE)
 
-**Phase 1 (1A through 1F) — Complete Frontend UI Foundation & Architecture**
+- **Phase 1 (1A–1F)**: Complete Frontend UI Foundation & Design System (Frozen baseline)
+- **Phase 2**: High-Fidelity Document Processing Engine (PDF, DOCX, TXT normalization, section detection, semantic chunking)
+- **Phase 3**: NVIDIA Nemotron 3 Super 120B A12B Legal Document Intelligence Pipeline
 
-The full frontend UI suite for LexiGuide AI is implemented, hardened, and accessible:
-- **Phase 1A**: Foundation & Architecture (Next.js 16, TypeScript Strict, Design Tokens)
-- **Phase 1B**: Design System & Primitives (Button, Card, Badge, Modal, Drawers, Theme Engine)
-- **Phase 1C**: Landing Page & Upload Experience (`/`)
-- **Phase 1D**: Analysis Workspace & 3-Panel Dashboard (`/analyze`)
-- **Phase 1E**: Comparison (`/compare`), Ask Document Q&A (`/qa`), Action Center (`/action-center`)
-- **Phase 1F**: Final Responsive, Accessibility (WCAG 2.2 AA), Touch Targets, and Frontend Hardening
+### AI Model & Architecture
 
-### Architectural Boundaries & Current Limitations:
-All frontend workflows are currently driven by centralized, typed synthetic development fixtures (`src/features/*/fixtures/`).
-The following backend systems are intentionally deferred to subsequent phases:
-- ❌ Real AI / NVIDIA Nemotron API integration (Scheduled for Phase 3)
-- ❌ Real PDF / DOCX / TXT file extraction and parsing engine (Scheduled for Phase 2)
-- ❌ RAG pipelines, embeddings, or vector databases (Scheduled for Phase 3 / 4)
-- ❌ Algorithmic document diffing backend (Scheduled for Phase 5)
-- ❌ Authentication, database persistence, user accounts, or billing
+- **AI Model**: NVIDIA Nemotron 3 Super 120B A12B
+- **Model ID**: `nvidia/nemotron-3-super-120b-a12b`
+- **Provider**: NVIDIA
+- **API Style**: NVIDIA hosted OpenAI-compatible API (`/chat/completions`)
+- **Base URL**: `https://integrate.api.nvidia.com/v1`
+- **Historical Benchmark Model**: `nvidia/nemotron-3-ultra-550b-a55b` (previous prototype baseline)
 
-Phase 1 is officially **FROZEN** and serves as the stable UI baseline for Phase 2 (Real Document Processing Engine).
+#### End-to-End Analysis Pipeline:
+```
+User Document (PDF / DOCX / TXT)
+      ↓
+Phase 2 Document Engine (Extraction, Section Detection, Chunks)
+      ↓
+NormalizedDocument
+      ↓
+Coverage-Aware Context Builder (12–15 Legal Categories, deterministic bounds)
+      ↓
+Legal Safety System Prompt (Untrusted Data boundary, no legal advice, concise bounds)
+      ↓
+NVIDIA API (OpenAI-compatible)
+      ↓
+NVIDIA Nemotron 3 Super 120B A12B
+      ↓
+Structured JSON Stream
+      ↓
+JSON Parse & Cleanup
+      ↓
+Zod Schema Validation (RawAiAnalysisResponseSchema)
+      ↓
+Source & Evidence Validator (Chunk quote grounding, section/page verification)
+      ↓
+Verified AnalysisResult
+      ↓
+LexiGuide Interactive Workspace
+```
+
+The model is **never** the final authority. The uploaded document, strict schema validation, and citation verification are the authority.
 
 ---
 

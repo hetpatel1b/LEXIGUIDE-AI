@@ -5,19 +5,21 @@ import { AiEngineError } from "./errors";
  * Enforces conservative, grounded defaults appropriate for legal documents.
  */
 export const AI_CONFIG = {
-  defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
-  fallbackModel: "nvidia/nemotron-3-super-120b-a12b",
+  defaultProvider: "nvidia",
+  defaultModel: "nvidia/nemotron-3-super-120b-a12b",
+  fallbackModel: "",
   defaultBaseURL: "https://integrate.api.nvidia.com/v1",
   temperature: 0.1,
-  maxTokens: 5000,
-  timeoutMs: 120000,
-  firstTokenTimeoutMs: 60000, // Realistic window for multi-chunk legal document generation
-  maxContextChars: 18000, // ~4,500 tokens bounded single-pass budget for fast, reliable response
+  maxTokens: 4096,
+  timeoutMs: 90000,
+  firstTokenTimeoutMs: 50000,
+  maxContextChars: 20000, // ~5,000 tokens coverage-aware bounded context
   schemaVersion: "1.0",
 } as const;
 
 export interface AiRuntimeConfig {
   apiKey: string;
+  provider: string;
   model: string;
   fallbackModel: string;
   baseURL: string;
@@ -47,12 +49,15 @@ export function getAiConfig(): AiRuntimeConfig {
     );
   }
 
-  const model = process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
+  const provider = process.env.AI_PROVIDER || AI_CONFIG.defaultProvider;
+  const model = process.env.AI_MODEL || process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
   const fallbackModel = process.env.NVIDIA_FALLBACK_MODEL_ID || AI_CONFIG.fallbackModel;
-  const baseURL = process.env.NVIDIA_API_BASE_URL || AI_CONFIG.defaultBaseURL;
+  const baseURL =
+    process.env.NVIDIA_BASE_URL || process.env.NVIDIA_API_BASE_URL || AI_CONFIG.defaultBaseURL;
 
   return {
     apiKey,
+    provider,
     model,
     fallbackModel,
     baseURL,

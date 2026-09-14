@@ -1,4 +1,5 @@
 import type { NormalizedDocument, DocumentChunk } from "@/lib/document-engine/types";
+import type { DocumentAnalysisIndex } from "../context/document-index";
 import type { RawAiAnalysisResponse } from "../schemas/analysis-schema";
 import type {
   AnalysisResult,
@@ -75,20 +76,32 @@ function verifyCitation(
 /**
  * Validates all AI findings against the authentic Phase 2 NormalizedDocument.
  * Marks verified: true only when facts are grounded in real chunk text.
+ * Uses precomputed DocumentAnalysisIndex for O(1) lookups if available.
  */
 export function validateAnalysisSources(
   raw: RawAiAnalysisResponse,
   document: NormalizedDocument,
-  modelName: string
+  modelName: string,
+  index?: DocumentAnalysisIndex
 ): AnalysisResult {
-  const chunkMap = new Map<string, DocumentChunk>();
-  for (const chunk of document.chunks || []) {
-    chunkMap.set(chunk.chunkId, chunk);
+  const t0 = Date.now();
+
+  const chunkMap = index ? index.chunkById : new Map<string, DocumentChunk>();
+  if (!index) {
+    for (const chunk of document.chunks || []) {
+      chunkMap.set(chunk.chunkId, chunk);
+    }
   }
 
   const sectionMap = new Map<string, string>();
-  for (const section of document.sections || []) {
-    sectionMap.set(section.sectionId, section.title);
+  if (index) {
+    for (const [secId, section] of index.sectionById.entries()) {
+      sectionMap.set(secId, section.title);
+    }
+  } else {
+    for (const section of document.sections || []) {
+      sectionMap.set(section.sectionId, section.title);
+    }
   }
 
   // 1. Validate Key Clauses
@@ -146,6 +159,11 @@ export function validateAnalysisSources(
       verified: isVerified,
     };
   });
+
+  const durationMs = Date.now() - t0;
+  console.log(
+    `[PERF] source_validation_ms=${durationMs} items_validated=${verifiedClauses.length + verifiedConcerns.length + verifiedObligations.length + verifiedDates.length}`
+  );
 
   return {
     analysisSchemaVersion: "1.0",
