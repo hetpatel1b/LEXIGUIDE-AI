@@ -85,7 +85,10 @@ export function UploadContainer() {
 
   const handleStartProcessing = async () => {
     if (!selectedFile) return;
-    await uploadAndProcess(selectedFile);
+    const doc = await uploadAndProcess(selectedFile);
+    if (doc) {
+      router.push("/analyze");
+    }
   };
 
   const handleNavigateToAnalysis = () => {

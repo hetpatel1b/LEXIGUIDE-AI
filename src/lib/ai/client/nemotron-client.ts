@@ -65,33 +65,38 @@ export class NemotronClient implements AiProvider {
     const reqTag = options?.requestId ? `[${options.requestId}]` : "";
     console.log(`[AI-DIAG]${reqTag} provider=${this.config.provider} model=${targetModel}`);
 
-    try {
-      return await this.executeChat(targetModel, messages, options, false);
-    } catch (primaryError) {
-      let resolvedError = primaryError;
+    const retryDelays = [1500, 3000];
+    let lastError: unknown;
 
-      // At most ONE retry for transient provider failures (429, 500, 502, 503)
-      if (
-        primaryError instanceof AiEngineError &&
-        (primaryError.code === "AI_PROVIDER_ERROR" || primaryError.code === "AI_RATE_LIMITED") &&
-        (primaryError.statusCode === 429 ||
-          primaryError.statusCode === 500 ||
-          primaryError.statusCode === 502 ||
-          primaryError.statusCode === 503)
-      ) {
-        console.warn(
-          `[AI-DIAG]${reqTag} Transient HTTP ${primaryError.statusCode} received from ${targetModel}. Retrying once after 1500ms...`
-        );
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        try {
-          return await this.executeChat(targetModel, messages, options, true);
-        } catch (retryErr) {
-          resolvedError = retryErr;
+    for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
+      const isRetry = attempt > 0;
+      try {
+        return await this.executeChat(targetModel, messages, options, isRetry);
+      } catch (err) {
+        lastError = err;
+
+        const isTransient =
+          err instanceof AiEngineError &&
+          (err.code === "AI_PROVIDER_ERROR" || err.code === "AI_RATE_LIMITED") &&
+          (err.statusCode === 429 ||
+            err.statusCode === 500 ||
+            err.statusCode === 502 ||
+            err.statusCode === 503);
+
+        if (isTransient && attempt < retryDelays.length) {
+          const delay = retryDelays[attempt];
+          console.warn(
+            `[AI-DIAG]${reqTag} Transient HTTP ${err.statusCode} received from ${targetModel} (attempt ${attempt + 1}/${retryDelays.length + 1}). Retrying in ${delay}ms...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
         }
-      }
 
-      throw resolvedError;
+        throw err;
+      }
     }
+
+    throw lastError;
   }
 
   private async executeChat(

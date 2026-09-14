@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processDocument, DocumentEngineError } from "@/lib/document-engine";
+import { serverDocumentStore } from "@/lib/server-document-store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -54,6 +55,9 @@ export async function POST(request: NextRequest) {
 
     // Process through the document engine pipeline
     const normalizedDocument = await processDocument(buffer, filename, mimeType);
+
+    // Register in server document store for fast server-side retrieval
+    serverDocumentStore.registerDocument(normalizedDocument);
 
     return NextResponse.json(
       {

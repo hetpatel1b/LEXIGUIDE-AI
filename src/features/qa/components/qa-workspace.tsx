@@ -34,8 +34,9 @@ export function QAWorkspace() {
     () => true,
     () => false
   );
-  const [qaHistory, setQaHistory] = React.useState<QuestionMessage[]>([]);
+  const [qaHistoryByDoc, setQaHistoryByDoc] = React.useState<Record<string, QuestionMessage[]>>({});
   const [isThinking, setIsThinking] = React.useState(false);
+  const [thinkingMessage, setThinkingMessage] = React.useState<string>("");
   const [activeCitation, setActiveCitation] = React.useState<EvidenceCitation | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
   const [isTopicsDrawerOpen, setIsTopicsDrawerOpen] = React.useState(false);
@@ -49,13 +50,20 @@ export function QAWorkspace() {
     return getActiveDocument();
   }, [hasMounted]);
 
+  // Document-isolated Q&A history
+  const qaHistory = React.useMemo(() => {
+    if (!activeDoc) return [];
+    return qaHistoryByDoc[activeDoc.id] || [];
+  }, [activeDoc, qaHistoryByDoc]);
+
   const messages = React.useMemo(() => {
     if (!activeDoc) return [];
     const initMsg: QuestionMessage = {
-      id: "init-qa-1",
+      id: `init-qa-${activeDoc.id}`,
       documentId: activeDoc.id,
       question: "Document ready",
       answer: `Document "${activeDoc.displayName}" is active. Ask any questions regarding its provisions, duties, key dates, or potential concerns.`,
+      answerStatus: "grounded",
       askedAt: "Just now",
       answeredAt: "Just now",
     };
@@ -69,96 +77,128 @@ export function QAWorkspace() {
     }
   }, [messages, isThinking]);
 
-  const handleSendMessage = React.useCallback((text: string) => {
+  const handleSendMessage = React.useCallback(async (text: string) => {
     if (!activeDoc) return;
+
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
 
     counterRef.current += 1;
     const userMsg: QuestionMessage = {
       id: `usr-qa-${counterRef.current}`,
       documentId: activeDoc.id,
-      question: text,
+      question: trimmedText,
       askedAt: "Just now",
     };
 
-    setQaHistory((prev) => [...prev, userMsg]);
-    setIsThinking(true);
+    // Scoped update for active document
+    setQaHistoryByDoc((prev) => ({
+      ...prev,
+      [activeDoc.id]: [...(prev[activeDoc.id] || []), userMsg],
+    }));
 
-    setTimeout(() => {
+    setIsThinking(true);
+    setThinkingMessage("Finding relevant sections…");
+
+    // Progressive loading state stages
+    const timer1 = setTimeout(() => {
+      setThinkingMessage("Reviewing the document…");
+    }, 700);
+
+    const timer2 = setTimeout(() => {
+      setThinkingMessage("Preparing grounded answer…");
+    }, 2000);
+
+    try {
+      const response = await fetch("/api/qa", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          documentId: activeDoc.id,
+          question: trimmedText,
+          document: activeDoc,
+        }),
+      });
+
+      const data = await response.json();
+
       counterRef.current += 1;
       let assistantMsg: QuestionMessage;
 
-      if (!activeDoc.chunks || activeDoc.chunks.length === 0) {
+      if (response.ok && data.success && data.data) {
+        const qaData = data.data;
+        const evidence: EvidenceCitation[] = (qaData.sources || []).map(
+          (s: { chunkId: string; quote: string; sectionTitle?: string; pageNumber?: number }, idx: number) => ({
+            id: `ev-${activeDoc.id}-${s.chunkId}-${idx}`,
+            sectionTitle: s.sectionTitle || "Document Content",
+            pageNumber: s.pageNumber ?? 1,
+            excerpt: s.quote,
+            documentTitle: activeDoc.displayName,
+          })
+        );
+
         assistantMsg = {
           id: `asst-qa-${counterRef.current}`,
           documentId: activeDoc.id,
-          question: text,
-          answer: `No readable content blocks found in ${activeDoc.displayName}.`,
-          isNotFound: true,
+          question: trimmedText,
+          answer: qaData.answer,
+          answerStatus: qaData.answerStatus,
+          isNotFound: qaData.answerStatus === "not_found",
+          isError: false,
+          evidence,
+          keyPoints: qaData.keyPoints,
+          suggestedNextStep: qaData.nextStep || undefined,
           askedAt: "Just now",
           answeredAt: "Just now",
         };
       } else {
-        const queryTerms = text
-          .toLowerCase()
-          .split(/\s+/)
-          .filter((t) => t.length > 2 && !["what", "when", "where", "how", "the", "are", "and", "for", "does"].includes(t));
+        const errMsg =
+          data?.error?.message ||
+          "We couldn't complete the answer. Please verify your document and try again.";
 
-        let bestChunk = null;
-        let highestScore = 0;
-
-        for (const chunk of activeDoc.chunks) {
-          const contentLower = chunk.text.toLowerCase();
-          let score = 0;
-          for (const term of queryTerms) {
-            if (contentLower.includes(term)) {
-              score += 1;
-            }
-          }
-          if (score > highestScore) {
-            highestScore = score;
-            bestChunk = chunk;
-          }
-        }
-
-        if (bestChunk && highestScore > 0) {
-          const sectionTitle = bestChunk.sectionTitle || "Document Excerpt";
-          const pageNumber = bestChunk.pageNumbers?.[0] ?? 1;
-
-          assistantMsg = {
-            id: `asst-qa-${counterRef.current}`,
-            documentId: activeDoc.id,
-            question: text,
-            answer: `According to ${sectionTitle} in ${activeDoc.displayName}: "${bestChunk.text.slice(0, 350)}..."`,
-            evidence: [
-              {
-                id: `ev-${counterRef.current}`,
-                sectionTitle,
-                pageNumber,
-                excerpt: bestChunk.text.slice(0, 350),
-                documentTitle: activeDoc.displayName,
-              },
-            ],
-            askedAt: "Just now",
-            answeredAt: "Just now",
-            suggestedNextStep: "Review the full section in the document viewer for additional contractual context.",
-          };
-        } else {
-          assistantMsg = {
-            id: `asst-qa-${counterRef.current}`,
-            documentId: activeDoc.id,
-            question: text,
-            answer: `Not found in the uploaded document (${activeDoc.displayName}). LexiGuide AI only answers based on terms actually identified in your active contract.`,
-            isNotFound: true,
-            askedAt: "Just now",
-            answeredAt: "Just now",
-            suggestedNextStep: "Try asking with specific terms from the document text.",
-          };
-        }
+        assistantMsg = {
+          id: `asst-qa-${counterRef.current}`,
+          documentId: activeDoc.id,
+          question: trimmedText,
+          answer: errMsg,
+          answerStatus: "error",
+          isNotFound: false,
+          isError: true,
+          askedAt: "Just now",
+          answeredAt: "Just now",
+        };
       }
 
-      setQaHistory((prev) => [...prev, assistantMsg]);
+      setQaHistoryByDoc((prev) => ({
+        ...prev,
+        [activeDoc.id]: [...(prev[activeDoc.id] || []), assistantMsg],
+      }));
+    } catch (err) {
+      counterRef.current += 1;
+      const errorMsg: QuestionMessage = {
+        id: `asst-qa-${counterRef.current}`,
+        documentId: activeDoc.id,
+        question: trimmedText,
+        answer: "We couldn't complete the request due to a network or server issue. Please try again.",
+        answerStatus: "error",
+        isNotFound: false,
+        isError: true,
+        askedAt: "Just now",
+        answeredAt: "Just now",
+      };
+
+      setQaHistoryByDoc((prev) => ({
+        ...prev,
+        [activeDoc.id]: [...(prev[activeDoc.id] || []), errorMsg],
+      }));
+    } finally {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       setIsThinking(false);
-    }, 450);
+      setThinkingMessage("");
+    }
   }, [activeDoc]);
 
   // Handle incoming query param if provided
@@ -171,7 +211,11 @@ export function QAWorkspace() {
   }, [initialQuery, activeDoc, handleSendMessage]);
 
   const handleReset = () => {
-    setQaHistory([]);
+    if (!activeDoc) return;
+    setQaHistoryByDoc((prev) => ({
+      ...prev,
+      [activeDoc.id]: [],
+    }));
   };
 
   const handleOpenEvidence = (msg: QuestionMessage) => {
@@ -283,6 +327,7 @@ export function QAWorkspace() {
             <QAConversation
               messages={messages}
               isThinking={isThinking}
+              thinkingMessage={thinkingMessage}
               onViewEvidence={handleOpenEvidence}
             />
           </div>

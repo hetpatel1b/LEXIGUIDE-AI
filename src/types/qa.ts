@@ -30,10 +30,19 @@ export interface QuestionMessage {
   documentId: string;
   question: string;
   answer?: string;
+  answerStatus?: "grounded" | "not_found" | "partially_supported" | "clarification" | "error";
   evidence?: EvidenceCitation[];
+  keyPoints?: Array<{
+    text: string;
+    source?: {
+      chunkId?: string;
+      quote?: string;
+    };
+  }>;
   askedAt: string;
   answeredAt?: string;
   category?: QACategory;
   suggestedNextStep?: string;
   isNotFound?: boolean;
+  isError?: boolean;
 }

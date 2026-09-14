@@ -211,6 +211,42 @@ test("Session Storage: Sanitizes and purges legacy demo document if stored", () 
   }
 });
 
+test("Session Storage: Authentic user-uploaded documents survive sanitation even with test-like filenames", () => {
+  setupMockSessionStorage();
+  try {
+    clearAllDocuments();
+
+    // 1. User legitimately uploads file named LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf
+    const realUploadDoc = createDummyDoc(
+      "doc_8fa012bc44de",
+      "LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf"
+    );
+    realUploadDoc.source = "user-upload";
+
+    setActiveDocument(realUploadDoc);
+
+    const active = getActiveDocument();
+    assert.ok(active !== null, "Authentic user-uploaded document must not be purged");
+    assert.strictEqual(active?.id, "doc_8fa012bc44de");
+    assert.strictEqual(active?.displayName, "LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf");
+
+    // 2. User legitimately uploads file named Employment_Agreement_2026.pdf
+    const realEA = createDummyDoc("doc_9123abcd4567", "Employment_Agreement_2026.pdf");
+    realEA.source = "user-upload";
+
+    setActiveDocument(realEA);
+
+    const activeEA = getActiveDocument();
+    assert.ok(activeEA !== null, "User-uploaded Employment_Agreement_2026.pdf must not be purged");
+    assert.strictEqual(activeEA?.id, "doc_9123abcd4567");
+
+    const sessionDocs = getSessionDocuments();
+    assert.strictEqual(sessionDocs.length, 2);
+  } finally {
+    cleanupMockSessionStorage();
+  }
+});
+
 test("Session Storage: Manages multi-document lifecycle, switching, and deletion", () => {
   setupMockSessionStorage();
   try {

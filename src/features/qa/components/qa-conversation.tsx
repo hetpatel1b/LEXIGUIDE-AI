@@ -19,6 +19,7 @@ import type { QuestionMessage } from "@/types";
 export interface QAConversationProps {
   messages: QuestionMessage[];
   isThinking?: boolean;
+  thinkingMessage?: string;
   onViewEvidence: (msg: QuestionMessage) => void;
   onAddToActionCenter?: (msg: QuestionMessage) => void;
 }
@@ -26,6 +27,7 @@ export interface QAConversationProps {
 export function QAConversation({
   messages,
   isThinking = false,
+  thinkingMessage,
   onViewEvidence,
   onAddToActionCenter,
 }: QAConversationProps) {
@@ -77,9 +79,27 @@ export function QAConversation({
                   {/* Direct Answer Header */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <Badge variant="brand" size="sm" dot>
-                        Document-Grounded Answer
-                      </Badge>
+                      {msg.isError || msg.answerStatus === "error" ? (
+                        <Badge variant="danger" size="sm" dot>
+                          Request Error
+                        </Badge>
+                      ) : msg.answerStatus === "clarification" ? (
+                        <Badge variant="neutral" size="sm" dot>
+                          Clarification
+                        </Badge>
+                      ) : msg.isNotFound || msg.answerStatus === "not_found" ? (
+                        <Badge variant="warning" size="sm" dot>
+                          Not Found in Uploaded Document
+                        </Badge>
+                      ) : msg.answerStatus === "partially_supported" ? (
+                        <Badge variant="neutral" size="sm" dot>
+                          Partially Supported by Document
+                        </Badge>
+                      ) : (
+                        <Badge variant="brand" size="sm" dot>
+                          Document-Grounded Answer
+                        </Badge>
+                      )}
                       {msg.answeredAt && (
                         <span className="text-[10px] text-[var(--foreground-muted)] font-mono">
                           {msg.answeredAt}
@@ -92,16 +112,58 @@ export function QAConversation({
                     </p>
                   </div>
 
-                  {/* Not Found in Document Notification */}
-                  {msg.isNotFound && (
-                    <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  {/* Key Points If Present */}
+                  {msg.keyPoints && msg.keyPoints.length > 0 && (
+                    <div className="pt-2 border-t border-[var(--border-muted)] space-y-1.5">
+                      <span className="text-[11px] font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider block">
+                        {msg.answerStatus === "clarification" ? "Suggested Inquiries:" : "Key Points:"}
+                      </span>
+                      <ul className="space-y-1">
+                        {msg.keyPoints.map((kp, idx) => (
+                          <li key={idx} className="text-xs text-[var(--foreground)] leading-relaxed flex items-start gap-1.5">
+                            <span className="text-[var(--primary)] font-bold shrink-0">&bull;</span>
+                            <span>{kp.text}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Error Notification */}
+                  {(msg.isError || msg.answerStatus === "error") && (
+                    <div className="p-3 rounded-[var(--radius-md)] border border-red-200/80 bg-red-50/70 dark:border-red-900/60 dark:bg-red-950/20 text-xs text-red-900 dark:text-red-200 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
                       <div className="leading-relaxed">
-                        <span className="font-semibold mr-1">Not Found in Uploaded Document:</span>
-                        LexiGuide AI only reports terms actually identified in this contract and does not fabricate missing clauses.
+                        <span className="font-semibold mr-1">System Notice:</span>
+                        The request could not be completed. Please check your connection or retry in a moment.
                       </div>
                     </div>
                   )}
+
+                  {/* Clarification Guidance */}
+                  {msg.answerStatus === "clarification" && (
+                    <div className="p-3 rounded-[var(--radius-md)] border border-blue-200/80 bg-blue-50/70 dark:border-blue-900/60 dark:bg-blue-950/20 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
+                      <div className="leading-relaxed">
+                        <span className="font-semibold mr-1">Specific Questions Recommended:</span>
+                        LexiGuide AI works best when asking about specific topics such as base salary, notice periods, arbitration seat, or specific numbered clauses.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Not Found in Document Notification */}
+                  {(msg.isNotFound || msg.answerStatus === "not_found") &&
+                    !msg.isError &&
+                    msg.answerStatus !== "error" &&
+                    msg.answerStatus !== "clarification" && (
+                      <div className="p-3 rounded-[var(--radius-md)] border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/60 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                        <div className="leading-relaxed">
+                          <span className="font-semibold mr-1">Not Found in Uploaded Document:</span>
+                          LexiGuide AI only reports terms actually identified in this contract and does not fabricate missing clauses.
+                        </div>
+                      </div>
+                    )}
 
                   {/* Source Citation & Verbatim Evidence */}
                   {firstCitation && (
@@ -156,17 +218,21 @@ export function QAConversation({
                       <span />
                     )}
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant={isAdded ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={() => handleAddToAction(msg)}
-                        leftIcon={<CheckSquare className="h-3 w-3" />}
-                        className="text-xs w-full xs:w-auto"
-                      >
-                        {isAdded ? "Added to Actions!" : "Add to Action Center"}
-                      </Button>
-                    </div>
+                    {!msg.isError &&
+                      msg.answerStatus !== "error" &&
+                      msg.answerStatus !== "clarification" && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant={isAdded ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => handleAddToAction(msg)}
+                            leftIcon={<CheckSquare className="h-3 w-3" />}
+                            className="text-xs w-full xs:w-auto"
+                          >
+                            {isAdded ? "Added to Actions!" : "Add to Action Center"}
+                          </Button>
+                        </div>
+                      )}
                   </div>
                 </Card>
               </div>
@@ -181,7 +247,7 @@ export function QAConversation({
           <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[var(--color-brand-blue)]/10 text-[var(--primary)] animate-pulse">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
-          <span>Retrieving grounded contract text &amp; cross-referencing sections…</span>
+          <span>{thinkingMessage || "Retrieving grounded contract text & cross-referencing sections…"}</span>
         </div>
       )}
     </div>

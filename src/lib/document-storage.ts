@@ -14,6 +14,11 @@ export function isLegacyDemoDocument(doc: Partial<NormalizedDocument>): boolean 
   if (typeof doc.id === "string" && (doc.id.startsWith("doc_test_") || doc.id.startsWith("doc-test"))) return true;
   if (doc.source === "test-fixture") return true;
 
+  // Authentic user uploads must NEVER be purged based on filename alone
+  if (doc.source === "user-upload") {
+    return false;
+  }
+
   const names = [
     doc.displayName,
     doc.originalFilename,
