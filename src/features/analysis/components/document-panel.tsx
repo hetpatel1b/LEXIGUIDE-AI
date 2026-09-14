@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { DocumentMetadata } from "./document-metadata";
 import { SectionList } from "./section-list";
 import { PageList } from "./page-list";
-import { SAMPLE_DOCUMENT } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
 import type { NormalizedDocument } from "@/types/document";
 
@@ -59,7 +58,7 @@ export function DocumentPanel({
         <div className="flex-1 flex flex-col items-center justify-start pt-4 gap-6">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600"
-            title={`${document ? document.displayName : SAMPLE_DOCUMENT.name} (${document ? document.format.toUpperCase() : "PDF"})`}
+            title={`${document ? document.displayName : "No document"} (${document ? document.format.toUpperCase() : "—"})`}
           >
             <FileText className="h-4 w-4" />
           </div>
@@ -91,13 +90,13 @@ export function DocumentPanel({
       }))
     : undefined;
 
-  const docName = document ? document.displayName : SAMPLE_DOCUMENT.name;
-  const docFormat = document ? document.format.toUpperCase() : "PDF";
+  const docName = document ? document.displayName : "No document";
+  const docFormat = document ? document.format.toUpperCase() : "—";
   const pageLabel = document
     ? document.pageCount !== null
       ? `${document.pageCount}p`
       : `${document.sections.length} sec`
-    : `${SAMPLE_DOCUMENT.pageCount}p`;
+    : "0p";
 
   return (
     <aside
@@ -125,8 +124,8 @@ export function DocumentPanel({
               <div className="flex items-center gap-1.5 text-[11px] text-[var(--foreground-muted)] font-mono">
                 <span>{docFormat} · {pageLabel}</span>
                 <span aria-hidden="true">&bull;</span>
-                <Badge variant={document ? "brand" : "success"} size="sm">
-                  {document ? "Ingested" : "Analyzed"}
+                <Badge variant={document ? "brand" : "neutral"} size="sm">
+                  {document ? "Ingested" : "No Document"}
                 </Badge>
               </div>
             </div>

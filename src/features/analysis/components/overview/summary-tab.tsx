@@ -11,10 +11,6 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  EXECUTIVE_SUMMARY,
-  DOCUMENT_METADATA_DETAILS,
-} from "../../fixtures/analysis-fixture";
 import type { AnalysisResult } from "@/lib/ai/types";
 
 export interface SummaryTabProps {
@@ -23,7 +19,18 @@ export interface SummaryTabProps {
 
 export function SummaryTab({ analysisResult }: SummaryTabProps) {
   const summary = React.useMemo(() => {
-    if (!analysisResult) return EXECUTIVE_SUMMARY;
+    if (!analysisResult) {
+      return {
+        overview: "No document analysis available.",
+        bulletPoints: [],
+        documentContext: {
+          jurisdiction: "Not specified",
+          governingLaw: "Not specified",
+          effectiveDate: "Not specified",
+          documentType: "Legal Document",
+        },
+      };
+    }
 
     const bulletPoints = [
       ...analysisResult.executiveSummary.keyThemes,
@@ -57,7 +64,7 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
         </div>
 
         <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
-          {analysisResult ? "Real AI Analysis · NVIDIA Nemotron" : "Illustrative analysis · Development preview"}
+          {analysisResult ? "Real AI Analysis · NVIDIA Nemotron" : "No Analysis Loaded"}
         </Badge>
       </div>
 
@@ -104,7 +111,7 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
               Governing Law: {summary.documentContext.governingLaw}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              {analysisResult ? "Jurisdiction identified from document text" : "Arbitration Seat: Bengaluru, Karnataka (Sole Arbitrator)"}
+              {analysisResult ? "Jurisdiction identified from document text" : "Jurisdiction not specified"}
             </p>
           </div>
         </Card>
@@ -125,7 +132,7 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
               Agreement Type: {summary.documentContext.documentType}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Review Status: {analysisResult ? "AI Analysis Completed by Nemotron" : DOCUMENT_METADATA_DETAILS.reviewStatus}
+              Review Status: {analysisResult ? "AI Analysis Completed by Nemotron" : "Awaiting Analysis"}
             </p>
           </div>
         </Card>
@@ -141,7 +148,7 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
         <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
           {analysisResult && analysisResult.analysisNotes.length > 0
             ? analysisResult.analysisNotes.join(" ")
-            : "The document contains structured substantive sections. The key legal commitments are highlighted across compensation, confidentiality, restrictive covenants, and termination procedures."}
+            : "No document notes available."}
         </p>
       </Card>
     </div>

@@ -66,7 +66,7 @@ export function CopilotInput({
       </form>
 
       <p className="text-[10px] text-[var(--foreground-muted)] text-center leading-tight">
-        Answers are strictly grounded in <span className="font-mono">Employment_Agreement_2026.pdf</span>.
+        Answers are strictly grounded in the active document text.
       </p>
     </div>
   );

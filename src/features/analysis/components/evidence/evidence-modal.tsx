@@ -5,7 +5,7 @@ import { BookOpen, Copy, Check, X, FileText } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { EvidenceDetail } from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
 
 export interface EvidenceModalProps {
   evidence: EvidenceDetail | null;

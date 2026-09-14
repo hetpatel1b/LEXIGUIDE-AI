@@ -3,15 +3,23 @@
 import * as React from "react";
 import { Layers, GitCompare, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { COMPARISON_METRICS } from "../fixtures/comparison-fixture";
 import type { ComparisonSummaryMetrics } from "@/types";
 
 export interface ComparisonSummaryProps {
   metrics?: ComparisonSummaryMetrics;
 }
 
+const DEFAULT_METRICS: ComparisonSummaryMetrics = {
+  sectionsCompared: 0,
+  changesIdentified: 0,
+  majorChanges: 0,
+  moderateChanges: 0,
+  minorChanges: 0,
+  unchangedCount: 0,
+};
+
 export function ComparisonSummary({
-  metrics = COMPARISON_METRICS,
+  metrics = DEFAULT_METRICS,
 }: ComparisonSummaryProps) {
   const cards = [
     {

@@ -3,8 +3,7 @@
 import * as React from "react";
 import { Sparkles, User, BookOpen, ExternalLink, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import type { EvidenceDetail } from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
 
 export interface CopilotMessageItem {
   id: string;
@@ -16,6 +15,7 @@ export interface CopilotMessageItem {
   suggestedNextStep?: string;
   isNotFound?: boolean;
   timestamp?: string;
+  documentTitle?: string;
 }
 
 export interface CopilotMessageProps {
@@ -91,7 +91,7 @@ export function CopilotMessage({ message, onViewEvidence }: CopilotMessageProps)
                       onClick={() =>
                         onViewEvidence({
                           id: message.id,
-                          documentTitle: "Employment_Agreement_2026.pdf",
+                          documentTitle: message.documentTitle || "Document",
                           sectionReference: message.sourceSection || "Clause",
                           pageNumber: message.pageNumber || 1,
                           excerpt: message.evidenceExcerpt || "",

@@ -17,15 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RiskIndicator } from "@/components/shared/risk-indicator";
-import {
-  METADATA_SUMMARY_CARDS,
-  EXECUTIVE_SUMMARY,
-  KEY_CLAUSES,
-  POTENTIAL_CONCERNS,
-  IMPORTANT_OBLIGATIONS,
-  IMPORTANT_DATES,
-  type EvidenceDetail,
-} from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
 import type { AnalysisTabId } from "../analysis-tabs";
 
 import type { AnalysisResult } from "@/lib/ai/types";
@@ -46,9 +38,54 @@ const ICON_MAP = {
 };
 
 export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: OverviewTabProps) {
-  // Dynamically derive metric cards from real analysis or fallback to demo fixture
+  // Dynamically derive metric cards from real analysis or fallback to empty state
   const metrics = React.useMemo(() => {
-    if (!analysisResult) return METADATA_SUMMARY_CARDS;
+    if (!analysisResult) {
+      return [
+        {
+          id: "doc-type",
+          label: "Document Type",
+          value: "Not loaded",
+          secondary: "Upload a document to analyze",
+          iconName: "FileText",
+        },
+        {
+          id: "parties",
+          label: "Identified Parties",
+          value: "—",
+          secondary: "No parties extracted",
+          iconName: "Users",
+        },
+        {
+          id: "effective-date",
+          label: "Effective Date",
+          value: "—",
+          secondary: "Governing law not specified",
+          iconName: "Calendar",
+        },
+        {
+          id: "clauses-count",
+          label: "Analyzed Clauses",
+          value: "0 Clauses",
+          secondary: "Awaiting document analysis",
+          iconName: "Scale",
+        },
+        {
+          id: "concerns-count",
+          label: "Review Priorities",
+          value: "0 Points",
+          secondary: "No review flags",
+          iconName: "AlertTriangle",
+        },
+        {
+          id: "obligations-count",
+          label: "Tracked Obligations",
+          value: "0 Duties",
+          secondary: "No duties extracted",
+          iconName: "CheckSquare",
+        },
+      ];
+    }
 
     const partiesStr =
       analysisResult.metadata.parties.length > 0
@@ -102,7 +139,12 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
   }, [analysisResult]);
 
   const execSummary = React.useMemo(() => {
-    if (!analysisResult) return EXECUTIVE_SUMMARY;
+    if (!analysisResult) {
+      return {
+        overview: "No document analysis available.",
+        bulletPoints: [],
+      };
+    }
     return {
       overview: analysisResult.executiveSummary.overview,
       bulletPoints:
@@ -113,7 +155,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
   }, [analysisResult]);
 
   const displayConcerns = React.useMemo(() => {
-    if (!analysisResult) return POTENTIAL_CONCERNS.slice(0, 3);
+    if (!analysisResult) return [];
     return analysisResult.potentialConcerns.slice(0, 3).map((c) => ({
       id: c.id,
       title: c.title,
@@ -127,7 +169,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
   }, [analysisResult]);
 
   const displayClauses = React.useMemo(() => {
-    if (!analysisResult) return KEY_CLAUSES.slice(0, 3);
+    if (!analysisResult) return [];
     return analysisResult.keyClauses.slice(0, 3).map((cl) => ({
       id: cl.id,
       title: cl.title,
@@ -142,7 +184,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
   }, [analysisResult]);
 
   const displayObligations = React.useMemo(() => {
-    if (!analysisResult) return IMPORTANT_OBLIGATIONS.slice(0, 3);
+    if (!analysisResult) return [];
     return analysisResult.obligations.slice(0, 3).map((ob) => ({
       id: ob.id,
       party: ob.party,
@@ -155,7 +197,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
   }, [analysisResult]);
 
   const displayDates = React.useMemo(() => {
-    if (!analysisResult) return IMPORTANT_DATES;
+    if (!analysisResult) return [];
     return analysisResult.importantDates.slice(0, 4).map((dt) => ({
       id: dt.id,
       event: dt.label,
@@ -230,7 +272,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
 
               <div className="flex items-center gap-2">
                 <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
-                  {analysisResult ? "Real AI Analysis • NVIDIA Nemotron" : "Illustrative analysis • Dev preview"}
+                  {analysisResult ? "Real AI Analysis • NVIDIA Nemotron" : "No Analysis Loaded"}
                 </Badge>
               </div>
             </div>
@@ -282,7 +324,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                   </h2>
                 </div>
                 <Badge variant="warning" size="sm">
-                  {analysisResult ? `${analysisResult.potentialConcerns.length} Review Points` : "5 Flagged"}
+                  {analysisResult ? `${analysisResult.potentialConcerns.length} Review Points` : "0 Flagged"}
                 </Badge>
               </div>
 
@@ -291,46 +333,52 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
               </p>
 
               <div className="space-y-2.5">
-                {displayConcerns.map((concern) => (
-                  <div
-                    key={concern.id}
-                    className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
-                        {concern.title}
-                      </h4>
-                      <RiskIndicator severity={concern.severity} size="sm" />
-                    </div>
-
-                    <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 leading-relaxed">
-                      {concern.description}
-                    </p>
-
-                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
-                      <span className="font-mono text-[10px]">
-                        {concern.clauseReference} &bull; Page {concern.pageNumber}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onViewEvidence({
-                            id: concern.id,
-                            documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
-                            sectionReference: concern.clauseReference || "Clause",
-                            pageNumber: concern.pageNumber || 1,
-                            excerpt: concern.evidenceSnippet || "",
-                            contextNote: concern.verified ? "✓ Verified against source text" : "Unverified citation",
-                          })
-                        }
-                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
-                      >
-                        <span>View Evidence</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </button>
-                    </div>
+                {displayConcerns.length === 0 ? (
+                  <div className="p-4 text-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+                    No concerns flagged for this document.
                   </div>
-                ))}
+                ) : (
+                  displayConcerns.map((concern) => (
+                    <div
+                      key={concern.id}
+                      className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
+                          {concern.title}
+                        </h4>
+                        <RiskIndicator severity={concern.severity} size="sm" />
+                      </div>
+
+                      <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 leading-relaxed">
+                        {concern.description}
+                      </p>
+
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
+                        <span className="font-mono text-[10px]">
+                          {concern.clauseReference} &bull; Page {concern.pageNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onViewEvidence({
+                              id: concern.id,
+                              documentTitle: analysisResult?.documentName || "Document",
+                              sectionReference: concern.clauseReference || "Clause",
+                              pageNumber: concern.pageNumber || 1,
+                              excerpt: concern.evidenceSnippet || "",
+                              contextNote: concern.verified ? "✓ Verified against source text" : "Unverified citation",
+                            })
+                          }
+                          className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
+                        >
+                          <span>View Evidence</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -342,7 +390,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("concerns")}
                 className="text-xs"
               >
-                View All {analysisResult ? analysisResult.potentialConcerns.length : 5} Concerns
+                View All {analysisResult ? analysisResult.potentialConcerns.length : 0} Concerns
               </Button>
             </div>
           </Card>
@@ -360,7 +408,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  {analysisResult ? `${analysisResult.keyClauses.length} Extracted` : "12 Identified"}
+                  {analysisResult ? `${analysisResult.keyClauses.length} Extracted` : "0 Identified"}
                 </Badge>
               </div>
 
@@ -369,48 +417,54 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
               </p>
 
               <div className="space-y-2.5">
-                {displayClauses.map((clause) => (
-                  <div
-                    key={clause.id}
-                    className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
-                        {clause.title}
-                      </h4>
-                      <Badge variant="brand" size="sm">
-                        {clause.sectionReference}
-                      </Badge>
-                    </div>
-
-                    <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 leading-relaxed">
-                      {clause.summary}
-                    </p>
-
-                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
-                      <span className="font-mono text-[10px]">
-                        Page {clause.pageNumber} &bull; {clause.category}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onViewEvidence({
-                            id: clause.id,
-                            documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
-                            sectionReference: clause.sectionReference || "Clause",
-                            pageNumber: clause.pageNumber || 1,
-                            excerpt: clause.evidenceSnippet || "",
-                            contextNote: clause.verified ? "✓ Verified against source text" : "Unverified citation",
-                          })
-                        }
-                        className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
-                      >
-                        <span>View Evidence</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </button>
-                    </div>
+                {displayClauses.length === 0 ? (
+                  <div className="p-4 text-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+                    No clauses identified for this document.
                   </div>
-                ))}
+                ) : (
+                  displayClauses.map((clause) => (
+                    <div
+                      key={clause.id}
+                      className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
+                          {clause.title}
+                        </h4>
+                        <Badge variant="brand" size="sm">
+                          {clause.sectionReference}
+                        </Badge>
+                      </div>
+
+                      <p className="text-xs text-[var(--foreground-secondary)] line-clamp-2 leading-relaxed">
+                        {clause.summary}
+                      </p>
+
+                      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-1 text-[11px] text-[var(--foreground-muted)]">
+                        <span className="font-mono text-[10px]">
+                          Page {clause.pageNumber} &bull; {clause.category}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onViewEvidence({
+                              id: clause.id,
+                              documentTitle: analysisResult?.documentName || "Document",
+                              sectionReference: clause.sectionReference || "Clause",
+                              pageNumber: clause.pageNumber || 1,
+                              excerpt: clause.evidenceSnippet || "",
+                              contextNote: clause.verified ? "✓ Verified against source text" : "Unverified citation",
+                            })
+                          }
+                          className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline font-medium text-[11px] cursor-pointer self-start xs:self-auto"
+                        >
+                          <span>View Evidence</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -422,7 +476,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("clauses")}
                 className="text-xs"
               >
-                View All {analysisResult ? analysisResult.keyClauses.length : 12} Key Clauses
+                View All {analysisResult ? analysisResult.keyClauses.length : 0} Key Clauses
               </Button>
             </div>
           </Card>
@@ -443,29 +497,35 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  {analysisResult ? `${analysisResult.obligations.length} Duties` : "8 Identified"}
+                  {analysisResult ? `${analysisResult.obligations.length} Duties` : "0 Identified"}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                {displayObligations.map((ob) => (
-                  <div
-                    key={ob.id}
-                    className="p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1"
-                  >
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-semibold text-[var(--foreground)] truncate max-w-[200px]">
-                        {ob.party}
-                      </span>
-                      <span className="font-mono text-[10px] text-[var(--foreground-muted)]">
-                        {ob.clauseReference}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[var(--foreground-secondary)] line-clamp-1">
-                      {ob.duty}
-                    </p>
+                {displayObligations.length === 0 ? (
+                  <div className="p-4 text-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+                    No obligations tracked for this document.
                   </div>
-                ))}
+                ) : (
+                  displayObligations.map((ob) => (
+                    <div
+                      key={ob.id}
+                      className="p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1"
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-[var(--foreground)] truncate max-w-[200px]">
+                          {ob.party}
+                        </span>
+                        <span className="font-mono text-[10px] text-[var(--foreground-muted)]">
+                          {ob.clauseReference}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--foreground-secondary)] line-clamp-1">
+                        {ob.duty}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -477,7 +537,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("obligations")}
                 className="text-xs"
               >
-                View All {analysisResult ? analysisResult.obligations.length : 8} Obligations
+                View All {analysisResult ? analysisResult.obligations.length : 0} Obligations
               </Button>
             </div>
           </Card>
@@ -495,30 +555,36 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                   </h2>
                 </div>
                 <Badge variant="neutral" size="sm">
-                  {analysisResult ? `${analysisResult.importantDates.length} Dates` : "4 Identified"}
+                  {analysisResult ? `${analysisResult.importantDates.length} Dates` : "0 Identified"}
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                {displayDates.map((dt) => (
-                  <div
-                    key={dt.id}
-                    className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] gap-2"
-                  >
-                    <div className="min-w-0">
-                      <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
-                        {dt.event}
-                      </h4>
-                      <p className="text-[10px] text-[var(--foreground-muted)] font-mono">
-                        {dt.sourceSection} &bull; Page {dt.pageNumber}
-                      </p>
-                    </div>
-
-                    <Badge variant="brand" size="sm" className="font-mono shrink-0 text-[10px]">
-                      {dt.dateOrDuration}
-                    </Badge>
+                {displayDates.length === 0 ? (
+                  <div className="p-4 text-center rounded-[var(--radius-md)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+                    No important dates found for this document.
                   </div>
-                ))}
+                ) : (
+                  displayDates.map((dt) => (
+                    <div
+                      key={dt.id}
+                      className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] gap-2"
+                    >
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-semibold text-[var(--foreground)] truncate">
+                          {dt.event}
+                        </h4>
+                        <p className="text-[10px] text-[var(--foreground-muted)] font-mono">
+                          {dt.sourceSection} &bull; Page {dt.pageNumber}
+                        </p>
+                      </div>
+
+                      <Badge variant="brand" size="sm" className="font-mono shrink-0 text-[10px]">
+                        {dt.dateOrDuration}
+                      </Badge>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -530,7 +596,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                 onClick={() => onNavigateTab("dates")}
                 className="text-xs"
               >
-                View All {analysisResult ? analysisResult.importantDates.length : 4} Key Dates
+                View All {analysisResult ? analysisResult.importantDates.length : 0} Key Dates
               </Button>
             </div>
           </Card>

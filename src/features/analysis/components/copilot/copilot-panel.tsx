@@ -6,47 +6,68 @@ import {
   PanelRightClose,
   PanelRightOpen,
   RotateCcw,
-  HelpCircle,
 } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CopilotMessage, type CopilotMessageItem } from "./copilot-message";
 import { CopilotInput } from "./copilot-input";
-import {
-  COPILOT_SUGGESTIONS,
-  COPILOT_QA_PAIRS,
-  COPILOT_NOT_FOUND_RESPONSE,
-  type EvidenceDetail,
-} from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
+import type { NormalizedDocument } from "@/types/document";
 
 export interface CopilotPanelProps {
+  document?: NormalizedDocument | null;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onViewEvidence?: (evidence: EvidenceDetail) => void;
   className?: string;
 }
 
-const INITIAL_MESSAGES: CopilotMessageItem[] = [
-  {
-    id: "init-1",
-    sender: "assistant",
-    text: "Hello! I am your Document Copilot for Employment_Agreement_2026.pdf. You can ask me questions about termination notice periods, confidentiality obligations, IP ownership, compensation, or dispute jurisdiction.",
-    timestamp: "10:00 AM",
-  },
+const DEFAULT_SUGGESTIONS = [
+  "What are the termination conditions?",
+  "What are my key obligations?",
+  "Are there restrictive covenants or non-compete terms?",
+  "What is the governing law and dispute jurisdiction?",
 ];
 
 export function CopilotPanel({
+  document,
   isCollapsed,
   onToggleCollapse,
   onViewEvidence,
   className,
 }: CopilotPanelProps) {
-  const [messages, setMessages] = React.useState<CopilotMessageItem[]>(INITIAL_MESSAGES);
+  const docName = document?.displayName;
+
+  const initialMessage = React.useMemo<CopilotMessageItem>(() => {
+    if (docName) {
+      return {
+        id: "init-1",
+        sender: "assistant",
+        text: `Hello! I am your Document Copilot for ${docName}. Ask me any questions about clauses, obligations, dates, or key terms.`,
+        documentTitle: docName,
+        timestamp: "Just now",
+      };
+    }
+    return {
+      id: "init-1",
+      sender: "assistant",
+      text: "Hello! I am your Document Copilot. Please upload or select a document to ask questions about its clauses, obligations, dates, and terms.",
+      timestamp: "Just now",
+    };
+  }, [docName]);
+
+  const [prevDocName, setPrevDocName] = React.useState(docName);
+  const [messages, setMessages] = React.useState<CopilotMessageItem[]>([initialMessage]);
   const [isTyping, setIsTyping] = React.useState(false);
   const scrollRef = React.useRef<HTMLDivElement>(null);
-
   const counterRef = React.useRef(100);
+
+  // Re-sync initial message when active document changes
+  if (docName !== prevDocName) {
+    setPrevDocName(docName);
+    setMessages([initialMessage]);
+  }
 
   // Auto-scroll on new messages
   React.useEffect(() => {
@@ -67,46 +88,68 @@ export function CopilotPanel({
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
-    // Simulate response resolution from fixtures
     setTimeout(() => {
-      const lower = userText.toLowerCase();
-      let matchedFixture = null;
-
-      if (lower.includes("terminat") || lower.includes("fire") || lower.includes("end")) {
-        matchedFixture = COPILOT_QA_PAIRS.termination;
-      } else if (lower.includes("obligation") || lower.includes("duty") || lower.includes("responsibilit")) {
-        matchedFixture = COPILOT_QA_PAIRS.obligations;
-      } else if (lower.includes("review") || lower.includes("concern") || lower.includes("careful") || lower.includes("risk")) {
-        matchedFixture = COPILOT_QA_PAIRS.review;
-      } else if (lower.includes("resign") || lower.includes("leave") || lower.includes("quit")) {
-        matchedFixture = COPILOT_QA_PAIRS.resign;
-      } else if (lower.includes("confident") || lower.includes("secret") || lower.includes("nda")) {
-        matchedFixture = COPILOT_QA_PAIRS.confidentiality;
-      }
-
       counterRef.current += 1;
       let assistantMsg: CopilotMessageItem;
 
-      if (matchedFixture) {
+      if (!document || !document.chunks || document.chunks.length === 0) {
         assistantMsg = {
           id: `asst-${counterRef.current}`,
           sender: "assistant",
-          text: matchedFixture.answer,
-          sourceSection: matchedFixture.sectionReference,
-          pageNumber: matchedFixture.pageNumber,
-          evidenceExcerpt: matchedFixture.evidenceExcerpt,
-          suggestedNextStep: matchedFixture.suggestedNextStep,
-          timestamp: "Just now",
-        };
-      } else {
-        assistantMsg = {
-          id: `asst-${counterRef.current}`,
-          sender: "assistant",
-          text: COPILOT_NOT_FOUND_RESPONSE.answer,
-          suggestedNextStep: COPILOT_NOT_FOUND_RESPONSE.suggestedNextStep,
+          text: "No active document content is loaded. Please upload a document to enable grounded Copilot answers.",
           isNotFound: true,
           timestamp: "Just now",
         };
+      } else {
+        // Deterministic keyword retrieval across document chunks
+        const queryTerms = userText
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((t) => t.length > 2 && !["what", "when", "where", "how", "the", "are", "and", "for"].includes(t));
+
+        let bestChunk = null;
+        let highestScore = 0;
+
+        for (const chunk of document.chunks) {
+          const contentLower = chunk.text.toLowerCase();
+          let score = 0;
+          for (const term of queryTerms) {
+            if (contentLower.includes(term)) {
+              score += 1;
+            }
+          }
+          if (score > highestScore) {
+            highestScore = score;
+            bestChunk = chunk;
+          }
+        }
+
+        if (bestChunk && highestScore > 0) {
+          const sectionTitle = bestChunk.sectionTitle || "Document Excerpt";
+          const pageNumber = bestChunk.pageNumbers?.[0] ?? 1;
+
+          assistantMsg = {
+            id: `asst-${counterRef.current}`,
+            sender: "assistant",
+            text: `Based on ${sectionTitle} in ${document.displayName}: "${bestChunk.text.slice(0, 300)}..."`,
+            sourceSection: sectionTitle,
+            pageNumber,
+            evidenceExcerpt: bestChunk.text.slice(0, 300),
+            documentTitle: document.displayName,
+            suggestedNextStep: "Review the referenced section in the document viewer for full contractual context.",
+            timestamp: "Just now",
+          };
+        } else {
+          assistantMsg = {
+            id: `asst-${counterRef.current}`,
+            sender: "assistant",
+            text: `Not found in the uploaded document (${document.displayName}). LexiGuide AI only answers based on terms actually identified in your active contract.`,
+            documentTitle: document.displayName,
+            suggestedNextStep: "Try phrasing your inquiry using specific terms that appear in the document clauses.",
+            isNotFound: true,
+            timestamp: "Just now",
+          };
+        }
       }
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -115,7 +158,7 @@ export function CopilotPanel({
   };
 
   const handleReset = () => {
-    setMessages(INITIAL_MESSAGES);
+    setMessages([initialMessage]);
   };
 
   if (isCollapsed) {
@@ -164,27 +207,27 @@ export function CopilotPanel({
       {/* Copilot Header */}
       <div className="p-3 sm:p-3.5 px-4 border-b border-[var(--border)] bg-[var(--surface)] shrink-0">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-brand-blue)]/10 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
             </div>
 
-            <div className="text-left">
+            <div className="text-left min-w-0">
               <div className="flex items-center gap-1.5">
-                <h3 className="text-xs font-semibold text-[var(--foreground)]">
+                <h3 className="text-xs font-semibold text-[var(--foreground)] truncate">
                   Document Copilot
                 </h3>
                 <Badge variant="brand" size="sm">
                   Grounded
                 </Badge>
               </div>
-              <p className="text-[10px] text-[var(--foreground-muted)]">
-                Ask questions about this agreement
+              <p className="text-[10px] text-[var(--foreground-muted)] truncate">
+                {docName ? `Active: ${docName}` : "Ask questions about your document"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <IconButton
               size="sm"
               variant="ghost"
@@ -237,7 +280,7 @@ export function CopilotPanel({
               Suggested Inquiries
             </span>
             <div className="flex flex-col gap-1.5">
-              {COPILOT_SUGGESTIONS.map((suggestion) => (
+              {DEFAULT_SUGGESTIONS.map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"

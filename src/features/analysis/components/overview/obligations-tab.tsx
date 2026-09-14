@@ -4,7 +4,6 @@ import * as React from "react";
 import { User, Building2, Clock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IMPORTANT_OBLIGATIONS } from "../../fixtures/analysis-fixture";
 import type { AnalysisResult } from "@/lib/ai/types";
 
 export interface ObligationsTabProps {
@@ -15,10 +14,10 @@ export function ObligationsTab({ analysisResult }: ObligationsTabProps) {
   const { firstPartyName, secondPartyName, firstPartyList, secondPartyList } = React.useMemo(() => {
     if (!analysisResult) {
       return {
-        firstPartyName: "Rahul Mehta (Employee)",
-        secondPartyName: "Acme Technologies Pvt. Ltd. (Employer)",
-        firstPartyList: IMPORTANT_OBLIGATIONS.filter((o) => o.party.includes("Employee")),
-        secondPartyList: IMPORTANT_OBLIGATIONS.filter((o) => o.party.includes("Employer")),
+        firstPartyName: "Primary Party",
+        secondPartyName: "Counterparty",
+        firstPartyList: [],
+        secondPartyList: [],
       };
     }
 

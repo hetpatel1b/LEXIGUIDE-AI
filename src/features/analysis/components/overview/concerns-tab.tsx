@@ -4,7 +4,7 @@ import * as React from "react";
 import { ExternalLink, Info } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { RiskIndicator } from "@/components/shared/risk-indicator";
-import { POTENTIAL_CONCERNS, type EvidenceDetail } from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
 import type { AnalysisResult } from "@/lib/ai/types";
 
 export interface ConcernsTabProps {
@@ -14,7 +14,7 @@ export interface ConcernsTabProps {
 
 export function ConcernsTab({ analysisResult, onViewEvidence }: ConcernsTabProps) {
   const concerns = React.useMemo(() => {
-    if (!analysisResult) return POTENTIAL_CONCERNS;
+    if (!analysisResult) return [];
     return analysisResult.potentialConcerns.map((c) => ({
       id: c.id,
       title: c.title,
@@ -116,7 +116,7 @@ export function ConcernsTab({ analysisResult, onViewEvidence }: ConcernsTabProps
                   onClick={() =>
                     onViewEvidence({
                       id: concern.id,
-                      documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
+                      documentTitle: analysisResult?.documentName || "Document",
                       sectionReference: concern.clauseReference || "Clause",
                       pageNumber: concern.pageNumber || 1,
                       excerpt: concern.evidenceSnippet || "",

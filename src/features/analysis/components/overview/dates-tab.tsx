@@ -4,7 +4,6 @@ import * as React from "react";
 import { Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { IMPORTANT_DATES } from "../../fixtures/analysis-fixture";
 import type { ImportantDateType } from "@/types";
 import type { AnalysisResult } from "@/lib/ai/types";
 
@@ -14,7 +13,7 @@ export interface DatesTabProps {
 
 export function DatesTab({ analysisResult }: DatesTabProps) {
   const dates = React.useMemo(() => {
-    if (!analysisResult) return IMPORTANT_DATES;
+    if (!analysisResult) return [];
     return analysisResult.importantDates.map((dt) => ({
       id: dt.id,
       event: dt.label,

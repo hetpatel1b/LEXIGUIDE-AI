@@ -3,10 +3,10 @@
 import * as React from "react";
 import { FileText, CheckSquare, AlertTriangle, Scale } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { QA_TOPIC_GROUPS } from "../fixtures/qa-fixture";
 import type { QATopicGroup } from "@/types";
 
 export interface QATopicGroupsProps {
+  groups?: QATopicGroup[];
   onSelectQuestion: (question: string) => void;
   className?: string;
 }
@@ -18,7 +18,55 @@ const ICON_MAP = {
   Scale,
 };
 
+const DEFAULT_QA_TOPIC_GROUPS: QATopicGroup[] = [
+  {
+    id: "understand",
+    title: "Understand Document",
+    description: "High-level overview, parties, and agreement structure",
+    iconName: "FileText",
+    questions: [
+      "What is this agreement about?",
+      "Summarize the key terms.",
+      "Who are the parties and their roles?",
+    ],
+  },
+  {
+    id: "obligations",
+    title: "Obligations & Deadlines",
+    description: "Required duties, notice periods, and milestones",
+    iconName: "CheckSquare",
+    questions: [
+      "What are my primary obligations?",
+      "What does the counterparty have to do?",
+      "What deadlines and notice requirements apply?",
+    ],
+  },
+  {
+    id: "concerns",
+    title: "Potential Concerns",
+    description: "Provisions that may warrant closer review or discussion",
+    iconName: "AlertTriangle",
+    questions: [
+      "Which clauses should I review carefully?",
+      "Are there restrictive covenants or non-compete terms?",
+      "What provisions may deserve legal clarification?",
+    ],
+  },
+  {
+    id: "clauses",
+    title: "Specific Provisions",
+    description: "In-depth breakdown of standard legal sections",
+    iconName: "Scale",
+    questions: [
+      "Explain the termination clause.",
+      "Explain the confidentiality clause.",
+      "What is the governing law and dispute jurisdiction?",
+    ],
+  },
+];
+
 export function QATopicGroups({
+  groups = DEFAULT_QA_TOPIC_GROUPS,
   onSelectQuestion,
   className,
 }: QATopicGroupsProps) {
@@ -32,7 +80,7 @@ export function QATopicGroups({
       </div>
 
       <div className="space-y-3">
-        {QA_TOPIC_GROUPS.map((group) => {
+        {groups.map((group) => {
           const Icon = ICON_MAP[group.iconName as keyof typeof ICON_MAP] || FileText;
 
           return (

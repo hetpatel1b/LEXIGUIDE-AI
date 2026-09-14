@@ -4,7 +4,7 @@ import * as React from "react";
 import { ExternalLink, Filter } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { KEY_CLAUSES, type EvidenceDetail } from "../../fixtures/analysis-fixture";
+import type { EvidenceDetail } from "@/types";
 import type { AnalysisResult } from "@/lib/ai/types";
 
 export interface ClausesTabProps {
@@ -16,7 +16,7 @@ export function ClausesTab({ analysisResult, onViewEvidence }: ClausesTabProps) 
   const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
 
   const clauses = React.useMemo(() => {
-    if (!analysisResult) return KEY_CLAUSES;
+    if (!analysisResult) return [];
     return analysisResult.keyClauses.map((c) => ({
       id: c.id,
       title: c.title,
@@ -136,7 +136,7 @@ export function ClausesTab({ analysisResult, onViewEvidence }: ClausesTabProps) 
                   onClick={() =>
                     onViewEvidence({
                       id: clause.id,
-                      documentTitle: analysisResult?.documentName || "Employment_Agreement_2026.pdf",
+                      documentTitle: analysisResult?.documentName || "Document",
                       sectionReference: clause.sectionReference || "Clause",
                       pageNumber: clause.pageNumber || 1,
                       excerpt: clause.evidenceSnippet || "",

@@ -23,7 +23,6 @@ export interface RealDocumentViewProps {
   selectedSection?: DocumentSectionItem | null;
   selectedPage?: number;
   onSelectSection?: (section: DocumentSectionItem) => void;
-  onSwitchToDemo: () => void;
 }
 
 export function RealDocumentView({
@@ -31,7 +30,6 @@ export function RealDocumentView({
   selectedSection,
   selectedPage = 1,
   onSelectSection,
-  onSwitchToDemo,
 }: RealDocumentViewProps) {
   // Find current section in document
   const activeSection =
@@ -71,17 +69,6 @@ export function RealDocumentView({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onSwitchToDemo}
-              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-              className="text-xs"
-            >
-              Switch to Demo Workspace
-            </Button>
-
             <Button
               href="/"
               variant="ghost"
@@ -215,24 +202,13 @@ export function RealDocumentView({
           <Info className="h-5 w-5 text-[var(--primary)] shrink-0 mt-0.5" />
           <div className="space-y-0.5">
             <p className="font-semibold text-[var(--foreground)]">
-              Phase 3 Scope Notice — AI Intelligence Layer
+              Document Intelligence Notice
             </p>
             <p className="text-[var(--foreground-muted)]">
-              Clause extraction, obligation synthesis, risk severity rating, and interactive Q&amp;A will be powered by NVIDIA Nemotron in Phase 3. The foundation of real, trustworthy document parsing is now complete.
+              Clause extraction, obligation synthesis, risk severity rating, and interactive Q&amp;A are powered by NVIDIA Nemotron across all parsed sections and chunks.
             </p>
           </div>
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onSwitchToDemo}
-          rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
-          className="shrink-0"
-        >
-          View Phase 1 Demo
-        </Button>
       </div>
     </div>
   );

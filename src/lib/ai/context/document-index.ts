@@ -37,7 +37,7 @@ export const LEGAL_CATEGORIES = [
 export type LegalCategory = (typeof LEGAL_CATEGORIES)[number];
 
 const CATEGORY_KEYWORDS: Record<LegalCategory, string[]> = {
-  PARTIES: ["parties", "preamble", "recital", "between", "executive", "company", "employer", "employee", "arjun mehta", "northstar analytics"],
+  PARTIES: ["parties", "preamble", "recital", "between", "executive", "company", "employer", "employee", "consultant", "contractor", "client", "service provider"],
   DATES: ["effective date", "execution date", "commencement", "calendar", "fiscal", "initial term"],
   TERM: ["initial contractual term", "initial term", "term", "duration", "period", "probation", "renewal", "expiration"],
   COMPENSATION: ["retention award", "retention bonus", "base salary", "annual incentive", "compensation", "salary", "bonus", "retention", "award", "schedule f"],

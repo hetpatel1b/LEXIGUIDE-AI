@@ -21,8 +21,7 @@ import { ClausesTab } from "./overview/clauses-tab";
 import { ConcernsTab } from "./overview/concerns-tab";
 import { ObligationsTab } from "./overview/obligations-tab";
 import { DatesTab } from "./overview/dates-tab";
-import type { EvidenceDetail } from "../fixtures/analysis-fixture";
-import type { DocumentSectionItem } from "@/types";
+import type { EvidenceDetail, DocumentSectionItem } from "@/types";
 import type { NormalizedDocument } from "@/types/document";
 import type { AnalysisResult } from "@/lib/ai/types";
 import { RealDocumentView } from "./real-document-view";
@@ -42,7 +41,6 @@ export interface AnalysisMainProps {
   onOpenDocumentDrawer?: () => void;
   onOpenCopilotDrawer?: () => void;
   onViewEvidence: (evidence: EvidenceDetail) => void;
-  onSwitchToDemo?: () => void;
   className?: string;
 }
 
@@ -61,7 +59,6 @@ export function AnalysisMain({
   onOpenDocumentDrawer,
   onOpenCopilotDrawer,
   onViewEvidence,
-  onSwitchToDemo,
 }: AnalysisMainProps) {
   const [showRawStructureView, setShowRawStructureView] = React.useState(false);
   const [elapsedSec, setElapsedSec] = React.useState(0);
@@ -149,16 +146,14 @@ export function AnalysisMain({
           )}
 
           <Badge
-            variant={realDocument ? "brand" : "neutral"}
+            variant="brand"
             size="sm"
             dot
             className="hidden xs:inline-flex shrink-0"
           >
-            {realDocument
-              ? analysisResult
-                ? "NVIDIA Nemotron Analysis"
-                : "Real Ingested Document"
-              : "Illustrative Analysis"}
+            {analysisResult
+              ? "NVIDIA Nemotron Analysis"
+              : "Real Ingested Document"}
           </Badge>
 
           {onOpenCopilotDrawer && (
@@ -207,7 +202,6 @@ export function AnalysisMain({
               selectedSection={selectedSection}
               selectedPage={selectedPage}
               onSelectSection={onSelectSection}
-              onSwitchToDemo={onSwitchToDemo || (() => {})}
             />
           ) : realDocument && isAnalyzing ? (
             /* B. Loading State during Nemotron AI execution with phased feedback */
@@ -291,16 +285,6 @@ export function AnalysisMain({
                     Retry AI Analysis
                   </Button>
                 )}
-                {onSwitchToDemo && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onSwitchToDemo}
-                  >
-                    View Demo Fixture
-                  </Button>
-                )}
               </div>
             </div>
           ) : realDocument && !analysisResult ? (
@@ -339,7 +323,7 @@ export function AnalysisMain({
               </div>
             </div>
           ) : (
-            /* E. Standard Tab Views (Consumes real analysisResult or demo fixture) */
+            /* E. Standard Tab Views (Consumes real analysisResult) */
             <>
               {activeTab === "overview" && (
                 <OverviewTab

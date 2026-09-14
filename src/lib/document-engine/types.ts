@@ -98,6 +98,7 @@ export interface NormalizedDocument {
   paragraphCount: number;
   uploadedAt: string;
   status: ProcessingStatus;
+  source?: "user-upload" | "test-fixture";
   extractedMetadata: DocumentExtractedMetadata;
   pages: DocumentPage[];
   sections: DocumentSection[];

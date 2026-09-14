@@ -3,7 +3,6 @@
 import * as React from "react";
 import { BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DOCUMENT_PAGES } from "../fixtures/analysis-fixture";
 
 export interface PageListProps {
   pages?: Array<{ pageNumber: number; title?: string; subtitle?: string }>;
@@ -13,12 +12,12 @@ export interface PageListProps {
 }
 
 export function PageList({
-  pages = DOCUMENT_PAGES,
+  pages = [],
   selectedPage = 1,
   onSelectPage,
   className,
 }: PageListProps) {
-  const displayPages = pages && pages.length > 0 ? pages : DOCUMENT_PAGES;
+  const displayPages = pages || [];
 
   return (
     <div className={cn("space-y-2 text-left", className)}>
@@ -32,7 +31,12 @@ export function PageList({
         </span>
       </div>
 
-      <div className="grid grid-cols-6 gap-1.5">
+      {displayPages.length === 0 ? (
+        <div className="p-3 text-center text-xs text-[var(--foreground-muted)] border border-dashed rounded-[var(--radius-md)]">
+          No pages available.
+        </div>
+      ) : (
+        <div className="grid grid-cols-6 gap-1.5">
         {displayPages.map((page) => {
           const isSelected = selectedPage === page.pageNumber;
           return (
@@ -54,6 +58,7 @@ export function PageList({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   GitCompare,
   FileText,
-  AlertCircle,
-  Check,
-  Sparkles,
   Info,
 } from "lucide-react";
 import { WorkspaceNav } from "@/components/shared";
@@ -18,47 +16,241 @@ import { ComparisonSummary } from "./comparison-summary";
 import { ComparisonFilters } from "./comparison-filters";
 import { ComparisonChangeCard } from "./comparison-change-card";
 import { UnchangedSectionCard } from "./unchanged-section-card";
-import {
-  COMPARISON_DOC_A,
-  COMPARISON_DOC_B,
-  COMPARISON_METRICS,
-  COMPARISON_CHANGES,
-  UNCHANGED_SECTIONS,
-} from "../fixtures/comparison-fixture";
-import type { ComparisonCategory, ComparisonChange } from "@/types";
+import { WorkspaceEmpty } from "@/features/analysis/components/states/workspace-empty";
+import { getSessionDocuments } from "@/lib/document-storage";
+import type { NormalizedDocument } from "@/types/document";
+import type {
+  ComparisonCategory,
+  ComparisonChange,
+  ComparisonDocument,
+  ComparisonSummaryMetrics,
+} from "@/types";
+
+interface ComparisonUnchangedItem {
+  id: string;
+  title: string;
+  sectionReference: string;
+  pageNumber: number;
+  note: string;
+}
+
+function getSectionText(doc: NormalizedDocument, sec: NormalizedDocument["sections"][0]): string {
+  const chunkText = (doc.chunks || [])
+    .filter((c) => c.sectionId === sec.sectionId)
+    .map((c) => c.text)
+    .join(" ")
+    .trim();
+  return chunkText || sec.title;
+}
+
+const emptySubscribe = () => () => {};
 
 export function ComparisonWorkspace() {
+  const router = useRouter();
+  const hasMounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+  const [selectedDocAId, setSelectedDocAId] = React.useState<string>("");
+  const [selectedDocBId, setSelectedDocBId] = React.useState<string>("");
   const [selectedCategory, setSelectedCategory] = React.useState<ComparisonCategory>("All");
   const [activeEvidenceChange, setActiveEvidenceChange] = React.useState<ComparisonChange | null>(null);
   const [isEvidenceModalOpen, setIsEvidenceModalOpen] = React.useState(false);
   const [copiedCitation, setCopiedCitation] = React.useState(false);
 
+  const sessionDocs = React.useMemo(() => {
+    if (!hasMounted) return [];
+    return getSessionDocuments();
+  }, [hasMounted]);
+
+  const docA = React.useMemo(() => {
+    if (!sessionDocs.length) return null;
+    return sessionDocs.find((d) => d.id === selectedDocAId) || sessionDocs[0] || null;
+  }, [sessionDocs, selectedDocAId]);
+
+  const docB = React.useMemo(() => {
+    if (sessionDocs.length < 2) return null;
+    return sessionDocs.find((d) => d.id === selectedDocBId) || sessionDocs[1] || null;
+  }, [sessionDocs, selectedDocBId]);
+
+  // Compute clause-level differences and unchanged sections dynamically between docA and docB
+  const { changes, unchangedSections, metrics } = React.useMemo(() => {
+    if (!docA || !docB) {
+      return {
+        changes: [] as ComparisonChange[],
+        unchangedSections: [] as ComparisonUnchangedItem[],
+        metrics: {
+          sectionsCompared: 0,
+          changesIdentified: 0,
+          majorChanges: 0,
+          moderateChanges: 0,
+          minorChanges: 0,
+          unchangedCount: 0,
+        } as ComparisonSummaryMetrics,
+      };
+    }
+
+    const calculatedChanges: ComparisonChange[] = [];
+    const calculatedUnchanged: ComparisonUnchangedItem[] = [];
+
+    const sectionsA = docA.sections || [];
+    const sectionsB = docB.sections || [];
+
+    // Map sections from docB by normalized title for quick comparison
+    const bMap = new Map(sectionsB.map((s) => [s.title.toLowerCase().trim(), s]));
+
+    sectionsA.forEach((secA, idx) => {
+      const matchKey = secA.title.toLowerCase().trim();
+      const secB = bMap.get(matchKey);
+
+      if (secB) {
+        // Both documents have this section title
+        const textA = getSectionText(docA, secA);
+        const textB = getSectionText(docB, secB);
+
+        if (textA === textB) {
+          calculatedUnchanged.push({
+            id: `unchanged-${idx}`,
+            title: secA.title,
+            sectionReference: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
+            pageNumber: secA.pageReferences[0] || 1,
+            note: "Identical substantive wording preserved across both document versions.",
+          });
+        } else {
+          // Content differed
+          const isFinancial =
+            matchKey.includes("compensat") ||
+            matchKey.includes("salary") ||
+            matchKey.includes("fee") ||
+            matchKey.includes("bonus") ||
+            matchKey.includes("pay");
+          const isDates =
+            matchKey.includes("term") ||
+            matchKey.includes("date") ||
+            matchKey.includes("notice") ||
+            matchKey.includes("duration");
+          const isObligations =
+            matchKey.includes("duty") ||
+            matchKey.includes("obligation") ||
+            matchKey.includes("service") ||
+            matchKey.includes("compliance");
+
+          const category: "Financial" | "Obligations" | "Dates" | "Risks" = isFinancial
+            ? "Financial"
+            : isDates
+            ? "Dates"
+            : isObligations
+            ? "Obligations"
+            : "Risks";
+
+          const lengthDelta = Math.abs(textA.length - textB.length);
+          const changeSeverity: "major" | "moderate" =
+            lengthDelta > 150 ? "major" : "moderate";
+
+          calculatedChanges.push({
+            id: `change-${idx}`,
+            clauseTitle: secA.title,
+            category,
+            changeSeverity,
+            sectionA: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
+            sectionB: secB.sectionNumber ? `Section ${secB.sectionNumber}` : `Section ${secB.title}`,
+            pageA: secA.pageReferences[0] || 1,
+            pageB: secB.pageReferences[0] || 1,
+            docAContent: textA.slice(0, 300) || "Original section provision.",
+            docBContent: textB.slice(0, 300) || "Updated section provision.",
+            summaryChange: `Revisions identified between ${docA.displayName} and ${docB.displayName}.`,
+            whyItMatters:
+              changeSeverity === "major"
+                ? "Substantive length and language modification. Review obligations closely."
+                : undefined,
+          });
+        }
+      } else {
+        // Section exists in A but not directly matched by title in B
+        const textA = getSectionText(docA, secA);
+        calculatedChanges.push({
+          id: `diff-removed-${idx}`,
+          clauseTitle: secA.title,
+          category: "Obligations",
+          changeSeverity: "major",
+          sectionA: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
+          sectionB: "Omitted / Replaced",
+          pageA: secA.pageReferences[0] || 1,
+          pageB: 1,
+          docAContent: textA.slice(0, 300),
+          docBContent: "Provision not directly found under this section header in target version.",
+          summaryChange: `Section "${secA.title}" is present in Document A but omitted or relocated in Document B.`,
+          whyItMatters: "Verify whether omitted provisions were consolidated into another clause or intentionally removed.",
+        });
+      }
+    });
+
+    // Check for sections in B that were not in A
+    const aMap = new Map(sectionsA.map((s) => [s.title.toLowerCase().trim(), s]));
+    sectionsB.forEach((secB, idx) => {
+      const matchKey = secB.title.toLowerCase().trim();
+      if (!aMap.has(matchKey)) {
+        const textB = getSectionText(docB, secB);
+        calculatedChanges.push({
+          id: `diff-added-${idx}`,
+          clauseTitle: secB.title,
+          category: "Risks",
+          changeSeverity: "major",
+          sectionA: "Not in Document A",
+          sectionB: secB.sectionNumber ? `Section ${secB.sectionNumber}` : `Section ${idx + 1}`,
+          pageA: 1,
+          pageB: secB.pageReferences[0] || 1,
+          docAContent: "Provision was not present in the original document baseline.",
+          docBContent: textB.slice(0, 300),
+          summaryChange: `New section "${secB.title}" added to Document B.`,
+          whyItMatters: "Carefully inspect new clauses for newly imposed covenants or liabilities.",
+        });
+      }
+    });
+
+    const calculatedMetrics: ComparisonSummaryMetrics = {
+      sectionsCompared: Math.max(sectionsA.length, sectionsB.length),
+      changesIdentified: calculatedChanges.length,
+      majorChanges: calculatedChanges.filter((c) => c.changeSeverity === "major").length,
+      moderateChanges: calculatedChanges.filter((c) => c.changeSeverity === "moderate").length,
+      minorChanges: 0,
+      unchangedCount: calculatedUnchanged.length,
+    };
+
+    return {
+      changes: calculatedChanges,
+      unchangedSections: calculatedUnchanged,
+      metrics: calculatedMetrics,
+    };
+  }, [docA, docB]);
+
   // Compute category counts
   const counts: Record<ComparisonCategory, number> = React.useMemo(() => {
     return {
-      All: COMPARISON_CHANGES.length + UNCHANGED_SECTIONS.length,
-      "Major Changes": COMPARISON_CHANGES.filter((c) => c.changeSeverity === "major").length,
-      "Moderate Changes": COMPARISON_CHANGES.filter((c) => c.changeSeverity === "moderate").length,
-      Unchanged: UNCHANGED_SECTIONS.length,
-      Financial: COMPARISON_CHANGES.filter((c) => c.category === "Financial").length,
-      Obligations: COMPARISON_CHANGES.filter((c) => c.category === "Obligations").length,
-      Dates: COMPARISON_CHANGES.filter((c) => c.category === "Dates").length,
-      Risks: COMPARISON_CHANGES.filter((c) => c.category === "Risks").length,
+      All: changes.length + unchangedSections.length,
+      "Major Changes": changes.filter((c) => c.changeSeverity === "major").length,
+      "Moderate Changes": changes.filter((c) => c.changeSeverity === "moderate").length,
+      Unchanged: unchangedSections.length,
+      Financial: changes.filter((c) => c.category === "Financial").length,
+      Obligations: changes.filter((c) => c.category === "Obligations").length,
+      Dates: changes.filter((c) => c.category === "Dates").length,
+      Risks: changes.filter((c) => c.category === "Risks").length,
     };
-  }, []);
+  }, [changes, unchangedSections]);
 
   // Filtered change list
   const filteredChanges = React.useMemo(() => {
-    if (selectedCategory === "All") return COMPARISON_CHANGES;
+    if (selectedCategory === "All") return changes;
     if (selectedCategory === "Major Changes") {
-      return COMPARISON_CHANGES.filter((c) => c.changeSeverity === "major");
+      return changes.filter((c) => c.changeSeverity === "major");
     }
     if (selectedCategory === "Moderate Changes") {
-      return COMPARISON_CHANGES.filter((c) => c.changeSeverity === "moderate");
+      return changes.filter((c) => c.changeSeverity === "moderate");
     }
     if (selectedCategory === "Unchanged") return [];
-    return COMPARISON_CHANGES.filter((c) => c.category === selectedCategory);
-  }, [selectedCategory]);
+    return changes.filter((c) => c.category === selectedCategory);
+  }, [changes, selectedCategory]);
 
   const showUnchanged =
     selectedCategory === "All" || selectedCategory === "Unchanged";
@@ -81,12 +273,81 @@ export function ComparisonWorkspace() {
     }
   };
 
+  // Prevent flash of empty state during hydration
+  if (!hasMounted) {
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav />
+        <div className="flex-1 flex items-center justify-center p-6 text-xs text-[var(--foreground-muted)]">
+          Loading comparison workspace…
+        </div>
+      </div>
+    );
+  }
+
+  // 0 Documents State
+  if (sessionDocs.length === 0) {
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <WorkspaceEmpty
+            title="Documents needed for comparison"
+            description="Upload at least two legal documents in the Analysis workspace to compare clauses, duties, and terms side by side."
+            onUploadClick={() => router.push("/analyze")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 1 Document State
+  if (sessionDocs.length === 1) {
+    const singleDoc = sessionDocs[0];
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav
+          documentName={singleDoc.displayName}
+          documentType={singleDoc.format.toUpperCase()}
+        />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <WorkspaceEmpty
+            title="Second document needed for comparison"
+            description={`"${singleDoc.displayName}" is active. Upload a second document in the Analysis workspace to compare them side by side.`}
+            onUploadClick={() => router.push("/analyze")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 2+ Documents State
+  const compDocA: ComparisonDocument = {
+    id: docA!.id,
+    name: docA!.displayName,
+    versionLabel: "Document A",
+    type: docA!.format.toUpperCase(),
+    pageCount: docA!.pageCount || 1,
+    sizeBytes: docA!.sizeBytes,
+  };
+
+  const compDocB: ComparisonDocument = {
+    id: docB!.id,
+    name: docB!.displayName,
+    versionLabel: "Document B",
+    type: docB!.format.toUpperCase(),
+    pageCount: docB!.pageCount || 1,
+    sizeBytes: docB!.sizeBytes,
+  };
+
+  const workspaceTitle = `${docA!.displayName} vs ${docB!.displayName}`;
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden">
-      {/* 1. Shared Workspace Navigation (Strictly Approved WorkspaceNav) */}
+      {/* 1. Shared Workspace Navigation */}
       <WorkspaceNav
-        documentName="Employment_Agreement_2026.pdf"
-        documentType="Employment Agreement"
+        documentName={workspaceTitle}
+        documentType="Comparison"
       />
 
       {/* 2. Main Wide Comparison Workspace */}
@@ -103,25 +364,28 @@ export function ComparisonWorkspace() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-[var(--foreground-muted)] max-w-4xl leading-relaxed">
-              Review clause-level differences between two revisions and identify changes that may deserve attention.
+              Review clause-level differences between {docA!.displayName} and {docB!.displayName}.
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
-            <Badge variant="neutral" size="sm" dot>
-              Illustrative Fixtures · Dev Preview
+            <Badge variant="brand" size="sm" dot>
+              Active Session ({sessionDocs.length} Documents)
             </Badge>
           </div>
         </div>
 
         {/* Document Pair Cards */}
         <section aria-label="Compared Documents" className="w-full">
-          <DocumentPair />
+          <DocumentPair
+            docA={compDocA}
+            docB={compDocB}
+          />
         </section>
 
         {/* Comparison Summary Metrics */}
         <section aria-label="Comparison Summary Metrics" className="w-full">
-          <ComparisonSummary metrics={COMPARISON_METRICS} />
+          <ComparisonSummary metrics={metrics} />
         </section>
 
         {/* Filter Bar */}
@@ -135,6 +399,12 @@ export function ComparisonWorkspace() {
 
         {/* Clause-Level Differences List */}
         <section aria-label="Clause Differences" className="space-y-4 pt-1 w-full">
+          {filteredChanges.length === 0 && (
+            <div className="p-8 text-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+              No clause differences detected for the selected filter category.
+            </div>
+          )}
+
           {filteredChanges.map((change) => (
             <ComparisonChangeCard
               key={change.id}
@@ -144,11 +414,11 @@ export function ComparisonWorkspace() {
           ))}
 
           {/* Unchanged Clauses Section */}
-          {showUnchanged && (
+          {showUnchanged && unchangedSections.length > 0 && (
             <div className="space-y-3 pt-5 border-t border-[var(--border-muted)] w-full">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-                  Unchanged Substantive Sections ({UNCHANGED_SECTIONS.length})
+                  Unchanged Substantive Sections ({unchangedSections.length})
                 </h3>
                 <span className="text-[11px] text-[var(--foreground-muted)]">
                   Verified identical across Document A and B
@@ -156,7 +426,7 @@ export function ComparisonWorkspace() {
               </div>
 
               <div className="space-y-2.5 w-full">
-                {UNCHANGED_SECTIONS.map((sec) => (
+                {unchangedSections.map((sec) => (
                   <UnchangedSectionCard key={sec.id} section={sec} />
                 ))}
               </div>
@@ -197,7 +467,7 @@ export function ComparisonWorkspace() {
               {/* Doc A */}
               <div className="p-3.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-2 flex flex-col justify-between">
                 <div className="flex items-center justify-between text-[11px] text-[var(--foreground-muted)] font-semibold pb-1.5 border-b border-[var(--border-muted)]">
-                  <span>Document A (Original)</span>
+                  <span>Document A ({docA!.displayName})</span>
                   <span className="font-mono">Page {activeEvidenceChange.pageA}</span>
                 </div>
                 <div className="flex-1 py-1">
@@ -210,7 +480,7 @@ export function ComparisonWorkspace() {
               {/* Doc B */}
               <div className="p-3.5 rounded-[var(--radius-lg)] border border-[var(--primary)]/40 bg-blue-50/40 dark:bg-blue-950/20 space-y-2 flex flex-col justify-between">
                 <div className="flex items-center justify-between text-[11px] text-[var(--primary)] font-semibold pb-1.5 border-b border-[var(--primary)]/20">
-                  <span>Document B (Updated)</span>
+                  <span>Document B ({docB!.displayName})</span>
                   <span className="font-mono text-[var(--foreground-muted)]">Page {activeEvidenceChange.pageB}</span>
                 </div>
                 <div className="flex-1 py-1">

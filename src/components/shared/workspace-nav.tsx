@@ -16,8 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export interface WorkspaceNavProps {
-  documentName?: string;
-  documentType?: string;
+  documentName?: string | null;
+  documentType?: string | null;
+  status?: "analyzed" | "analyzing" | "uploaded" | "none";
   className?: string;
   extraRightControls?: React.ReactNode;
 }
@@ -54,8 +55,9 @@ export const WORKSPACE_ROUTES = [
 ] as const;
 
 export function WorkspaceNav({
-  documentName = "Employment_Agreement_2026.pdf",
-  documentType = "Employment Agreement",
+  documentName,
+  documentType,
+  status = "analyzed",
   className,
   extraRightControls,
 }: WorkspaceNavProps) {
@@ -82,20 +84,38 @@ export function WorkspaceNav({
             />
           </div>
 
-          <div className="h-4 w-px bg-[var(--border)] hidden lg:block" />
+          {documentName && (
+            <>
+              <div className="h-4 w-px bg-[var(--border)] hidden lg:block" />
 
-          {/* Contextual Document Pill */}
-          <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] text-xs truncate">
-            <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
-            <span className="font-semibold text-[var(--foreground)] truncate max-w-[180px]" title={documentName}>
-              {documentName}
-            </span>
-            <span className="h-1 w-1 rounded-full bg-[var(--foreground-muted)]" />
-            <span className="text-[11px] text-[var(--foreground-muted)]">{documentType}</span>
-            <Badge variant="success" size="sm" dot>
-              Analyzed
-            </Badge>
-          </div>
+              {/* Contextual Document Pill (Only rendered when a real document exists) */}
+              <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[var(--surface-muted)] border border-[var(--border)] text-xs truncate">
+                <FileText className="h-3.5 w-3.5 text-red-500 shrink-0" aria-hidden="true" />
+                <span className="font-semibold text-[var(--foreground)] truncate max-w-[180px]" title={documentName}>
+                  {documentName}
+                </span>
+                {documentType && (
+                  <>
+                    <span className="h-1 w-1 rounded-full bg-[var(--foreground-muted)]" />
+                    <span className="text-[11px] text-[var(--foreground-muted)]">{documentType}</span>
+                  </>
+                )}
+                {status === "analyzed" ? (
+                  <Badge variant="success" size="sm" dot>
+                    Analyzed
+                  </Badge>
+                ) : status === "analyzing" ? (
+                  <Badge variant="brand" size="sm" dot>
+                    Analyzing…
+                  </Badge>
+                ) : (
+                  <Badge variant="neutral" size="sm">
+                    Ready to Analyze
+                  </Badge>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: Workspace Navigation Tools + Extra Controls + Exit */}

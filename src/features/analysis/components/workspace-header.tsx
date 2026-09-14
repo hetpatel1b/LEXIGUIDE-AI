@@ -18,8 +18,9 @@ export interface WorkspaceHeaderProps extends Partial<WorkspaceNavProps> {
 export function WorkspaceHeader(props: WorkspaceHeaderProps) {
   return (
     <WorkspaceNav
-      documentName={props.documentName || "Employment_Agreement_2026.pdf"}
-      documentType={props.documentType || "Employment Agreement"}
+      documentName={props.documentName}
+      documentType={props.documentType}
+      status={props.status}
       className={props.className}
       extraRightControls={props.extraRightControls}
     />

@@ -105,6 +105,7 @@ export async function processDocument(
     paragraphCount: stats.paragraphCount,
     uploadedAt: new Date().toISOString(),
     status: "uploaded",
+    source: "user-upload",
     extractedMetadata: rawParsed.extractedMetadata,
     pages,
     sections: updatedSections,

@@ -6,7 +6,6 @@ import {
   Sparkles,
   LayoutDashboard,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { WorkspaceNav } from "@/components/shared";
 import { DocumentPanel } from "./document-panel";
 import { AnalysisMain } from "./analysis-main";
@@ -17,17 +16,26 @@ import { WorkspaceSkeleton } from "./states/workspace-skeleton";
 import { WorkspaceEmpty } from "./states/workspace-empty";
 import { WorkspaceError } from "./states/workspace-error";
 import type { AnalysisTabId } from "./analysis-tabs";
-import type { EvidenceDetail } from "../fixtures/analysis-fixture";
-import type { DocumentSectionItem } from "@/types";
+import type { EvidenceDetail, DocumentSectionItem } from "@/types";
 import type { NormalizedDocument } from "@/types/document";
 import { getActiveDocument } from "@/lib/document-storage";
-import { Badge } from "@/components/ui/badge";
 import { useDocumentAnalysis } from "../hooks/use-document-analysis";
+import { useDocumentUpload } from "@/features/upload";
+
+const emptySubscribe = () => () => {};
 
 export type WorkspacePreviewState = "normal" | "loading" | "empty" | "error";
 
 export function AnalysisWorkspace() {
-  // Desktop Panel Collapse State: default closed as requested
+  const hasMounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Desktop Panel Collapse State: default closed
   const [isLeftCollapsed, setIsLeftCollapsed] = React.useState(true);
   const [isRightCollapsed, setIsRightCollapsed] = React.useState(true);
 
@@ -35,9 +43,46 @@ export function AnalysisWorkspace() {
   const [isDocDrawerOpen, setIsDocDrawerOpen] = React.useState(false);
   const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = React.useState(false);
 
-  // Real Uploaded Document vs Demo Mode
-  const [uploadedDoc, setUploadedDoc] = React.useState<NormalizedDocument | null>(() => getActiveDocument());
-  const [useDemoFixture, setUseDemoFixture] = React.useState<boolean>(false);
+  // Storage synchronization version
+  const [storageVersion, setStorageVersion] = React.useState(0);
+
+  // Upload handler for direct-upload on /analyze
+  const {
+    status: uploadStatus,
+    stageMessage: uploadStageMessage,
+    errorMessage: uploadError,
+    uploadAndProcess,
+  } = useDocumentUpload();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const doc = await uploadAndProcess(file);
+      if (doc) {
+        setStorageVersion((v) => v + 1);
+      }
+    }
+  };
+
+  // Listen for storage updates in other tabs/windows or local updates
+  React.useEffect(() => {
+    const handleStorage = () => {
+      setStorageVersion((v) => v + 1);
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("lexiguide-doc-update", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("lexiguide-doc-update", handleStorage);
+    };
+  }, []);
+
+  // Real Uploaded Document from Session Storage (client-only after mount)
+  const uploadedDoc = React.useMemo(() => {
+    if (!hasMounted) return null;
+    void storageVersion;
+    return getActiveDocument();
+  }, [hasMounted, storageVersion]);
 
   // AI Analysis State Machine
   const {
@@ -46,47 +91,63 @@ export function AnalysisWorkspace() {
     analysis,
     errorMessage: analysisError,
     runAnalysis,
-  } = useDocumentAnalysis(useDemoFixture ? null : uploadedDoc);
+  } = useDocumentAnalysis(uploadedDoc);
 
-  // Auto-trigger analysis for freshly uploaded real document
+  // Auto-trigger analysis for freshly uploaded real document if not analyzed
   React.useEffect(() => {
-    if (uploadedDoc && !useDemoFixture && analysisStatus === "idle" && !analysis) {
+    if (uploadedDoc && analysisStatus === "idle" && !analysis) {
       runAnalysis(uploadedDoc);
     }
-  }, [uploadedDoc, useDemoFixture, analysisStatus, analysis, runAnalysis]);
+  }, [uploadedDoc, analysisStatus, analysis, runAnalysis]);
 
   // Analysis State
   const [activeTab, setActiveTab] = React.useState<AnalysisTabId>("overview");
-  const [selectedSection, setSelectedSection] = React.useState<DocumentSectionItem | null>(() => {
-    const doc = getActiveDocument();
-    if (doc && doc.sections && doc.sections.length > 0) {
-      const first = doc.sections[0];
-      return {
-        id: first.sectionId,
-        sectionNumber: first.sectionNumber || "•",
-        title: first.title,
-        pageNumber: first.pageReferences[0] || 1,
-      };
-    }
-    return null;
-  });
+  const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null);
   const [selectedPage, setSelectedPage] = React.useState<number>(1);
+
+  const selectedSection: DocumentSectionItem | null = React.useMemo(() => {
+    if (!uploadedDoc || !uploadedDoc.sections || uploadedDoc.sections.length === 0) {
+      return null;
+    }
+    if (selectedSectionId) {
+      const match = uploadedDoc.sections.find((s) => s.sectionId === selectedSectionId);
+      if (match) {
+        return {
+          id: match.sectionId,
+          sectionNumber: match.sectionNumber || "•",
+          title: match.title,
+          pageNumber: match.pageReferences[0] || 1,
+        };
+      }
+    }
+    const first = uploadedDoc.sections[0];
+    return {
+      id: first.sectionId,
+      sectionNumber: first.sectionNumber || "•",
+      title: first.title,
+      pageNumber: first.pageReferences[0] || 1,
+    };
+  }, [uploadedDoc, selectedSectionId]);
 
   // Evidence Dialog State
   const [activeEvidence, setActiveEvidence] = React.useState<EvidenceDetail | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
 
   // Development Preview State (normal by default; testable via ?state=loading|empty|error)
-  const [previewState, setPreviewState] = React.useState<WorkspacePreviewState>(() => {
-    if (typeof window !== "undefined") {
+  const [previewStateOverride, setPreviewStateOverride] = React.useState<WorkspacePreviewState | null>(null);
+
+  const previewState: WorkspacePreviewState = React.useMemo(() => {
+    if (previewStateOverride) return previewStateOverride;
+    if (!hasMounted) return "normal";
+    try {
       const params = new URLSearchParams(window.location.search);
       const st = params.get("state") as WorkspacePreviewState | null;
       if (st && ["normal", "loading", "empty", "error"].includes(st)) {
         return st;
       }
-    }
+    } catch {}
     return "normal";
-  });
+  }, [hasMounted, previewStateOverride]);
 
   const handleOpenEvidence = (evidence: EvidenceDetail) => {
     setActiveEvidence(evidence);
@@ -99,9 +160,8 @@ export function AnalysisWorkspace() {
   };
 
   const handleSelectSection = (section: DocumentSectionItem) => {
-    setSelectedSection(section);
+    setSelectedSectionId(section.id);
     setSelectedPage(section.pageNumber);
-    // On mobile, close drawer after selecting section
     setIsDocDrawerOpen(false);
   };
 
@@ -110,41 +170,55 @@ export function AnalysisWorkspace() {
     setIsDocDrawerOpen(false);
   };
 
-  const activeDoc = useDemoFixture ? null : uploadedDoc;
-  const docName = activeDoc ? activeDoc.displayName : "Employment_Agreement_2026.pdf";
-  const docType = activeDoc ? `${activeDoc.format.toUpperCase()} Legal Document` : "Employment Agreement";
+  // Case B: No active user-uploaded document exists
+  if (!uploadedDoc && previewState === "normal") {
+    return (
+      <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav documentName={null} documentType={null} status="none" />
+        <main className="flex-1 flex flex-col items-center justify-center p-6">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.docx,.txt"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          {uploadStatus === "uploading" || uploadStatus === "processing" ? (
+            <div className="flex flex-col items-center justify-center p-8 space-y-4 max-w-md text-center">
+              <div className="h-10 w-10 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-[var(--foreground)]">Processing your document...</p>
+                <p className="text-xs text-[var(--foreground-muted)]">{uploadStageMessage || "Extracting legal text and sections"}</p>
+              </div>
+            </div>
+          ) : (
+            <WorkspaceEmpty
+              title="No legal document uploaded"
+              description="Upload your contract (PDF, DOCX, or TXT) to begin automated clause extraction, concern detection, and grounded legal intelligence."
+              actionText="Select Document to Analyze"
+              onUploadClick={() => fileInputRef.current?.click()}
+            />
+          )}
+          {uploadError && (
+            <p className="mt-4 text-xs text-red-600 dark:text-red-400 max-w-md text-center">{uploadError}</p>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  const docName = uploadedDoc?.displayName || null;
+  const docType = uploadedDoc ? `${uploadedDoc.format.toUpperCase()} Legal Document` : null;
+  const navStatus = analysis ? "analyzed" : isAnalyzing ? "analyzing" : "uploaded";
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      {/* 1. Global Workspace Navigation (Shared across /analyze, /qa, /compare, /action-center) */}
+      {/* 1. Global Workspace Navigation */}
       <WorkspaceNav
         documentName={docName}
         documentType={docType}
+        status={navStatus}
       />
-
-      {/* Real Ingested Document Mode Notification Banner */}
-      {uploadedDoc && (
-        <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-900/60 px-4 py-1.5 flex items-center justify-between text-xs shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <Badge variant={useDemoFixture ? "warning" : "brand"} size="sm">
-              {useDemoFixture ? "Demo Fixture Active" : "Real Ingested Document"}
-            </Badge>
-            <span className="text-[var(--foreground)] font-medium truncate">
-              {useDemoFixture
-                ? "Viewing Sample Employment Agreement (Phase 1 Mock Analysis)"
-                : `Active Document: ${uploadedDoc.displayName} (${uploadedDoc.sections.length} sections, ${uploadedDoc.chunks.length} chunks)`}
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setUseDemoFixture(!useDemoFixture)}
-            className="text-[var(--primary)] hover:underline font-medium text-xs shrink-0 ml-2 cursor-pointer"
-          >
-            {useDemoFixture ? "Return to Uploaded Document" : "Switch to Sample Agreement (Demo)"}
-          </button>
-        </div>
-      )}
 
       {/* 2. Mobile Quick-Navigation Strip (< 768px) */}
       <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-2.5 sm:px-4 py-1.5 shrink-0">
@@ -191,21 +265,21 @@ export function AnalysisWorkspace() {
 
         {/* Empty State Preview */}
         {previewState === "empty" && (
-          <WorkspaceEmpty onReset={() => setPreviewState("normal")} />
+          <WorkspaceEmpty />
         )}
 
         {/* Error State Preview */}
         {previewState === "error" && (
-          <WorkspaceError onRetry={() => setPreviewState("normal")} />
+          <WorkspaceError onRetry={() => setPreviewStateOverride("normal")} />
         )}
 
         {/* Normal Mode: Hybrid 3-Panel Workspace */}
-        {previewState === "normal" && (
+        {previewState === "normal" && uploadedDoc && (
           <>
             {/* Left: Document Panel (Desktop >= 1024px) */}
             <div className="hidden lg:flex h-full shrink-0">
               <DocumentPanel
-                document={activeDoc}
+                document={uploadedDoc}
                 isCollapsed={isLeftCollapsed}
                 onToggleCollapse={() => setIsLeftCollapsed(!isLeftCollapsed)}
                 selectedSectionId={selectedSection?.id}
@@ -217,26 +291,26 @@ export function AnalysisWorkspace() {
 
             {/* Center: Primary Analysis Workspace */}
             <AnalysisMain
-              realDocument={activeDoc}
-              analysisResult={useDemoFixture ? null : analysis}
+              realDocument={uploadedDoc}
+              analysisResult={analysis}
               isAnalyzing={isAnalyzing}
               analysisError={analysisError}
-              onTriggerAnalysis={() => runAnalysis(activeDoc)}
+              onTriggerAnalysis={() => runAnalysis(uploadedDoc)}
               activeTab={activeTab}
               onSelectTab={setActiveTab}
               selectedSection={selectedSection}
               selectedPage={selectedPage}
               onSelectSection={handleSelectSection}
-              onClearSection={() => setSelectedSection(null)}
+              onClearSection={() => setSelectedSectionId(null)}
               onOpenDocumentDrawer={() => setIsDocDrawerOpen(true)}
               onOpenCopilotDrawer={() => setIsCopilotDrawerOpen(true)}
               onViewEvidence={handleOpenEvidence}
-              onSwitchToDemo={() => setUseDemoFixture(true)}
             />
 
             {/* Right: AI Copilot Assistant (Desktop >= 1024px) */}
             <div className="hidden lg:flex h-full shrink-0">
               <CopilotPanel
+                document={uploadedDoc}
                 isCollapsed={isRightCollapsed}
                 onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
                 onViewEvidence={handleOpenEvidence}
@@ -256,7 +330,7 @@ export function AnalysisWorkspace() {
       >
         <div className="flex-1 overflow-y-auto">
           <DocumentPanel
-            document={activeDoc}
+            document={uploadedDoc}
             isCollapsed={false}
             onToggleCollapse={() => setIsDocDrawerOpen(false)}
             selectedSectionId={selectedSection?.id}
@@ -277,6 +351,7 @@ export function AnalysisWorkspace() {
       >
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           <CopilotPanel
+            document={uploadedDoc}
             isCollapsed={false}
             onToggleCollapse={() => setIsCopilotDrawerOpen(false)}
             onViewEvidence={handleOpenEvidence}

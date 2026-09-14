@@ -5,7 +5,6 @@ import { FileText, ArrowRight, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { COMPARISON_DOC_A, COMPARISON_DOC_B } from "../fixtures/comparison-fixture";
 import type { ComparisonDocument } from "@/types";
 
 export interface DocumentPairProps {
@@ -15,9 +14,27 @@ export interface DocumentPairProps {
   onChangeDocB?: () => void;
 }
 
+const DEFAULT_DOC_A: ComparisonDocument = {
+  id: "doc-a",
+  name: "Document A",
+  versionLabel: "Version 1",
+  type: "PDF",
+  pageCount: 0,
+  sizeBytes: 0,
+};
+
+const DEFAULT_DOC_B: ComparisonDocument = {
+  id: "doc-b",
+  name: "Document B",
+  versionLabel: "Version 2",
+  type: "PDF",
+  pageCount: 0,
+  sizeBytes: 0,
+};
+
 export function DocumentPair({
-  docA = COMPARISON_DOC_A,
-  docB = COMPARISON_DOC_B,
+  docA = DEFAULT_DOC_A,
+  docB = DEFAULT_DOC_B,
   onChangeDocA,
   onChangeDocB,
 }: DocumentPairProps) {

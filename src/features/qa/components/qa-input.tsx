@@ -6,12 +6,14 @@ import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
 
 export interface QAInputProps {
+  documentName?: string;
   onSendMessage: (text: string) => void;
   disabled?: boolean;
   className?: string;
 }
 
 export function QAInput({
+  documentName,
   onSendMessage,
   disabled = false,
   className,
@@ -68,7 +70,7 @@ export function QAInput({
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] text-[var(--foreground-muted)]">
         <span>Answers are intended to use information found in the selected document.</span>
-        <span className="font-mono text-[10px]">Employment_Agreement_2026.pdf</span>
+        {documentName && <span className="font-mono text-[10px] truncate max-w-[200px]">{documentName}</span>}
       </div>
     </div>
   );

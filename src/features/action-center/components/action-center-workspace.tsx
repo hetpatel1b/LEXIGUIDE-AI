@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckSquare,
   FileText,
@@ -16,30 +17,122 @@ import { Button } from "@/components/ui/button";
 import { ActionSummary } from "./action-summary";
 import { ActionFilters } from "./action-filters";
 import { ActionItemCard } from "./action-item-card";
-import {
-  INITIAL_ACTION_ITEMS,
-  ACTION_CENTER_METRICS,
-} from "../fixtures/action-center-fixture";
+import { WorkspaceEmpty } from "@/features/analysis/components/states/workspace-empty";
+import { getActiveDocument, getCachedAnalysis } from "@/lib/document-storage";
 import type { ActionCategory, ActionItem } from "@/types";
+import type { NormalizedDocument } from "@/types/document";
+import type { AnalysisResult } from "@/lib/ai/types";
+
+const emptySubscribe = () => () => {};
 
 export function ActionCenterWorkspace() {
-  const [items, setItems] = React.useState<ActionItem[]>(INITIAL_ACTION_ITEMS);
+  const router = useRouter();
+  const hasMounted = React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+  const [checkedIds, setCheckedIds] = React.useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = React.useState<"all" | ActionCategory>("all");
   const [activeEvidenceItem, setActiveEvidenceItem] = React.useState<ActionItem | null>(null);
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
   const [copiedCitation, setCopiedCitation] = React.useState(false);
 
+  const activeDoc = React.useMemo(() => {
+    if (!hasMounted) return null;
+    return getActiveDocument();
+  }, [hasMounted]);
+
+  const analysis = React.useMemo(() => {
+    if (!activeDoc) return null;
+    return getCachedAnalysis(activeDoc.id);
+  }, [activeDoc]);
+
+  // Derive dynamic action items from real analysis
+  const items: ActionItem[] = React.useMemo(() => {
+    if (!analysis) return [];
+    const generatedItems: ActionItem[] = [];
+
+    // 1. From Potential Concerns -> "review" or "discuss"
+    analysis.potentialConcerns.forEach((c, idx) => {
+      const id = `act-concern-${idx}`;
+      generatedItems.push({
+        id,
+        category: c.severity === "high" ? "review" : "discuss",
+        status: c.severity === "high" ? "needs_review" : "discuss",
+        title: c.title,
+        description: c.suggestedReviewQuestion || c.whyItMatters || c.explanation,
+        whyItMatters: c.whyItMatters,
+        sourceSection: c.source.sectionTitle || c.source.sectionId || "Section",
+        pageNumber: c.source.pageNumber || 1,
+        evidenceSnippet: c.source.quote,
+        isChecked: checkedIds.has(id),
+      });
+    });
+
+    // 2. From Obligations -> "upcoming" (if deadline) or "confirm"
+    analysis.obligations.forEach((o, idx) => {
+      const id = `act-ob-${idx}`;
+      generatedItems.push({
+        id,
+        category: o.deadline ? "upcoming" : "confirm",
+        status: o.deadline ? "upcoming" : "confirm",
+        title: `Obligation: ${o.party}`,
+        description: `${o.description}${o.deadline ? ` (Due: ${o.deadline})` : ""}`,
+        sourceSection: o.source.sectionTitle || o.source.sectionId || "Section",
+        pageNumber: o.source.pageNumber || 1,
+        evidenceSnippet: o.source.quote,
+        isChecked: checkedIds.has(id),
+      });
+    });
+
+    // 3. From Important Dates -> "upcoming"
+    analysis.importantDates.forEach((dt, idx) => {
+      const id = `act-date-${idx}`;
+      generatedItems.push({
+        id,
+        category: "upcoming",
+        status: "upcoming",
+        title: dt.label,
+        description: `Contractual timeline: ${dt.dateOrDuration}`,
+        sourceSection: dt.source.sectionTitle || dt.source.sectionId || "Dates",
+        pageNumber: dt.source.pageNumber || 1,
+        evidenceSnippet: dt.source.quote,
+        isChecked: checkedIds.has(id),
+      });
+    });
+
+    // 4. From Review Priorities -> "discuss"
+    analysis.executiveSummary.reviewPriorities.forEach((rp, idx) => {
+      const id = `act-rp-${idx}`;
+      generatedItems.push({
+        id,
+        category: "discuss",
+        status: "discuss",
+        title: `Review Consideration ${idx + 1}`,
+        description: rp,
+        sourceSection: "Executive Review",
+        pageNumber: 1,
+        evidenceSnippet: rp,
+        isChecked: checkedIds.has(id),
+      });
+    });
+
+    return generatedItems;
+  }, [analysis, checkedIds]);
+
   // Toggle checklist item
   const handleToggleCheck = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isChecked: !item.isChecked } : item
-      )
-    );
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   const handleResetChecklist = () => {
-    setItems(INITIAL_ACTION_ITEMS);
+    setCheckedIds(new Set());
   };
 
   // Compute counts
@@ -78,8 +171,8 @@ export function ActionCenterWorkspace() {
   };
 
   const handleCopyCitation = async () => {
-    if (!activeEvidenceItem) return;
-    const text = `Action Reference: ${activeEvidenceItem.title}\nSource: Employment_Agreement_2026.pdf, ${activeEvidenceItem.sourceSection}, Page ${activeEvidenceItem.pageNumber}\nExcerpt: "${activeEvidenceItem.evidenceSnippet}"`;
+    if (!activeEvidenceItem || !activeDoc) return;
+    const text = `Action Reference: ${activeEvidenceItem.title}\nSource: ${activeDoc.displayName}, ${activeEvidenceItem.sourceSection}, Page ${activeEvidenceItem.pageNumber}\nExcerpt: "${activeEvidenceItem.evidenceSnippet}"`;
     try {
       await navigator.clipboard.writeText(text);
       setCopiedCitation(true);
@@ -90,12 +183,60 @@ export function ActionCenterWorkspace() {
     }
   };
 
+  // Prevent flash during hydration
+  if (!hasMounted) {
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav />
+        <div className="flex-1 flex items-center justify-center p-6 text-xs text-[var(--foreground-muted)]">
+          Loading Action Center…
+        </div>
+      </div>
+    );
+  }
+
+  // 1. No Active Document
+  if (!activeDoc) {
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <WorkspaceEmpty
+            title="No document available for Action Center"
+            description="Upload a legal document in the Analysis workspace first to generate actionable checklists and review points."
+            onUploadClick={() => router.push("/analyze")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 2. Active Document Present but not yet analyzed
+  if (!analysis) {
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
+        <WorkspaceNav
+          documentName={activeDoc.displayName}
+          documentType={activeDoc.format.toUpperCase()}
+        />
+        <div className="flex-1 flex items-center justify-center p-6">
+          <WorkspaceEmpty
+            title="Document analysis required"
+            description={`"${activeDoc.displayName}" is ready, but has not yet been analyzed. Run document analysis to generate structured review tasks and obligations.`}
+            onUploadClick={() => router.push("/analyze")}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Active Document Analyzed
   return (
     <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden">
-      {/* 1. Shared Workspace Navigation (Strictly Approved WorkspaceNav) */}
+      {/* 1. Shared Workspace Navigation */}
       <WorkspaceNav
-        documentName="Employment_Agreement_2026.pdf"
-        documentType="Employment Agreement"
+        documentName={activeDoc.displayName}
+        documentType={analysis.metadata.documentType || "Legal Document"}
       />
 
       {/* 2. Main Wide Action Center Workspace */}
@@ -112,7 +253,7 @@ export function ActionCenterWorkspace() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-[var(--foreground-muted)] max-w-4xl leading-relaxed">
-              Turn document findings into clear, structured next steps and professional consultation points.
+              Actionable review items, compliance duties, and milestones derived from {activeDoc.displayName}.
             </p>
           </div>
 

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ListFilter, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DOCUMENT_SECTIONS } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
 
 export interface SectionListProps {
@@ -14,12 +13,12 @@ export interface SectionListProps {
 }
 
 export function SectionList({
-  sections = DOCUMENT_SECTIONS,
+  sections = [],
   selectedSectionId,
   onSelectSection,
   className,
 }: SectionListProps) {
-  const displaySections = sections && sections.length > 0 ? sections : DOCUMENT_SECTIONS;
+  const displaySections = sections || [];
 
   return (
     <div className={cn("space-y-2 text-left", className)}>
@@ -33,7 +32,12 @@ export function SectionList({
         </span>
       </div>
 
-      <nav aria-label="Document Sections Navigation" className="space-y-0.5">
+      {displaySections.length === 0 ? (
+        <div className="p-3 text-center text-xs text-[var(--foreground-muted)] border border-dashed rounded-[var(--radius-md)]">
+          No sections identified.
+        </div>
+      ) : (
+        <nav aria-label="Document Sections Navigation" className="space-y-0.5">
         {displaySections.map((section) => {
           const isSelected = selectedSectionId === section.id;
           return (
@@ -80,6 +84,7 @@ export function SectionList({
           );
         })}
       </nav>
+      )}
     </div>
   );
 }
