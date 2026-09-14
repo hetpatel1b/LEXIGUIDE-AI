@@ -23,3 +23,13 @@ export interface DocumentMetadata {
   uploadedAt: string;
   status: ProcessingStatus;
 }
+
+export type {
+  NormalizedDocument,
+  DocumentPage,
+  DocumentSection,
+  DocumentChunk,
+  SourceLocation,
+  DocumentExtractedMetadata,
+} from "@/lib/document-engine/types";
+

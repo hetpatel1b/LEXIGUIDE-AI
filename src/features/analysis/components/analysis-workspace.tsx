@@ -19,6 +19,9 @@ import { WorkspaceError } from "./states/workspace-error";
 import type { AnalysisTabId } from "./analysis-tabs";
 import type { EvidenceDetail } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
+import type { NormalizedDocument } from "@/types/document";
+import { getActiveDocument } from "@/lib/document-storage";
+import { Badge } from "@/components/ui/badge";
 
 export type WorkspacePreviewState = "normal" | "loading" | "empty" | "error";
 
@@ -31,9 +34,25 @@ export function AnalysisWorkspace() {
   const [isDocDrawerOpen, setIsDocDrawerOpen] = React.useState(false);
   const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = React.useState(false);
 
+  // Real Uploaded Document vs Demo Mode
+  const [uploadedDoc, setUploadedDoc] = React.useState<NormalizedDocument | null>(() => getActiveDocument());
+  const [useDemoFixture, setUseDemoFixture] = React.useState<boolean>(false);
+
   // Analysis State
   const [activeTab, setActiveTab] = React.useState<AnalysisTabId>("overview");
-  const [selectedSection, setSelectedSection] = React.useState<DocumentSectionItem | null>(null);
+  const [selectedSection, setSelectedSection] = React.useState<DocumentSectionItem | null>(() => {
+    const doc = getActiveDocument();
+    if (doc && doc.sections && doc.sections.length > 0) {
+      const first = doc.sections[0];
+      return {
+        id: first.sectionId,
+        sectionNumber: first.sectionNumber || "•",
+        title: first.title,
+        pageNumber: first.pageReferences[0] || 1,
+      };
+    }
+    return null;
+  });
   const [selectedPage, setSelectedPage] = React.useState<number>(1);
 
   // Evidence Dialog State
@@ -74,13 +93,41 @@ export function AnalysisWorkspace() {
     setIsDocDrawerOpen(false);
   };
 
+  const activeDoc = useDemoFixture ? null : uploadedDoc;
+  const docName = activeDoc ? activeDoc.displayName : "Employment_Agreement_2026.pdf";
+  const docType = activeDoc ? `${activeDoc.format.toUpperCase()} Legal Document` : "Employment Agreement";
+
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       {/* 1. Global Workspace Navigation (Shared across /analyze, /qa, /compare, /action-center) */}
       <WorkspaceNav
-        documentName="Employment_Agreement_2026.pdf"
-        documentType="Employment Agreement"
+        documentName={docName}
+        documentType={docType}
       />
+
+      {/* Real Ingested Document Mode Notification Banner */}
+      {uploadedDoc && (
+        <div className="bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200 dark:border-blue-900/60 px-4 py-1.5 flex items-center justify-between text-xs shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Badge variant={useDemoFixture ? "warning" : "brand"} size="sm">
+              {useDemoFixture ? "Demo Fixture Active" : "Real Ingested Document"}
+            </Badge>
+            <span className="text-[var(--foreground)] font-medium truncate">
+              {useDemoFixture
+                ? "Viewing Sample Employment Agreement (Phase 1 Mock Analysis)"
+                : `Active Document: ${uploadedDoc.displayName} (${uploadedDoc.sections.length} sections, ${uploadedDoc.chunks.length} chunks)`}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setUseDemoFixture(!useDemoFixture)}
+            className="text-[var(--primary)] hover:underline font-medium text-xs shrink-0 ml-2 cursor-pointer"
+          >
+            {useDemoFixture ? "Return to Uploaded Document" : "Switch to Sample Agreement (Demo)"}
+          </button>
+        </div>
+      )}
 
       {/* 2. Mobile Quick-Navigation Strip (< 768px) */}
       <div className="md:hidden flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-2.5 sm:px-4 py-1.5 shrink-0">
@@ -141,6 +188,7 @@ export function AnalysisWorkspace() {
             {/* Left: Document Panel (Desktop >= 1024px) */}
             <div className="hidden lg:flex h-full shrink-0">
               <DocumentPanel
+                document={activeDoc}
                 isCollapsed={isLeftCollapsed}
                 onToggleCollapse={() => setIsLeftCollapsed(!isLeftCollapsed)}
                 selectedSectionId={selectedSection?.id}
@@ -152,13 +200,17 @@ export function AnalysisWorkspace() {
 
             {/* Center: Primary Analysis Workspace */}
             <AnalysisMain
+              realDocument={activeDoc}
               activeTab={activeTab}
               onSelectTab={setActiveTab}
               selectedSection={selectedSection}
+              selectedPage={selectedPage}
+              onSelectSection={handleSelectSection}
               onClearSection={() => setSelectedSection(null)}
               onOpenDocumentDrawer={() => setIsDocDrawerOpen(true)}
               onOpenCopilotDrawer={() => setIsCopilotDrawerOpen(true)}
               onViewEvidence={handleOpenEvidence}
+              onSwitchToDemo={() => setUseDemoFixture(true)}
             />
 
             {/* Right: AI Copilot Assistant (Desktop >= 1024px) */}
@@ -183,6 +235,7 @@ export function AnalysisWorkspace() {
       >
         <div className="flex-1 overflow-y-auto">
           <DocumentPanel
+            document={activeDoc}
             isCollapsed={false}
             onToggleCollapse={() => setIsDocDrawerOpen(false)}
             selectedSectionId={selectedSection?.id}

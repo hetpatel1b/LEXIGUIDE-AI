@@ -14,8 +14,10 @@ import { SectionList } from "./section-list";
 import { PageList } from "./page-list";
 import { SAMPLE_DOCUMENT } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
+import type { NormalizedDocument } from "@/types/document";
 
 export interface DocumentPanelProps {
+  document?: NormalizedDocument | null;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   selectedSectionId?: string;
@@ -26,6 +28,7 @@ export interface DocumentPanelProps {
 }
 
 export function DocumentPanel({
+  document,
   isCollapsed,
   onToggleCollapse,
   selectedSectionId,
@@ -56,7 +59,7 @@ export function DocumentPanel({
         <div className="flex-1 flex flex-col items-center justify-start pt-4 gap-6">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600"
-            title={`${SAMPLE_DOCUMENT.name} (PDF, 18 pages)`}
+            title={`${document ? document.displayName : SAMPLE_DOCUMENT.name} (${document ? document.format.toUpperCase() : "PDF"})`}
           >
             <FileText className="h-4 w-4" />
           </div>
@@ -68,6 +71,33 @@ export function DocumentPanel({
       </div>
     );
   }
+
+  // Pre-map sections for SectionList if a real document is present
+  const mappedSections: DocumentSectionItem[] = document
+    ? document.sections.map((s) => ({
+        id: s.sectionId,
+        sectionNumber: s.sectionNumber || "•",
+        title: s.title,
+        pageNumber: s.pageReferences.length > 0 ? s.pageReferences[0] : 1,
+      }))
+    : [];
+
+  // Pre-map pages for PageList if a real document is present
+  const mappedPages = document
+    ? document.pages.map((p, idx) => ({
+        pageNumber: p.pageNumber || idx + 1,
+        title: p.pageNumber ? `Page ${p.pageNumber}` : `Block ${idx + 1}`,
+        subtitle: `${p.wordCount} words`,
+      }))
+    : undefined;
+
+  const docName = document ? document.displayName : SAMPLE_DOCUMENT.name;
+  const docFormat = document ? document.format.toUpperCase() : "PDF";
+  const pageLabel = document
+    ? document.pageCount !== null
+      ? `${document.pageCount}p`
+      : `${document.sections.length} sec`
+    : `${SAMPLE_DOCUMENT.pageCount}p`;
 
   return (
     <aside
@@ -88,15 +118,15 @@ export function DocumentPanel({
             <div className="min-w-0 text-left">
               <h3
                 className="text-xs font-semibold text-[var(--foreground)] truncate max-w-[170px]"
-                title={SAMPLE_DOCUMENT.name}
+                title={docName}
               >
-                {SAMPLE_DOCUMENT.name}
+                {docName}
               </h3>
               <div className="flex items-center gap-1.5 text-[11px] text-[var(--foreground-muted)] font-mono">
-                <span>PDF · {SAMPLE_DOCUMENT.pageCount}p</span>
+                <span>{docFormat} · {pageLabel}</span>
                 <span aria-hidden="true">&bull;</span>
-                <Badge variant="success" size="sm">
-                  Analyzed
+                <Badge variant={document ? "brand" : "success"} size="sm">
+                  {document ? "Ingested" : "Analyzed"}
                 </Badge>
               </div>
             </div>
@@ -118,16 +148,18 @@ export function DocumentPanel({
       {/* Single Coherent Scrollable Container for Metadata, Sections & Navigator */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-4">
         {/* Document Metadata Details */}
-        <DocumentMetadata />
+        <DocumentMetadata document={document} />
 
         {/* Section Navigation */}
         <SectionList
+          sections={document ? mappedSections : undefined}
           selectedSectionId={selectedSectionId}
           onSelectSection={onSelectSection}
         />
 
         {/* Page Navigation */}
         <PageList
+          pages={mappedPages}
           selectedPage={selectedPage}
           onSelectPage={onSelectPage}
         />

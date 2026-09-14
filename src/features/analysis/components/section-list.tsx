@@ -7,16 +7,20 @@ import { DOCUMENT_SECTIONS } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
 
 export interface SectionListProps {
+  sections?: DocumentSectionItem[];
   selectedSectionId?: string;
   onSelectSection?: (section: DocumentSectionItem) => void;
   className?: string;
 }
 
 export function SectionList({
+  sections = DOCUMENT_SECTIONS,
   selectedSectionId,
   onSelectSection,
   className,
 }: SectionListProps) {
+  const displaySections = sections && sections.length > 0 ? sections : DOCUMENT_SECTIONS;
+
   return (
     <div className={cn("space-y-2 text-left", className)}>
       <div className="flex items-center justify-between pb-1 border-b border-[var(--border-muted)]">
@@ -25,12 +29,12 @@ export function SectionList({
           Document Sections
         </span>
         <span className="text-[10px] text-[var(--foreground-muted)]">
-          {DOCUMENT_SECTIONS.length} sections
+          {displaySections.length} sections
         </span>
       </div>
 
       <nav aria-label="Document Sections Navigation" className="space-y-0.5">
-        {DOCUMENT_SECTIONS.map((section) => {
+        {displaySections.map((section) => {
           const isSelected = selectedSectionId === section.id;
           return (
             <button

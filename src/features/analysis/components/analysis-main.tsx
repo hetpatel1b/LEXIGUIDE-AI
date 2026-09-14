@@ -19,26 +19,36 @@ import { ObligationsTab } from "./overview/obligations-tab";
 import { DatesTab } from "./overview/dates-tab";
 import type { EvidenceDetail } from "../fixtures/analysis-fixture";
 import type { DocumentSectionItem } from "@/types";
+import type { NormalizedDocument } from "@/types/document";
+import { RealDocumentView } from "./real-document-view";
 
 export interface AnalysisMainProps {
+  realDocument?: NormalizedDocument | null;
   activeTab: AnalysisTabId;
   onSelectTab: (tab: AnalysisTabId) => void;
   selectedSection?: DocumentSectionItem | null;
+  selectedPage?: number;
+  onSelectSection?: (section: DocumentSectionItem) => void;
   onClearSection?: () => void;
   onOpenDocumentDrawer?: () => void;
   onOpenCopilotDrawer?: () => void;
   onViewEvidence: (evidence: EvidenceDetail) => void;
+  onSwitchToDemo?: () => void;
   className?: string;
 }
 
 export function AnalysisMain({
+  realDocument,
   activeTab,
   onSelectTab,
   selectedSection,
+  selectedPage = 1,
+  onSelectSection,
   onClearSection,
   onOpenDocumentDrawer,
   onOpenCopilotDrawer,
   onViewEvidence,
+  onSwitchToDemo,
   className,
 }: AnalysisMainProps) {
   return (
@@ -94,8 +104,13 @@ export function AnalysisMain({
 
         {/* Right: Illustrative Analysis Badge + Mobile/Tablet Copilot Trigger */}
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="neutral" size="sm" dot className="hidden xs:inline-flex shrink-0">
-            Illustrative Analysis
+          <Badge
+            variant={realDocument ? "brand" : "neutral"}
+            size="sm"
+            dot
+            className="hidden xs:inline-flex shrink-0"
+          >
+            {realDocument ? "Real Ingested Document" : "Illustrative Analysis"}
           </Badge>
 
           {onOpenCopilotDrawer && (
@@ -124,26 +139,72 @@ export function AnalysisMain({
         className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
       >
         <div className="w-full max-w-[1600px] mx-auto space-y-6">
-          {activeTab === "overview" && (
-            <OverviewTab
-              onNavigateTab={onSelectTab}
-              onViewEvidence={onViewEvidence}
-            />
+          {realDocument ? (
+            activeTab === "overview" ? (
+              <RealDocumentView
+                document={realDocument}
+                selectedSection={selectedSection}
+                selectedPage={selectedPage}
+                onSelectSection={onSelectSection}
+                onSwitchToDemo={onSwitchToDemo || (() => {})}
+              />
+            ) : (
+              <div className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-8 text-center max-w-xl mx-auto space-y-4 my-8 shadow-sm">
+                <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[var(--primary)] flex items-center justify-center mx-auto">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Analysis is Phase 3
+                </h3>
+                <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
+                  AI-powered clause identification, risk assessment, and obligation synthesis will be powered by NVIDIA Nemotron in Phase 3. Real document extraction and section mapping for &ldquo;{realDocument.displayName}&rdquo; are complete.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onSelectTab("overview")}
+                  >
+                    Return to Document Overview
+                  </Button>
+                  {onSwitchToDemo && (
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="sm"
+                      onClick={onSwitchToDemo}
+                    >
+                      View Phase 1 Demo Data
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
+          ) : (
+            <>
+              {activeTab === "overview" && (
+                <OverviewTab
+                  onNavigateTab={onSelectTab}
+                  onViewEvidence={onViewEvidence}
+                />
+              )}
+
+              {activeTab === "summary" && <SummaryTab />}
+
+              {activeTab === "clauses" && (
+                <ClausesTab onViewEvidence={onViewEvidence} />
+              )}
+
+              {activeTab === "concerns" && (
+                <ConcernsTab onViewEvidence={onViewEvidence} />
+              )}
+
+              {activeTab === "obligations" && <ObligationsTab />}
+
+              {activeTab === "dates" && <DatesTab />}
+            </>
           )}
-
-          {activeTab === "summary" && <SummaryTab />}
-
-          {activeTab === "clauses" && (
-            <ClausesTab onViewEvidence={onViewEvidence} />
-          )}
-
-          {activeTab === "concerns" && (
-            <ConcernsTab onViewEvidence={onViewEvidence} />
-          )}
-
-          {activeTab === "obligations" && <ObligationsTab />}
-
-          {activeTab === "dates" && <DatesTab />}
         </div>
       </div>
     </main>

@@ -6,16 +6,20 @@ import { cn } from "@/lib/utils";
 import { DOCUMENT_PAGES } from "../fixtures/analysis-fixture";
 
 export interface PageListProps {
+  pages?: Array<{ pageNumber: number; title?: string; subtitle?: string }>;
   selectedPage?: number;
   onSelectPage?: (pageNumber: number) => void;
   className?: string;
 }
 
 export function PageList({
+  pages = DOCUMENT_PAGES,
   selectedPage = 1,
   onSelectPage,
   className,
 }: PageListProps) {
+  const displayPages = pages && pages.length > 0 ? pages : DOCUMENT_PAGES;
+
   return (
     <div className={cn("space-y-2 text-left", className)}>
       <div className="flex items-center justify-between pb-1 border-b border-[var(--border-muted)]">
@@ -24,19 +28,19 @@ export function PageList({
           Page Navigator
         </span>
         <span className="text-[10px] text-[var(--foreground-muted)]">
-          18 Pages
+          {displayPages.length} Pages
         </span>
       </div>
 
       <div className="grid grid-cols-6 gap-1.5">
-        {DOCUMENT_PAGES.map((page) => {
+        {displayPages.map((page) => {
           const isSelected = selectedPage === page.pageNumber;
           return (
             <button
               key={page.pageNumber}
               type="button"
               onClick={() => onSelectPage?.(page.pageNumber)}
-              title={`${page.title} — ${page.subtitle}`}
+              title={page.title ? `${page.title}${page.subtitle ? ` — ${page.subtitle}` : ""}` : `Page ${page.pageNumber}`}
               aria-label={`Jump to page ${page.pageNumber}`}
               className={cn(
                 "flex flex-col items-center justify-center h-8 rounded-[var(--radius-md)] border text-xs font-mono transition-colors cursor-pointer",
