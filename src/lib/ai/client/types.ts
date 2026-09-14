@@ -43,10 +43,30 @@ export interface ChatCompletionResponse {
   };
 }
 
+export interface ChatCompletionResult {
+  content: string;
+  finishReason: string | null;
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+  };
+  ttftMs: number;
+  totalDurationMs: number;
+  model: string;
+}
+
+export interface ChatCompletionOptions {
+  maxTokens?: number;
+  temperature?: number;
+  requestId?: string;
+}
+
 /**
  * Pluggable AI provider interface.
  * Abstracts Nemotron away from application logic for clean testability and future expansions.
  */
 export interface AiProvider {
-  generateChatCompletion(messages: ChatMessage[]): Promise<string>;
+  generateChatCompletion(messages: ChatMessage[], options?: ChatCompletionOptions): Promise<string>;
+  generateChatCompletionDetailed?(messages: ChatMessage[], options?: ChatCompletionOptions): Promise<ChatCompletionResult>;
 }

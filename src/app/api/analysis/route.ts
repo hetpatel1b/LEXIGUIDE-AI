@@ -13,13 +13,22 @@ export const runtime = "nodejs";
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const reqStart = Date.now();
-  console.log(`[AI-DIAG] POST /api/analysis request received at T+0ms`);
+  const headerReqId = request.headers.get("x-analysis-request-id");
+  let requestId = headerReqId || `ana_${Math.random().toString(36).substring(2, 9)}_${Date.now().toString(36)}`;
+  let reqTag = `[${requestId}]`;
+
+  console.log(`[AI-DIAG]${reqTag} POST /api/analysis request received at T+0ms`);
 
   try {
     const body = await request.json();
 
+    if (body?.requestId && !headerReqId) {
+      requestId = String(body.requestId);
+      reqTag = `[${requestId}]`;
+    }
+
     if (!body || !body.document) {
-      console.warn(`[AI-DIAG] POST /api/analysis rejected: missing 'document' payload`);
+      console.warn(`[AI-DIAG]${reqTag} POST /api/analysis rejected: missing 'document' payload`);
       return NextResponse.json(
         {
           success: false,
@@ -28,14 +37,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             message: "Missing required 'document' in request payload.",
           },
         },
-        { status: 400 }
+        {
+          status: 400,
+          headers: { "x-analysis-request-id": requestId },
+        }
       );
     }
 
     const document = body.document as NormalizedDocument;
 
     if (!document.id || !document.chunks || !Array.isArray(document.chunks)) {
-      console.warn(`[AI-DIAG] POST /api/analysis rejected: invalid document structure`);
+      console.warn(`[AI-DIAG]${reqTag} POST /api/analysis rejected: invalid document structure`);
       return NextResponse.json(
         {
           success: false,
@@ -44,12 +56,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             message: "Invalid document structure. Document must contain chunks.",
           },
         },
-        { status: 400 }
+        {
+          status: 400,
+          headers: { "x-analysis-request-id": requestId },
+        }
       );
     }
 
     if (document.chunks.length === 0) {
-      console.warn(`[AI-DIAG] POST /api/analysis rejected: empty document chunks`);
+      console.warn(`[AI-DIAG]${reqTag} POST /api/analysis rejected: empty document chunks`);
       return NextResponse.json(
         {
           success: false,
@@ -58,15 +73,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             message: "The document contains no readable text chunks to analyze.",
           },
         },
-        { status: 422 }
+        {
+          status: 422,
+          headers: { "x-analysis-request-id": requestId },
+        }
       );
     }
 
-    console.log(`[AI-DIAG] Analyzing document id=${document.id}, title=${document.displayName}, chunks=${document.chunks.length}`);
-    const result = await analyzeDocument(document);
+    console.log(
+      `[AI-DIAG]${reqTag} Analyzing document id=${document.id}, title=${document.displayName}, chunks=${document.chunks.length}`
+    );
+    const result = await analyzeDocument(document, undefined, requestId);
 
     const totalDuration = Date.now() - reqStart;
-    console.log(`[AI-DIAG] POST /api/analysis completed successfully in ${totalDuration}ms`);
+    console.log(
+      `[AI-DIAG]${reqTag} POST /api/analysis completed successfully in ${totalDuration}ms`
+    );
 
     return NextResponse.json(
       {
@@ -74,15 +96,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         data: result,
         timestamp: Date.now(),
         durationMs: totalDuration,
+        requestId,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: { "x-analysis-request-id": requestId },
+      }
     );
   } catch (error: unknown) {
     const totalDuration = Date.now() - reqStart;
 
     if (error instanceof AiEngineError) {
       console.error(
-        `[AI-DIAG] POST /api/analysis failed with AiEngineError: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
+        `[AI-DIAG]${reqTag} POST /api/analysis failed with AiEngineError: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
       );
       return NextResponse.json(
         {
@@ -91,14 +117,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             code: error.code,
             message: toSafeUserMessage(error),
           },
+          requestId,
         },
-        { status: error.statusCode }
+        {
+          status: error.statusCode,
+          headers: { "x-analysis-request-id": requestId },
+        }
       );
     }
 
     const safeMessage = toSafeUserMessage(error);
     console.error(
-      `[AI-DIAG] POST /api/analysis unexpected error after ${totalDuration}ms: ${safeMessage}`
+      `[AI-DIAG]${reqTag} POST /api/analysis unexpected error after ${totalDuration}ms: ${safeMessage}`
     );
     return NextResponse.json(
       {
@@ -107,8 +137,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           code: "AI_UNKNOWN_ERROR",
           message: safeMessage,
         },
+        requestId,
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "x-analysis-request-id": requestId },
+      }
     );
   }
 }

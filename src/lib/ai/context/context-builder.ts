@@ -38,17 +38,60 @@ ${safeText}
 ---`;
 }
 
+const LEGAL_PRIORITY_KEYWORDS = [
+  "parties", "title", "preamble", "recital", "definition",
+  "term", "termination", "compensation", "salary", "incentive", "retention", "bonus", "payment",
+  "confidential", "intellectual property", "ip", "invention", "ownership",
+  "non-compete", "restrictive", "non-solicit", "security", "data protection",
+  "liability", "indemnif", "governing law", "dispute", "arbitration", "jurisdiction",
+  "notice", "schedule", "exhibit"
+];
+
 /**
- * Selects chunks deterministically when document exceeds single-pass context budget.
- * Distributes chunk selection across all sections so neither beginning nor end is dropped.
+ * Selects chunks deterministically using legal priority heuristics when document
+ * exceeds single-pass context budget.
  */
 function selectBoundedChunks(chunks: DocumentChunk[], maxChars: number): DocumentChunk[] {
-  let totalChars = chunks.reduce((acc, c) => acc + c.text.length, 0);
-  if (totalChars <= maxChars) {
+  // Approximate chunk block size including header formatting (~90 chars overhead per chunk)
+  const getChunkFormattedSize = (c: DocumentChunk) => c.text.length + 95;
+
+  let totalEstimatedChars = chunks.reduce((acc, c) => acc + getChunkFormattedSize(c), 0);
+  if (totalEstimatedChars <= maxChars) {
     return chunks;
   }
 
-  // If over budget, pick first chunk of each section, plus evenly distributed chunks
+  const selected: DocumentChunk[] = [];
+  const selectedIds = new Set<string>();
+  let currentChars = 0;
+
+  const addChunk = (chunk: DocumentChunk) => {
+    if (!selectedIds.has(chunk.chunkId)) {
+      const size = getChunkFormattedSize(chunk);
+      if (currentChars + size <= maxChars) {
+        selected.push(chunk);
+        selectedIds.add(chunk.chunkId);
+        currentChars += size;
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // 1. Mandatory Identity Chunks: First 3 chunks (Preamble, parties, recitals, effective date)
+  for (let i = 0; i < Math.min(3, chunks.length); i++) {
+    addChunk(chunks[i]);
+  }
+
+  // 2. High-Priority Legal Headings: compensation, term, termination, IP, restrictive covenants, governing law
+  for (const chunk of chunks) {
+    const titleLower = (chunk.sectionTitle || "").toLowerCase();
+    const isPriority = LEGAL_PRIORITY_KEYWORDS.some((kw) => titleLower.includes(kw));
+    if (isPriority) {
+      addChunk(chunk);
+    }
+  }
+
+  // 3. Structural Distribution: First chunk of each remaining section to preserve document architecture
   const sectionMap = new Map<string, DocumentChunk[]>();
   for (const chunk of chunks) {
     const list = sectionMap.get(chunk.sectionId) || [];
@@ -56,29 +99,16 @@ function selectBoundedChunks(chunks: DocumentChunk[], maxChars: number): Documen
     sectionMap.set(chunk.sectionId, list);
   }
 
-  const selected: DocumentChunk[] = [];
-  let currentChars = 0;
-
-  // 1. Take first chunk of every section to guarantee structural coverage
   for (const [, sChunks] of sectionMap.entries()) {
     if (sChunks.length > 0) {
-      const first = sChunks[0];
-      if (currentChars + first.text.length <= maxChars) {
-        selected.push(first);
-        currentChars += first.text.length;
-      }
+      addChunk(sChunks[0]);
     }
   }
 
-  // 2. Fill remaining budget with subsequent chunks in document order
+  // 4. Fill remaining budget with sequential chunks in document order
   for (const chunk of chunks) {
-    if (!selected.includes(chunk)) {
-      if (currentChars + chunk.text.length <= maxChars) {
-        selected.push(chunk);
-        currentChars += chunk.text.length;
-      } else {
-        break;
-      }
+    if (!addChunk(chunk) && currentChars >= maxChars) {
+      break;
     }
   }
 

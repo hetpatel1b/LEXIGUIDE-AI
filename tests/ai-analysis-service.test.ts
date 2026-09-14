@@ -107,3 +107,90 @@ test("AI Analysis Service - rejects document with empty chunks", async () => {
     }
   );
 });
+
+test("AI Analysis Service - recovers when Pass 1 is truncated and Pass 2 retry succeeds", async () => {
+  let callCount = 0;
+  const retryProvider: AiProvider = {
+    async generateChatCompletionDetailed() {
+      callCount++;
+      if (callCount === 1) {
+        // Pass 1: truncated output with finish_reason='length'
+        return {
+          content: '{"analysisSchemaVersion": "1.0", "metadata": { "documentType": "Employment"',
+          finishReason: "length",
+          ttftMs: 10,
+          totalDurationMs: 20,
+          model: "test-model",
+        };
+      }
+      // Pass 2: valid complete output with finish_reason='stop'
+      return {
+        content: MOCK_VALID_EMPLOYMENT_RESPONSE,
+        finishReason: "stop",
+        ttftMs: 5,
+        totalDurationMs: 15,
+        model: "test-model",
+      };
+    },
+    async generateChatCompletion() {
+      return MOCK_VALID_EMPLOYMENT_RESPONSE;
+    },
+  };
+
+  const result = await analyzeDocument(employmentDoc, retryProvider, "test_retry_req");
+  assert.strictEqual(callCount, 2, "Should have executed retry pass");
+  assert.strictEqual(result.analysisSchemaVersion, "1.0");
+  assert.strictEqual(result.keyClauses.length, 2);
+});
+
+test("AI Analysis Service - does not retry on authentication error", async () => {
+  let callCount = 0;
+  const authFailProvider: AiProvider = {
+    async generateChatCompletionDetailed() {
+      callCount++;
+      throw new AiEngineError("AI_AUTH_ERROR", "Authentication failed", 401);
+    },
+    async generateChatCompletion() {
+      throw new AiEngineError("AI_AUTH_ERROR", "Authentication failed", 401);
+    },
+  };
+
+  await assert.rejects(
+    async () => {
+      await analyzeDocument(employmentDoc, authFailProvider);
+    },
+    (err: unknown) => {
+      assert.ok(err instanceof AiEngineError);
+      assert.strictEqual(err.code, "AI_AUTH_ERROR");
+      assert.strictEqual(callCount, 1, "Must not retry authentication failure");
+      return true;
+    }
+  );
+});
+
+test("AI Analysis Service - safely normalizes unclosed quotes on chunkId", async () => {
+  // Inject a chunkId missing closing quote before comma (e.g. "chunkId": "chk_123, instead of "chunkId": "chk_123",)
+  const rawWithMissingQuote = MOCK_VALID_EMPLOYMENT_RESPONSE.replace(
+    /"chunkId":\s*"([^"]+)",/g,
+    '"chunkId": "$1,'
+  );
+
+  const provider: AiProvider = {
+    async generateChatCompletionDetailed() {
+      return {
+        content: rawWithMissingQuote,
+        finishReason: "stop",
+        ttftMs: 10,
+        totalDurationMs: 20,
+        model: "test-model",
+      };
+    },
+    async generateChatCompletion() {
+      return rawWithMissingQuote;
+    },
+  };
+
+  const result = await analyzeDocument(employmentDoc, provider);
+  assert.strictEqual(result.analysisSchemaVersion, "1.0");
+  assert.strictEqual(result.keyClauses.length, 2);
+});

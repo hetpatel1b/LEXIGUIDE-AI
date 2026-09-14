@@ -9,10 +9,10 @@ export const AI_CONFIG = {
   fallbackModel: "nvidia/nemotron-3-super-120b-a12b",
   defaultBaseURL: "https://integrate.api.nvidia.com/v1",
   temperature: 0.1,
-  maxTokens: 3500,
+  maxTokens: 5000,
   timeoutMs: 120000,
   firstTokenTimeoutMs: 60000, // Realistic window for multi-chunk legal document generation
-  maxContextChars: 24000, // ~6,000 tokens safe single-pass budget for fast response
+  maxContextChars: 18000, // ~4,500 tokens bounded single-pass budget for fast, reliable response
   schemaVersion: "1.0",
 } as const;
 

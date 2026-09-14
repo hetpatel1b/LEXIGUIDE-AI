@@ -1,6 +1,12 @@
 import { getAiConfig, type AiRuntimeConfig } from "../config";
 import { AiEngineError } from "../errors";
-import type { AiProvider, ChatMessage, ChatCompletionRequest } from "./types";
+import type {
+  AiProvider,
+  ChatMessage,
+  ChatCompletionRequest,
+  ChatCompletionResult,
+  ChatCompletionOptions,
+} from "./types";
 
 /**
  * Server-side client for NVIDIA Nemotron document analysis.
@@ -22,7 +28,21 @@ export class NemotronClient implements AiProvider {
    * Invokes NVIDIA Nemotron chat completion endpoint with streaming,
    * measures TTFT, strips reasoning tokens, and returns the assembled JSON content.
    */
-  public async generateChatCompletion(messages: ChatMessage[]): Promise<string> {
+  public async generateChatCompletion(
+    messages: ChatMessage[],
+    options?: ChatCompletionOptions
+  ): Promise<string> {
+    const result = await this.generateChatCompletionDetailed(messages, options);
+    return result.content;
+  }
+
+  /**
+   * Invokes NVIDIA Nemotron with full metadata (finish_reason, token usage, TTFT, and latency).
+   */
+  public async generateChatCompletionDetailed(
+    messages: ChatMessage[],
+    options?: ChatCompletionOptions
+  ): Promise<ChatCompletionResult> {
     if (!this.config.apiKey) {
       throw new AiEngineError(
         "AI_CONFIG_ERROR",
@@ -31,8 +51,10 @@ export class NemotronClient implements AiProvider {
       );
     }
 
+    const reqTag = options?.requestId ? `[${options.requestId}]` : "";
+
     try {
-      return await this.executeChatStream(this.config.model, messages);
+      return await this.executeChatStream(this.config.model, messages, options);
     } catch (primaryError) {
       // If primary model stalls or fails and a distinct fallback is configured, try fallback
       if (
@@ -42,9 +64,9 @@ export class NemotronClient implements AiProvider {
         (primaryError.code === "AI_TIMEOUT" || primaryError.code === "AI_PROVIDER_ERROR")
       ) {
         console.warn(
-          `[AI-DIAG] Primary model (${this.config.model}) failed (${primaryError.code}). Failing over to ${this.config.fallbackModel}...`
+          `[AI-DIAG]${reqTag} Primary model (${this.config.model}) failed (${primaryError.code}). Failing over to ${this.config.fallbackModel}...`
         );
-        return await this.executeChatStream(this.config.fallbackModel, messages);
+        return await this.executeChatStream(this.config.fallbackModel, messages, options);
       }
 
       throw primaryError;
@@ -53,24 +75,26 @@ export class NemotronClient implements AiProvider {
 
   private async executeChatStream(
     modelName: string,
-    messages: ChatMessage[]
-  ): Promise<string> {
+    messages: ChatMessage[],
+    options?: ChatCompletionOptions
+  ): Promise<ChatCompletionResult> {
     const endpoint = `${this.config.baseURL.replace(/\/$/, "")}/chat/completions`;
+    const reqTag = options?.requestId ? `[${options.requestId}]` : "";
+
     const payload: ChatCompletionRequest = {
       model: modelName,
       messages,
-      temperature: this.config.temperature,
-      max_tokens: this.config.maxTokens,
+      temperature: options?.temperature ?? this.config.temperature,
+      max_tokens: options?.maxTokens ?? this.config.maxTokens,
       stream: true,
       reasoning_effort: "none",
       chat_template_kwargs: {
         enable_thinking: false,
       },
-      response_format: { type: "json_object" },
     };
 
     const t0 = Date.now();
-    console.log(`[AI-DIAG] NVIDIA request started for model=${modelName}...`);
+    console.log(`[AI-DIAG]${reqTag} NVIDIA request started for model=${modelName} (maxTokens=${payload.max_tokens})...`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
@@ -78,7 +102,7 @@ export class NemotronClient implements AiProvider {
     let firstTokenTimer: NodeJS.Timeout | null = null;
     if (this.config.firstTokenTimeoutMs > 0) {
       firstTokenTimer = setTimeout(() => {
-        console.warn(`[AI-DIAG] First token timeout (${this.config.firstTokenTimeoutMs}ms) exceeded for ${modelName}`);
+        console.warn(`[AI-DIAG]${reqTag} First token timeout (${this.config.firstTokenTimeoutMs}ms) exceeded for ${modelName}`);
         controller.abort();
       }, this.config.firstTokenTimeoutMs);
     }
@@ -95,7 +119,7 @@ export class NemotronClient implements AiProvider {
       });
 
       console.log(
-        `[AI-DIAG] NVIDIA response headers received in ${Date.now() - t0}ms (status: ${response.status})`
+        `[AI-DIAG]${reqTag} NVIDIA response headers received in ${Date.now() - t0}ms (status: ${response.status})`
       );
 
       if (!response.ok) {
@@ -118,11 +142,60 @@ export class NemotronClient implements AiProvider {
       const decoder = new TextDecoder("utf-8");
       let firstTokenTime: number | null = null;
       let accumulatedContent = "";
+      let finishReason: string | null = null;
+      let usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number } | undefined;
       let lineBuffer = "";
+
+      const processSseLine = (line: string) => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
+          return;
+        }
+
+        if (trimmed.startsWith("data:")) {
+          try {
+            const data = JSON.parse(trimmed.slice(5).trim());
+            const choice = data.choices?.[0];
+            const delta = choice?.delta;
+
+            if (delta?.content) {
+              if (!firstTokenTime) {
+                firstTokenTime = Date.now() - t0;
+                if (firstTokenTimer) {
+                  clearTimeout(firstTokenTimer);
+                  firstTokenTimer = null;
+                }
+                console.log(`[AI-DIAG]${reqTag} FIRST TOKEN RECEIVED (TTFT): ${firstTokenTime}ms`);
+              }
+              accumulatedContent += delta.content;
+            }
+
+            if (choice?.finish_reason) {
+              finishReason = choice.finish_reason;
+            }
+
+            if (data.usage) {
+              usage = {
+                promptTokens: data.usage.prompt_tokens,
+                completionTokens: data.usage.completion_tokens,
+                totalTokens: data.usage.total_tokens,
+              };
+            }
+          } catch {
+            // Ignore partial SSE JSON parse errors
+          }
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          // Process any trailing bytes remaining in lineBuffer
+          if (lineBuffer.trim()) {
+            processSseLine(lineBuffer.trim());
+          }
+          break;
+        }
 
         const chunkText = decoder.decode(value, { stream: true });
         lineBuffer += chunkText;
@@ -130,32 +203,7 @@ export class NemotronClient implements AiProvider {
         lineBuffer = lines.pop() || "";
 
         for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
-            continue;
-          }
-
-          if (trimmed.startsWith("data:")) {
-            try {
-              const data = JSON.parse(trimmed.slice(5).trim());
-              const delta = data.choices?.[0]?.delta;
-
-              if (delta?.content) {
-                if (!firstTokenTime) {
-                  firstTokenTime = Date.now() - t0;
-                  if (firstTokenTimer) {
-                    clearTimeout(firstTokenTimer);
-                    firstTokenTimer = null;
-                  }
-                  console.log(`[AI-DIAG] FIRST TOKEN RECEIVED (TTFT): ${firstTokenTime}ms`);
-                }
-                accumulatedContent += delta.content;
-              }
-              // delta.reasoning_content is deliberately ignored to protect against leakage
-            } catch {
-              // Ignore partial JSON parse errors in SSE line buffering
-            }
-          }
+          processSseLine(line);
         }
       }
 
@@ -164,7 +212,7 @@ export class NemotronClient implements AiProvider {
 
       const totalDuration = Date.now() - t0;
       console.log(
-        `[AI-DIAG] NVIDIA stream completed in ${totalDuration}ms (TTFT: ${firstTokenTime || totalDuration}ms, chars: ${accumulatedContent.length})`
+        `[AI-DIAG]${reqTag} NVIDIA stream completed in ${totalDuration}ms (TTFT: ${firstTokenTime || totalDuration}ms, finish_reason: ${finishReason}, chars: ${accumulatedContent.length})`
       );
 
       if (!accumulatedContent.trim()) {
@@ -175,7 +223,14 @@ export class NemotronClient implements AiProvider {
         );
       }
 
-      return accumulatedContent;
+      return {
+        content: accumulatedContent,
+        finishReason,
+        usage,
+        ttftMs: firstTokenTime || totalDuration,
+        totalDurationMs: totalDuration,
+        model: modelName,
+      };
     } catch (error: unknown) {
       if (firstTokenTimer) clearTimeout(firstTokenTimer);
       clearTimeout(timeoutId);

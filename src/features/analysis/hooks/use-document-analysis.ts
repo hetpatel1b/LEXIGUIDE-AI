@@ -41,6 +41,8 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
     return "idle";
   });
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const inFlightRef = React.useRef(false);
+  const analyzingDocIdRef = React.useRef<string | null>(null);
 
   // Adjust state during render when document prop changes (React 19 pattern)
   if (docId !== prevDocId) {
@@ -60,6 +62,16 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
         return;
       }
 
+      // Guard against duplicate in-flight requests for the same document
+      if (inFlightRef.current && analyzingDocIdRef.current === targetDoc.id) {
+        console.log(`[AI-DIAG] Duplicate analysis request suppressed for docId=${targetDoc.id}`);
+        return;
+      }
+
+      inFlightRef.current = true;
+      analyzingDocIdRef.current = targetDoc.id;
+
+      const requestId = `ana_${Math.random().toString(36).substring(2, 9)}_${Date.now().toString(36)}`;
       setStatus("preparing");
       setErrorMessage(null);
 
@@ -67,8 +79,11 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
         setStatus("analyzing");
         const response = await fetch("/api/analysis", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ document: targetDoc }),
+          headers: {
+            "Content-Type": "application/json",
+            "X-Analysis-Request-Id": requestId,
+          },
+          body: JSON.stringify({ document: targetDoc, requestId }),
         });
 
         const data = await response.json();
@@ -93,6 +108,9 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
             : "Network error contacting analysis service. Please try again."
         );
         setStatus("error");
+      } finally {
+        inFlightRef.current = false;
+        analyzingDocIdRef.current = null;
       }
     },
     [document]

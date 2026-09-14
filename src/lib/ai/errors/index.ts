@@ -57,7 +57,11 @@ export function toSafeUserMessage(error: unknown): string {
       case "AI_CONTEXT_TOO_LARGE":
         return "The document is too extensive for single-pass analysis. Please consider a shorter section or summary.";
       case "AI_SCHEMA_ERROR":
+        return "The AI generated an unexpected response structure. Please retry analysis.";
       case "AI_INVALID_RESPONSE":
+        if (error.details?.diagnostic === "TRUNCATED_OR_MALFORMED_JSON") {
+          return "LexiGuide received an incomplete AI analysis. Please retry.";
+        }
         return "The AI generated an unexpected response structure. Please retry analysis.";
       case "AI_SOURCE_VALIDATION_ERROR":
         return "The analysis could not be safely verified against the document source text. Analysis aborted for safety.";
