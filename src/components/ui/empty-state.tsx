@@ -29,9 +29,9 @@ export function EmptyState({
         {icon || <FileQuestion className="h-6 w-6 stroke-[1.5]" aria-hidden="true" />}
       </div>
 
-      <h4 className="text-base font-semibold tracking-tight text-[var(--foreground)] mb-1">
+      <h2 className="text-base font-semibold tracking-tight text-[var(--foreground)] mb-1">
         {title}
-      </h4>
+      </h2>
 
       <p className="max-w-md text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed mb-6">
         {description}

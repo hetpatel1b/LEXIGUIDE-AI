@@ -26,6 +26,8 @@ export function Tabs({
   density = "spacious",
   className,
 }: TabsProps) {
+  const tabRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let nextIndex = index;
     if (e.key === "ArrowRight") {
@@ -44,6 +46,12 @@ export function Tabs({
     const nextTab = tabs[nextIndex];
     if (nextTab && !nextTab.disabled) {
       onTabChange(nextTab.id);
+      // Wait for React to render the new state, then focus the new tab
+      setTimeout(() => {
+        if (tabRefs.current[nextIndex]) {
+          tabRefs.current[nextIndex]?.focus();
+        }
+      }, 0);
     }
   };
 
@@ -61,6 +69,9 @@ export function Tabs({
         return (
           <button
             key={tab.id}
+            ref={(el) => {
+              tabRefs.current[idx] = el;
+            }}
             role="tab"
             type="button"
             id={`tab-${tab.id}`}

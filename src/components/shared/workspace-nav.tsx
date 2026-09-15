@@ -102,12 +102,14 @@ export function WorkspaceNav({
 
   return (
     <header
-      role="banner"
       className={cn(
         "sticky top-0 z-40 w-full border-b border-[var(--border)] bg-[var(--surface)] px-2.5 sm:px-6 shrink-0 shadow-sm",
         className
       )}
     >
+      <h1 className="sr-only">
+        {documentName ? `Document Workspace for ${documentName}` : "Document Workspace"}
+      </h1>
       <div className="flex h-14 items-center justify-between gap-2 sm:gap-3">
         {/* Left: Brand Identity (Light Wordmark) & Document Context */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">

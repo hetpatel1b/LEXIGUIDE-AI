@@ -4,6 +4,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/lib/utils";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 export interface WorkspaceDrawerProps {
   isOpen: boolean;
@@ -20,6 +21,10 @@ export function WorkspaceDrawer({
   side = "left",
   children,
 }: WorkspaceDrawerProps) {
+  const drawerRef = React.useRef<HTMLDivElement>(null);
+  
+  useFocusTrap(drawerRef, isOpen);
+
   // Handle escape key
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,10 +48,12 @@ export function WorkspaceDrawer({
 
   return (
     <div
+      ref={drawerRef}
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      className="fixed inset-0 z-50 flex"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex outline-none"
     >
       {/* Backdrop */}
       <div

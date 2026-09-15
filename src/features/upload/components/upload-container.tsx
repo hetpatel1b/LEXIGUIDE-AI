@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui";
 import { FILE_CONSTRAINTS } from "@/lib/constants";
 import { UploadDropzone } from "./upload-dropzone";
 import { SelectedFileCard } from "./selected-file-card";
+import { AriaLiveRegion } from "@/components/shared/aria-live-region";
 import { useDocumentUpload } from "../hooks/use-document-upload";
 
 export function UploadContainer() {
@@ -113,8 +114,20 @@ export function UploadContainer() {
   const isProcessing = status === "uploading" || status === "processing";
   const isSuccess = status === "success" && !!processedDocument;
 
+  // Determine the dynamic accessibility announcement message
+  const announcementMessage = React.useMemo(() => {
+    if (serverError) return `Error: ${serverError}`;
+    if (validationError) return `Validation error: ${validationError}`;
+    if (isSuccess) return "Document processed successfully. Ready for analysis.";
+    if (status === "uploading") return "Uploading document...";
+    if (status === "processing") return stageMessage || "Processing document...";
+    if (selectedFile) return `File ${selectedFile.name} selected.`;
+    return "";
+  }, [serverError, validationError, isSuccess, status, stageMessage, selectedFile]);
+
   return (
     <div id="upload-section" className="w-full max-w-4xl mx-auto space-y-4">
+      <AriaLiveRegion message={announcementMessage} />
       {/* Informational Multi-File Notice */}
       {noticeMessage && (
         <Alert

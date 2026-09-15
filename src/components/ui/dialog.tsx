@@ -4,6 +4,7 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IconButton } from "./icon-button";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 export interface DialogProps {
   isOpen: boolean;
@@ -24,6 +25,9 @@ export function Dialog({
 }: DialogProps) {
   const titleId = React.useId();
   const descId = React.useId();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+
+  useFocusTrap(dialogRef, isOpen);
 
   // Escape key handling
   React.useEffect(() => {
@@ -48,11 +52,13 @@ export function Dialog({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? titleId : undefined}
       aria-describedby={description ? descId : undefined}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto outline-none"
     >
       {/* Backdrop */}
       <div

@@ -192,9 +192,9 @@ export function AnalysisWorkspace() {
       return (
         <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
           <WorkspaceNav documentName={null} documentType={null} status="none" />
-          <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-hidden">
+          <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-hidden">
             <WorkspaceSkeleton />
-          </main>
+          </div>
         </div>
       );
     }
@@ -202,7 +202,7 @@ export function AnalysisWorkspace() {
     return (
       <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
         <WorkspaceNav documentName={null} documentType={null} status="none" />
-        <main className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
           <input
             ref={fileInputRef}
             type="file"
@@ -229,7 +229,7 @@ export function AnalysisWorkspace() {
           {uploadError && (
             <p className="mt-4 text-xs text-red-600 dark:text-red-400 max-w-md text-center">{uploadError}</p>
           )}
-        </main>
+        </div>
       </div>
     );
   }

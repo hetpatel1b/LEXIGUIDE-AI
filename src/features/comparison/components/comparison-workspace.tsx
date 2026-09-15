@@ -354,7 +354,7 @@ export function ComparisonWorkspace() {
       />
 
       {/* 2. Main Wide Comparison Workspace */}
-      <main className="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 space-y-6 text-left">
+      <div className="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 space-y-6 text-left">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
           <div className="space-y-1 min-w-0 flex-1">
@@ -556,7 +556,7 @@ export function ComparisonWorkspace() {
             Findings are grounded in the uploaded document. Potential concerns and identified discrepancies are informational review points, not legal conclusions. Always consult qualified legal counsel for binding legal advice.
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Side-by-Side Evidence Modal Dialog */}
       <Dialog

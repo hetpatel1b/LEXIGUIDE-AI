@@ -91,20 +91,13 @@ export function UploadDropzone({
     <div
       role="region"
       aria-label="Legal document upload dropzone"
-      tabIndex={disabled ? -1 : 0}
       onClick={triggerBrowse}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && !disabled) {
-          e.preventDefault();
-          triggerBrowse();
-        }
-      }}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-4 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none cursor-pointer",
+        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-4 sm:p-8 md:p-12 text-center transition-all duration-200 select-none cursor-pointer",
         isDragging
           ? "border-[var(--primary)] bg-blue-50/70 dark:bg-blue-950/40 scale-[1.005]"
           : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-subtle)]",
@@ -112,7 +105,7 @@ export function UploadDropzone({
         className
       )}
     >
-      {/* Hidden native accessible file input */}
+      {/* Hidden native file input, focusable via tabindex=-1 so it doesn't break keyboard flow but works with button */}
       <input
         ref={fileInputRef}
         type="file"
@@ -121,6 +114,7 @@ export function UploadDropzone({
         accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
         onChange={handleFileInputChange}
         disabled={disabled}
+        tabIndex={-1}
         className="sr-only"
       />
 
@@ -137,9 +131,9 @@ export function UploadDropzone({
       </div>
 
       {/* Primary Instruction */}
-      <h3 className="text-base sm:text-lg font-semibold text-[var(--foreground)] tracking-tight mb-1.5 px-2">
+      <h2 className="text-base sm:text-lg font-semibold text-[var(--foreground)] tracking-tight mb-1.5 px-2">
         {isDragging ? "Drop your legal document here" : "Drag and drop your legal document"}
-      </h3>
+      </h2>
 
       <p className="max-w-md text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed mb-5 sm:mb-6 px-2">
         Upload your contract, agreement, or terms to examine key clauses, obligations, and areas warranting attention.
@@ -163,7 +157,7 @@ export function UploadDropzone({
       </div>
 
       {/* Constraints & Supported Formats */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-3 border-t border-[var(--border-muted)] w-full max-w-md text-[11px] text-[var(--foreground-muted)] px-2">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-3 border-t border-[var(--border-muted)] w-full max-w-md text-[11px] text-[var(--foreground-secondary)] px-2">
         <span className="font-medium text-[var(--foreground-secondary)]">Supported formats:</span>
         <span className="font-mono bg-[var(--surface-muted)] px-1.5 py-0.5 rounded border border-[var(--border-muted)]">
           PDF
@@ -179,7 +173,7 @@ export function UploadDropzone({
       </div>
 
       {/* Privacy & Confidentiality Micro-signal */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5 text-[11px] text-[var(--foreground-subtle)] px-2 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5 text-[11px] text-[var(--foreground-secondary)] px-2 text-center">
         <Shield className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
         <span>Confidential document handling &bull; Client-side validation active</span>
       </div>

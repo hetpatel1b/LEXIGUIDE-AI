@@ -76,7 +76,8 @@ export function AnalysisMain({
   }, [isAnalyzing]);
 
   return (
-    <main
+    <div
+      role="region"
       id="analysis-workspace-main"
       aria-label="Document Analysis Workspace"
       className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--background)] min-w-0"
@@ -347,6 +348,6 @@ export function AnalysisMain({
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -291,7 +291,7 @@ export function ActionCenterWorkspace() {
       />
 
       {/* 2. Main Wide Action Center Workspace */}
-      <main className="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 space-y-6 text-left">
+      <div className="flex-1 w-full max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-5 sm:py-6 space-y-6 text-left">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
           <div className="space-y-1 min-w-0 flex-1">
@@ -366,7 +366,7 @@ export function ActionCenterWorkspace() {
             Findings are grounded in the uploaded document. Action items are structured informational review points, not legal conclusions or formal legal advice. Always consult qualified legal counsel for binding legal decisions.
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Evidence Modal Dialog */}
       <Dialog

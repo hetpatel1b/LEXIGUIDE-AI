@@ -69,12 +69,14 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen flex flex-col font-sans bg-[var(--background)] text-[var(--foreground)] selection:bg-blue-100">
         {/* Accessible Skip Link */}
-        <a
-          href="#main-content"
-          className="sr-only sr-only-focusable z-50 p-3 bg-[var(--color-brand-blue)] text-white font-medium rounded-b-md shadow-lg"
-        >
-          Skip to main content
-        </a>
+        <nav aria-label="Skip links">
+          <a
+            href="#main-content"
+            className="sr-only sr-only-focusable z-50 p-3 bg-[var(--color-brand-blue)] text-white font-medium rounded-b-md shadow-lg"
+          >
+            Skip to main content
+          </a>
+        </nav>
 
         {/* Global Application Shell Header */}
         <AppHeader />

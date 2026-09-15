@@ -44,7 +44,7 @@ export function ProductPreview() {
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 font-mono text-[11px] text-[var(--foreground-muted)]">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 font-mono text-[11px] text-[var(--foreground-secondary)]">
               <span>Status: Analyzed</span>
               <span aria-hidden="true">&bull;</span>
               <span>18 Pages</span>
@@ -75,9 +75,9 @@ export function ProductPreview() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
               {/* Left Column: Key Provisions & Obligations */}
               <div className="lg:col-span-6 space-y-3.5">
-                <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--foreground-muted)]">
+                <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--foreground-muted)]">
                   Key Clauses &amp; Obligations
-                </h4>
+                </h3>
 
                 <div className="space-y-3">
                   <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-3.5 space-y-1.5">
@@ -108,9 +108,9 @@ export function ProductPreview() {
 
               {/* Right Column: Potential Concerns & Grounded Evidence */}
               <div className="lg:col-span-6 space-y-3.5">
-                <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--foreground-muted)]">
+                <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-[var(--foreground-muted)]">
                   Potential Concerns &amp; Evidence
-                </h4>
+                </h3>
 
                 <div className="space-y-3">
                   {/* Concern Card */}
@@ -121,7 +121,7 @@ export function ProductPreview() {
                       </span>
                       <RiskIndicator severity="medium" size="sm" />
                     </div>
-                    <p className="text-xs text-[var(--foreground-muted)] leading-relaxed">
+                    <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
                       Review the termination language carefully. The employer holds immediate termination rights with pay in lieu, while employee voluntary resignation requires 90 calendar days.
                     </p>
                   </div>
