@@ -130,4 +130,52 @@ test("Efficiency - Server-Side Deduplication & Caching", async (t) => {
     await cache.getOrCompute(key, sessionId, computeFn);
     assert.strictEqual(computeCount, 2, "Should recompute after session clear");
   });
+  await t.test("TTL Expiration should remove stale entries", async () => {
+    const cache = new ServerResultCache();
+    // Use a small TTL via mocking or by intercepting Date.now
+    // Since we cannot mock Date.now easily here without side effects, we can access private properties using `any` to set fake timestamps.
+    const sessionId = "session_ttl";
+    const key = "analysis:doc_ttl";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      return { data: "ttl_data" };
+    };
+
+    await cache.getOrCompute(key, sessionId, computeFn);
+    assert.strictEqual(computeCount, 1);
+
+    // Force expiration by modifying the internal timestamp
+    const secureKey = `${sessionId}:${key}`;
+    const internalCache = (cache as any).resolvedCache;
+    const entry = internalCache.get(secureKey);
+    entry.timestamp = Date.now() - (60 * 60 * 1000) - 1000; // 1 hour and 1 second ago
+
+    // Try again, it should recompute because it's expired
+    await cache.getOrCompute(key, sessionId, computeFn);
+    assert.strictEqual(computeCount, 2, "Should recompute after TTL expires");
+  });
+
+  await t.test("Maximum 500-entry bound and eviction behavior", async () => {
+    const cache = new ServerResultCache();
+    const sessionId = "session_max";
+
+    const computeFn = async (id: number) => {
+      return { data: `data_${id}` };
+    };
+
+    // Fill the cache up to 505 entries
+    for (let i = 0; i < 505; i++) {
+      await cache.getOrCompute(`key_${i}`, sessionId, () => computeFn(i));
+    }
+
+    const stats = cache.getStats();
+    assert.ok(stats.resolvedCount <= 500, `Cache should not exceed 500 entries (was ${stats.resolvedCount})`);
+
+    // Verify the very first entries were evicted (LRU / insertion order eviction)
+    const internalCache = (cache as any).resolvedCache;
+    assert.ok(!internalCache.has(`${sessionId}:key_0`), "First entry should be evicted");
+    assert.ok(internalCache.has(`${sessionId}:key_504`), "Latest entry should exist");
+  });
 });
