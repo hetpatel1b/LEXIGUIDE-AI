@@ -8,6 +8,7 @@ import type {
 import { type SectionMappingResult } from "./section-mapper";
 import {
   isSubstantivelyIdentical,
+  isSubstantiveChange,
   determineChangeSeverity,
   extractDiffHighlights,
 } from "./diff-engine";
@@ -63,14 +64,14 @@ export function mapClauses(
       ? `Section ${pair.sectionB.sectionNumber}`
       : pair.sectionB.title;
 
-    if (isSubstantivelyIdentical(textA, textB)) {
+    if (!isSubstantiveChange(textA, textB)) {
       unchangedSections.push({
         id: `unchanged_${unchangedIndex++}`,
         title: pair.sectionA.title,
         sectionReference: sectionRefA,
         pageNumber: pageA,
         chunkId: chunkA?.chunkId,
-        note: "Verified identical wording preserved across both document revisions.",
+        note: "Verified identical wording or non-substantive formatting preserved across both document revisions.",
       });
     } else {
       const status: DifferenceType = "modified";
@@ -99,24 +100,41 @@ export function mapClauses(
         verified: true,
       };
 
-      changes.push({
-        id: `chg_${changeIndex++}`,
-        clauseTitle: pair.sectionB.title || pair.sectionA.title,
-        category: pair.category,
-        changeSeverity: severity,
-        status,
-        sectionA: sectionRefA,
-        sectionB: sectionRefB,
-        pageA,
-        pageB,
-        docAContent: textA.slice(0, 450),
-        docBContent: textB.slice(0, 450),
-        summaryChange: `Clause wording modified between ${docA.displayName} and ${docB.displayName}.`,
-        diffHighlightA: highlightA,
-        diffHighlightB: highlightB,
-        sourceA,
-        sourceB,
-      });
+      const highlightATrimmed = highlightA?.trim();
+      const highlightBTrimmed = highlightB?.trim();
+
+      if (!highlightATrimmed || !highlightBTrimmed || highlightATrimmed.includes("Missing") || highlightBTrimmed.includes("Missing")) {
+        continue;
+      }
+
+      const identityKey = `mod_${pair.category}_${highlightATrimmed}_${highlightBTrimmed}`;
+
+      // Deduplicate substantive changes
+      const existing = changes.find(c => 
+        c.diffHighlightA?.trim() === highlightATrimmed && 
+        c.diffHighlightB?.trim() === highlightBTrimmed
+      );
+
+      if (!existing) {
+        changes.push({
+          id: `chg_${changeIndex++}`,
+          clauseTitle: pair.sectionB.title || pair.sectionA.title,
+          category: pair.category,
+          changeSeverity: severity,
+          status,
+          sectionA: sectionRefA,
+          sectionB: sectionRefB,
+          pageA,
+          pageB,
+          docAContent: textA.slice(0, 450),
+          docBContent: textB.slice(0, 450),
+          summaryChange: `Clause wording modified between ${docA.displayName} and ${docB.displayName}.`,
+          diffHighlightA: highlightATrimmed,
+          diffHighlightB: highlightBTrimmed,
+          sourceA,
+          sourceB,
+        });
+      }
     }
   }
 
@@ -138,23 +156,28 @@ export function mapClauses(
       verified: true,
     };
 
-    changes.push({
-      id: `chg_${changeIndex++}`,
-      clauseTitle: secA.title,
-      category: "Obligations",
-      changeSeverity: determineChangeSeverity("Obligations", textA, "", "removed"),
-      status: "removed",
-      sectionA: sectionRefA,
-      sectionB: "Omitted / Replaced",
-      pageA,
-      pageB: 1,
-      docAContent: textA.slice(0, 450),
-      docBContent: "No corresponding provision found in updated document.",
-      summaryChange: `Provision "${secA.title}" is present in Document A but omitted or removed in Document B.`,
-      whyItMatters:
-        "Consider reviewing whether the omitted provision was intentionally removed or merged into another section.",
-      sourceA,
-    });
+    const isBoilerplate = 
+      secA.title.toLowerCase().includes("schedule") || 
+      textA.toUpperCase().startsWith("SCHEDULE") ||
+      secA.title.toUpperCase().includes("OPERATIONAL EXAMPLES");
+
+    if (isSubstantiveChange(textA, "") && !isBoilerplate) {
+      changes.push({
+        id: `chg_${changeIndex++}`,
+        clauseTitle: secA.title,
+        category: "General",
+        changeSeverity: "moderate",
+        status: "removed",
+        sectionA: sectionRefA,
+        sectionB: "Not present",
+        pageA,
+        pageB: 1,
+        docAContent: textA.slice(0, 450),
+        docBContent: "Clause removed in target document.",
+        summaryChange: `Entire clause removed from ${docB.displayName}.`,
+        sourceA,
+      });
+    }
   }
 
   // 3. Process Unmapped Sections in Document B -> ADDED
@@ -175,23 +198,28 @@ export function mapClauses(
       verified: true,
     };
 
-    changes.push({
-      id: `chg_${changeIndex++}`,
-      clauseTitle: secB.title,
-      category: "Obligations",
-      changeSeverity: determineChangeSeverity("Obligations", "", textB, "added"),
-      status: "added",
-      sectionA: "Not in Document A",
-      sectionB: sectionRefB,
-      pageA: 1,
-      pageB,
-      docAContent: "Provision was not present in the baseline document.",
-      docBContent: textB.slice(0, 450),
-      summaryChange: `New provision "${secB.title}" added to Document B.`,
-      whyItMatters:
-        "Review newly introduced obligations or covenants to ensure they align with business expectations.",
-      sourceB,
-    });
+    const isBoilerplate = 
+      secB.title.toLowerCase().includes("schedule") || 
+      textB.toUpperCase().startsWith("SCHEDULE") ||
+      secB.title.toUpperCase().includes("OPERATIONAL EXAMPLES");
+
+    if (isSubstantiveChange("", textB) && !isBoilerplate) {
+      changes.push({
+        id: `chg_${changeIndex++}`,
+        clauseTitle: secB.title,
+        category: "General",
+        changeSeverity: "moderate",
+        status: "added",
+        sectionA: "Not present",
+        sectionB: sectionRefB,
+        pageA: 1,
+        pageB,
+        docAContent: "Clause not present in baseline document.",
+        docBContent: textB.slice(0, 450),
+        summaryChange: `New clause added in ${docB.displayName}.`,
+        sourceB,
+      });
+    }
   }
 
   return {

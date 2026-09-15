@@ -325,9 +325,24 @@ export function getWorkspaceGeneration(): number {
   return currentWorkspaceGeneration;
 }
 
+import {
+  clearComparisonWorkspaceState,
+} from "@/lib/comparison/comparison-storage";
+
+export {
+  getComparisonWorkspaceState,
+  setComparisonWorkspaceState,
+  clearComparisonWorkspaceState,
+  runComparisonWorkflow,
+} from "@/lib/comparison/comparison-storage";
+export type {
+  ComparisonWorkspaceState,
+  ComparisonWorkspaceStatus,
+} from "@/lib/comparison/comparison-storage";
+
 /**
  * Completely resets the document workspace on the client.
- * Clears active document, session documents, all cached analyses, and custom action items.
+ * Clears active document, session documents, all cached analyses, comparison state, and custom action items.
  * Dispatches synchronization events so all listening components update immediately.
  */
 export function resetDocumentWorkspace(): void {
@@ -336,12 +351,15 @@ export function resetDocumentWorkspace(): void {
   if (typeof window === "undefined") return;
 
   try {
-    // 1. Remove specific known keys
+    // 1. Clear comparison workspace state
+    clearComparisonWorkspaceState();
+
+    // 2. Remove specific known keys
     window.sessionStorage.removeItem(ACTIVE_DOC_STORAGE_KEY);
     window.sessionStorage.removeItem(SESSION_DOCS_STORAGE_KEY);
     window.sessionStorage.removeItem("lexiguide_custom_action_items");
 
-    // 2. Scan and purge all document analysis cache entries and lexiguide document keys
+    // 3. Scan and purge all document analysis cache entries and lexiguide document keys
     const keysToRemove: string[] = [];
     for (let i = 0; i < window.sessionStorage.length; i++) {
       const key = window.sessionStorage.key(i);
@@ -351,7 +369,7 @@ export function resetDocumentWorkspace(): void {
     }
     keysToRemove.forEach((key) => window.sessionStorage.removeItem(key));
 
-    // 3. Dispatch events to notify all active workspace listeners
+    // 4. Dispatch events to notify all active workspace listeners
     if (typeof window.dispatchEvent === "function") {
       window.dispatchEvent(new Event("lexiguide-doc-update"));
       window.dispatchEvent(new Event("lexiguide-workspace-reset"));
@@ -361,3 +379,4 @@ export function resetDocumentWorkspace(): void {
     console.warn("Failed to reset document workspace from sessionStorage:", err);
   }
 }
+

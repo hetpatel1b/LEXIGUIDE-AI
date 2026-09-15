@@ -114,24 +114,43 @@ export const temporaryComparisonStore = {
   },
 
   /**
-   * Removes a temporary comparison document from the store.
+   * Removes a temporary comparison document from the store with session verification.
    */
-  removeTemporaryDocument(docId: string): void {
-    if (!docId) return;
+  removeTemporaryDocument(docId: string, requestingSessionId?: string): boolean {
+    if (!docId) return false;
+    const entry = tempStore.get(docId);
+    if (!entry) return false;
+
+    if (requestingSessionId && entry.ownerSessionId) {
+      if (entry.ownerSessionId !== requestingSessionId.toLowerCase()) {
+        console.warn(
+          `[TEMP-COMP-STORE-SECURITY] Cross-session temporary document deletion REJECTED: docId=${docId}`
+        );
+        return false;
+      }
+    }
+
     tempStore.delete(docId);
     console.log(`[TEMP-COMP-STORE] Removed temporary document id=${docId}`);
+    return true;
   },
 
   /**
    * Removes all temporary documents associated with a specific comparisonId.
    */
-  clearComparison(comparisonId: string): void {
-    if (!comparisonId) return;
+  clearComparison(comparisonId: string, requestingSessionId?: string): number {
+    if (!comparisonId) return 0;
+    let removed = 0;
+    const normalizedOwner = requestingSessionId ? requestingSessionId.toLowerCase() : undefined;
     for (const [id, entry] of tempStore.entries()) {
       if (entry.comparisonId === comparisonId) {
-        tempStore.delete(id);
+        if (!normalizedOwner || !entry.ownerSessionId || entry.ownerSessionId === normalizedOwner) {
+          tempStore.delete(id);
+          removed++;
+        }
       }
     }
+    return removed;
   },
 
   /**

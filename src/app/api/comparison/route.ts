@@ -307,3 +307,70 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     concurrencyGuard.release(session.sessionId, "comparison", lockKey);
   }
 }
+
+/**
+ * DELETE /api/comparison
+ * Purges ephemeral comparison-scoped documents on explicit user action
+ * ("New Document to Compare" / "Replace Document").
+ * Preserves anonymous user identity, Document A, and daily quotas.
+ */
+export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  const originCheck = validateOrigin(request);
+  if (!originCheck.valid) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: originCheck.reason || "Cross-origin request rejected.",
+        },
+      },
+      { status: 403 }
+    );
+  }
+
+  const session = resolveAnonymousSession(request);
+  let comparisonId: string | undefined;
+  let documentBId: string | undefined;
+
+  try {
+    const body = await request.json().catch(() => null);
+    if (body) {
+      if (typeof body.comparisonId === "string") comparisonId = body.comparisonId;
+      if (typeof body.documentBId === "string") documentBId = body.documentBId;
+    }
+  } catch {}
+
+  if (!comparisonId && request.nextUrl.searchParams.has("comparisonId")) {
+    comparisonId = request.nextUrl.searchParams.get("comparisonId") || undefined;
+  }
+  if (!documentBId && request.nextUrl.searchParams.has("documentBId")) {
+    documentBId = request.nextUrl.searchParams.get("documentBId") || undefined;
+  }
+
+  let clearedCount = 0;
+  if (comparisonId) {
+    clearedCount += temporaryComparisonStore.clearComparison(comparisonId, session.sessionId);
+  }
+  if (documentBId) {
+    const removed = temporaryComparisonStore.removeTemporaryDocument(documentBId, session.sessionId);
+    if (removed) clearedCount++;
+  }
+  if (!comparisonId && !documentBId) {
+    clearedCount = temporaryComparisonStore.clearSession(session.sessionId);
+  }
+
+  console.log(
+    `[TEMP-COMP-STORE] Cleared comparison data for session ${session.sessionId} (compId: ${comparisonId || "all"}, docB: ${documentBId || "all"}, count: ${clearedCount})`
+  );
+
+  const response = NextResponse.json({
+    success: true,
+    message: "Ephemeral comparison records cleared.",
+    data: { clearedCount },
+    timestamp: new Date().toISOString(),
+  });
+
+  return attachSessionCookie(response, session.sessionId);
+}
+

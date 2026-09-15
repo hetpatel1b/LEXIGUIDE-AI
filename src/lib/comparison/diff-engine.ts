@@ -32,6 +32,29 @@ export function isSubstantivelyIdentical(textA: string, textB: string): boolean 
 }
 
 /**
+ * Checks if a change between two texts is a substantive contractual modification,
+ * filtering out metadata, whitespace, pagination, or generic rewording.
+ */
+export function isSubstantiveChange(textA: string, textB: string): boolean {
+  if (isSubstantivelyIdentical(textA, textB)) return false;
+
+  const numsA = extractNumericTokens(textA);
+  const numsB = extractNumericTokens(textB);
+  const hasNumericDiff = numsA.some(n => !numsB.includes(n)) || numsB.some(n => !numsA.includes(n));
+  if (hasNumericDiff) return true;
+
+  if (detectNegationShift(textA, textB)) return true;
+
+  const qualifiers = ["subject to", "provided that", "except", "unless", "notwithstanding", "solely"];
+  const tA = textA.toLowerCase();
+  const tB = textB.toLowerCase();
+  const qualShift = qualifiers.some(q => tA.includes(q) !== tB.includes(q));
+  if (qualShift) return true;
+
+  return false;
+}
+
+/**
  * Extracts key numbers, currencies, dates, and time periods from text.
  */
 export function extractNumericTokens(text: string): string[] {
@@ -179,19 +202,29 @@ export function extractDiffHighlights(
   }
 
   // Fallback: compare words
-  const wordsA = textA.split(/\s+/);
-  const wordsB = textB.split(/\s+/);
+  const wordsA = textA.split(/\s+/).filter(Boolean);
+  const wordsB = textB.split(/\s+/).filter(Boolean);
+
+  if (wordsA.length === 0 && wordsB.length > 0) {
+    return { highlightA: "Missing section content", highlightB: wordsB.slice(0, 5).join(" ") };
+  }
+  if (wordsB.length === 0 && wordsA.length > 0) {
+    return { highlightA: wordsA.slice(0, 5).join(" "), highlightB: "Missing section content" };
+  }
 
   for (let i = 0; i < Math.min(wordsA.length, wordsB.length); i++) {
     if (wordsA[i].toLowerCase() !== wordsB[i].toLowerCase()) {
-      const phraseA = wordsA.slice(Math.max(0, i - 1), i + 3).join(" ");
-      const phraseB = wordsB.slice(Math.max(0, i - 1), i + 3).join(" ");
-      return {
-        highlightA: phraseA,
-        highlightB: phraseB,
-      };
+      return { highlightA: wordsA.slice(i, i + 5).join(" "), highlightB: wordsB.slice(i, i + 5).join(" ") };
     }
   }
 
-  return {};
+  // If one is a prefix of the other, the diff is the extra words
+  if (wordsA.length > wordsB.length) {
+    return { highlightA: wordsA.slice(wordsB.length, wordsB.length + 5).join(" "), highlightB: "Missing text" };
+  }
+  if (wordsB.length > wordsA.length) {
+    return { highlightA: "Missing text", highlightB: wordsB.slice(wordsA.length, wordsA.length + 5).join(" ") };
+  }
+
+  return { highlightA: undefined, highlightB: undefined };
 }

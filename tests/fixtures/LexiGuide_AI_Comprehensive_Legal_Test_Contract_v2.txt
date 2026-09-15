@@ -26,7 +26,7 @@ Employee Arjun Mehta
 Employer Northstar Analytics Private Limited
 Effective date 1 October 2026
 Initial term 24 months, ending 30 September 2028 unless terminated earlier
-Base salary INR 2,800,000 per annum, paid monthly
+Base salary INR 2,400,000 per annum, paid monthly
 Target annual incentive 15% of annual base salary; discretionary and conditional
 Notice period 90 calendar days after probation, subject to special provisions
 Probation 6 months from the Effective Date
@@ -107,7 +107,7 @@ All undisputed invoices shall be paid within thirty (30) days of receipt.
 ## Base salary
 
 2.1. Base salary
-Annual base salary is INR 2,800,000, paid in twelve equal monthly installments, subject to applicable deductions. Salary
+Annual base salary is INR 2,400,000, paid in twelve equal monthly installments, subject to applicable deductions. Salary
 is ordinarily credited on or before the last working day of each calendar month.
 
 
@@ -406,7 +406,7 @@ or security violation, or other grounds permitted by applicable law, subject to 
 
 8.4. Change-in-control termination
 If a Change in Control occurs and the Executive's role is materially reduced within 120 days thereafter, the Executive
-may resign within 90 days after written notice of the reduction. Subject to applicable law, the Company shall pay 3
+may resign within 30 days after written notice of the reduction. Subject to applicable law, the Company shall pay 3
 months of base salary as transition compensation.
 
 
@@ -686,7 +686,7 @@ Event Deadline / timing Responsible party Reference
 Monthly salary payment On or before last working day of
 each month
 Company 2.1
-Expense submission Within 90 days after expense Executive 2.5
+Expense submission	Within 30 days after expense Executive 2.5
 Product launch milestone 31 March 2027 Executive 3.1
 Annual strategy document 15 April each year Executive 3.1
 Conflict disclosure Within 5 Business Days after
@@ -734,7 +734,7 @@ LexiGuide AI • Fictional Legal Analysis Test Document Page 11
 SCHEDULE F — SPECIAL COMMERCIAL TERMS
 F.1. Retention award
 If the Executive remains continuously employed through 30 September 2028, the Company will pay a retention award
-of INR 600,000, subject to applicable tax and provided the Executive is not serving a notice of resignation on that date.
+of INR 750,000, subject to applicable tax and provided the Executive is not serving a notice of resignation on that date.
 F.2. Early departure
 If the Executive resigns before 30 September 2028, the retention award is not payable unless the Company expressly
 agrees otherwise in writing.
@@ -761,7 +761,7 @@ G.3. Customer continuity
 The Executive shall reasonably assist with introductions and transition of material customer relationships for up to 20
 business days after notice of termination, during normal working hours.
 G.4. Post-termination contact
-The Company may contact the Executive for factual clarification concerning Company records for up to 60 days after
+The Company may contact the Executive for factual clarification concerning Company records for up to 30 days after
 termination, provided requests are reasonable and do not disclose third-party confidential information.
 
 LexiGuide AI • Fictional Legal Analysis Test Document Page 12

@@ -23,6 +23,12 @@ import { InconsistencyCard } from "./inconsistency-card";
 import { ComparisonUploadDialog } from "./comparison-upload-dialog";
 import { WorkspaceEmpty } from "@/features/analysis/components/states/workspace-empty";
 import { getActiveDocument } from "@/lib/document-storage";
+import {
+  getComparisonWorkspaceState,
+  setComparisonWorkspaceState,
+  clearComparisonWorkspaceState,
+  runComparisonWorkflow,
+} from "@/lib/comparison/comparison-storage";
 import type { NormalizedDocument } from "@/types/document";
 import type {
   ComparisonCategory,
@@ -52,7 +58,9 @@ export function ComparisonWorkspace() {
     return getActiveDocument();
   }, [hasMounted, storageVersion]);
 
-  // Document B: Fresh, ephemeral upload scoped strictly to this comparison session
+  const activeDocId = activeDoc?.id || null;
+
+  // Document B: Ephemeral upload scoped to this comparison session, preserved across tabs
   const [tempDocB, setTempDocB] = React.useState<NormalizedDocument | null>(null);
   const [comparisonId, setComparisonId] = React.useState<string | undefined>(undefined);
 
@@ -70,67 +78,142 @@ export function ComparisonWorkspace() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [loadingStage, setLoadingStage] = React.useState<string>("Preparing documents…");
   const [comparisonError, setComparisonError] = React.useState<string | null>(null);
-  // Abort controller for in-flight comparison requests
-  const compAbortControllerRef = React.useRef<AbortController | null>(null);
+
+  // Hydrate local React state from persisted ComparisonWorkspaceState
+  const hydrateFromWorkspace = React.useCallback((docAId: string | null) => {
+    if (!docAId) {
+      setTempDocB(null);
+      setComparisonId(undefined);
+      setComparisonResult(null);
+      setIsLoading(false);
+      setLoadingStage("Preparing documents…");
+      setComparisonError(null);
+      setSelectedCategory("All");
+      return;
+    }
+
+    const state = getComparisonWorkspaceState(docAId);
+    if (state && state.documentAId === docAId) {
+      setTempDocB(state.tempDocB);
+      setComparisonId(state.comparisonId);
+      setComparisonResult(state.comparisonResult);
+      setIsLoading(state.status === "comparing");
+      if (state.loadingStage) setLoadingStage(state.loadingStage);
+      setComparisonError(state.comparisonError);
+      if (state.selectedCategory) setSelectedCategory(state.selectedCategory);
+    } else {
+      setTempDocB(null);
+      setComparisonId(undefined);
+      setComparisonResult(null);
+      setIsLoading(false);
+      setLoadingStage("Preparing documents…");
+      setComparisonError(null);
+    }
+  }, []);
 
   // Listen for storage updates in other tabs/windows or local updates, plus bfcache restoration
   React.useEffect(() => {
     const handleStorage = () => {
       setStorageVersion((v) => v + 1);
     };
+    const handleReset = () => {
+      setStorageVersion((v) => v + 1);
+      hydrateFromWorkspace(null);
+    };
+
     window.addEventListener("storage", handleStorage);
     window.addEventListener("lexiguide-doc-update", handleStorage);
-    window.addEventListener("lexiguide-workspace-reset", handleStorage);
+    window.addEventListener("lexiguide-workspace-reset", handleReset);
     window.addEventListener("pageshow", handleStorage);
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("lexiguide-doc-update", handleStorage);
-      window.removeEventListener("lexiguide-workspace-reset", handleStorage);
+      window.removeEventListener("lexiguide-workspace-reset", handleReset);
       window.removeEventListener("pageshow", handleStorage);
     };
-  }, []);
+  }, [hydrateFromWorkspace]);
 
-  // Stale state protection: Invalidate comparison if active Document A changes or is cleared
+  // Non-destructive mount & Document A invalidation lifecycle
   const prevActiveDocIdRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    const currentId = activeDoc?.id || null;
-    if (prevActiveDocIdRef.current !== currentId) {
-      if (compAbortControllerRef.current) {
-        compAbortControllerRef.current.abort();
-        compAbortControllerRef.current = null;
+    if (prevActiveDocIdRef.current !== activeDocId) {
+      // If Document A was previously set and changed to a DIFFERENT document, invalidate old comparison
+      if (prevActiveDocIdRef.current && prevActiveDocIdRef.current !== activeDocId) {
+        clearComparisonWorkspaceState(prevActiveDocIdRef.current);
       }
-      setTempDocB(null);
-      setComparisonResult(null);
-      setComparisonError(null);
-      setComparisonId(undefined);
-      setIsUploadOpen(false);
-      setActiveEvidenceChange(null);
-      setIsEvidenceModalOpen(false);
-      setSelectedCategory("All");
-      prevActiveDocIdRef.current = currentId;
+      prevActiveDocIdRef.current = activeDocId;
+      hydrateFromWorkspace(activeDocId);
     }
-  }, [activeDoc]);
+  }, [activeDocId, hydrateFromWorkspace]);
+
+  // Listen for comparison updates dispatched from workspace runner or background
+  React.useEffect(() => {
+    const handleComparisonUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail;
+      if (!activeDocId) return;
+
+      if (!detail || detail.documentAId !== activeDocId) {
+        hydrateFromWorkspace(activeDocId);
+      } else {
+        setTempDocB(detail.tempDocB);
+        setComparisonId(detail.comparisonId);
+        setComparisonResult(detail.comparisonResult);
+        setIsLoading(detail.status === "comparing");
+        if (detail.loadingStage) setLoadingStage(detail.loadingStage);
+        setComparisonError(detail.comparisonError);
+        if (detail.selectedCategory) setSelectedCategory(detail.selectedCategory);
+      }
+    };
+
+    window.addEventListener("lexiguide-comparison-update", handleComparisonUpdate);
+    return () => {
+      window.removeEventListener("lexiguide-comparison-update", handleComparisonUpdate);
+    };
+  }, [activeDocId, hydrateFromWorkspace]);
 
   // Upload handler for Document B
   const handleUploadSuccess = (newDoc: NormalizedDocument, compId?: string) => {
+    const effectiveCompId =
+      compId ||
+      comparisonId ||
+      `cmp_${Math.random().toString(36).substring(2, 9)}_${Date.now().toString(36)}`;
     setTempDocB(newDoc);
-    if (compId) {
-      setComparisonId(compId);
-    }
+    setComparisonId(effectiveCompId);
     setComparisonResult(null);
     setComparisonError(null);
+
+    // Save initial Document B ready state in workspace storage
+    if (activeDoc) {
+      setComparisonWorkspaceState({
+        comparisonId: effectiveCompId,
+        documentAId: activeDoc.id,
+        tempDocB: newDoc,
+        status: "document_b_ready",
+        comparisonResult: null,
+        comparisonError: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
   };
 
   // Replace Document B (clears only Document B, preserves Document A)
   const handleReplaceDocB = () => {
+    if (activeDoc) {
+      clearComparisonWorkspaceState(activeDoc.id, comparisonId, tempDocB?.id);
+    }
     setTempDocB(null);
     setComparisonResult(null);
     setComparisonError(null);
     setComparisonId(undefined);
   };
 
-  // Compare With Another Document (clears B and opens fresh upload)
+  // New Document to Compare (clears B and opens fresh upload, preserving Document A)
   const handleCompareWithAnother = () => {
+    if (activeDoc) {
+      clearComparisonWorkspaceState(activeDoc.id, comparisonId, tempDocB?.id);
+    }
     setTempDocB(null);
     setComparisonResult(null);
     setComparisonError(null);
@@ -138,7 +221,21 @@ export function ComparisonWorkspace() {
     setIsUploadOpen(true);
   };
 
-  // Perform Real Comparison Pipeline via POST /api/comparison
+  // Filter category selection with persistence
+  const handleSelectCategory = (cat: ComparisonCategory) => {
+    setSelectedCategory(cat);
+    if (activeDoc) {
+      const current = getComparisonWorkspaceState(activeDoc.id);
+      if (current) {
+        setComparisonWorkspaceState({
+          ...current,
+          selectedCategory: cat,
+        });
+      }
+    }
+  };
+
+  // Perform Real Comparison Pipeline via workspace-level runner
   const runComparison = React.useCallback(
     async (targetA: NormalizedDocument, targetB: NormalizedDocument, compId?: string) => {
       if (!targetA || !targetB) return;
@@ -147,72 +244,7 @@ export function ComparisonWorkspace() {
         setComparisonResult(null);
         return;
       }
-
-      if (compAbortControllerRef.current) {
-        compAbortControllerRef.current.abort();
-      }
-      const controller = new AbortController();
-      compAbortControllerRef.current = controller;
-
-      setIsLoading(true);
-      setComparisonError(null);
-      setLoadingStage("Preparing documents…");
-
-      const stageTimer1 = setTimeout(() => {
-        setLoadingStage("Mapping corresponding sections…");
-      }, 300);
-      const stageTimer2 = setTimeout(() => {
-        setLoadingStage("Checking clause changes…");
-      }, 700);
-      const stageTimer3 = setTimeout(() => {
-        setLoadingStage("Reviewing significant differences…");
-      }, 1400);
-
-      try {
-        const response = await fetch("/api/comparison", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            documentAId: targetA.id,
-            documentBId: targetB.id,
-            comparisonId: compId,
-          }),
-          signal: controller.signal,
-        });
-
-        const data = await response.json();
-
-        // Late response guard: verify Document A is STILL the active document
-        const currentActive = getActiveDocument();
-        if (!currentActive || currentActive.id !== targetA.id) {
-          return;
-        }
-
-        if (response.ok && data.success && data.data) {
-          setComparisonResult(data.data as ComparisonResult);
-        } else {
-          const errMsg = data?.error?.message || "Unable to compare the selected documents.";
-          setComparisonError(errMsg);
-          setComparisonResult(null);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === "AbortError") {
-          return;
-        }
-        const currentActive = getActiveDocument();
-        if (!currentActive || currentActive.id !== targetA.id) {
-          return;
-        }
-        setComparisonError("Network error occurred while connecting to comparison engine.");
-        setComparisonResult(null);
-      } finally {
-        clearTimeout(stageTimer1);
-        clearTimeout(stageTimer2);
-        clearTimeout(stageTimer3);
-        setIsLoading(false);
-      }
+      await runComparisonWorkflow(targetA, targetB, compId);
     },
     []
   );
@@ -347,8 +379,10 @@ export function ComparisonWorkspace() {
                 onClick={handleCompareWithAnother}
                 leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
                 className="text-xs"
+                data-testid="btn-new-comparison"
+                aria-label="New Document to Compare"
               >
-                Compare With Another Document
+                New Document to Compare
               </Button>
             </div>
           )}
@@ -468,7 +502,7 @@ export function ComparisonWorkspace() {
             <div className="pt-1 w-full">
               <ComparisonFilters
                 selectedCategory={selectedCategory}
-                onSelectCategory={setSelectedCategory}
+                onSelectCategory={handleSelectCategory}
                 counts={counts}
               />
             </div>
