@@ -44,6 +44,7 @@ export function UploadDropzone({
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -69,16 +70,15 @@ export function UploadDropzone({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const file = files[0];
     if (files.length > 1) {
       onMultipleFilesRejected?.(files.length);
     }
 
-    onFileSelect(files[0]);
+    onFileSelect(file);
 
-    // Reset input value to allow selecting the same file again if removed
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    // Reset input value to allow selecting the same file again if needed
+    e.target.value = "";
   };
 
   const triggerBrowse = () => {
@@ -92,6 +92,7 @@ export function UploadDropzone({
       role="region"
       aria-label="Legal document upload dropzone"
       tabIndex={disabled ? -1 : 0}
+      onClick={triggerBrowse}
       onKeyDown={(e) => {
         if ((e.key === "Enter" || e.key === " ") && !disabled) {
           e.preventDefault();
@@ -103,7 +104,7 @@ export function UploadDropzone({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-4 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none",
+        "group relative flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-4 sm:p-8 md:p-12 text-center transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 select-none cursor-pointer",
         isDragging
           ? "border-[var(--primary)] bg-blue-50/70 dark:bg-blue-950/40 scale-[1.005]"
           : "border-[var(--border-strong)] bg-[var(--surface)] hover:border-[var(--primary)]/60 hover:bg-[var(--surface-subtle)]",
@@ -150,7 +151,10 @@ export function UploadDropzone({
           type="button"
           variant="primary"
           size="md"
-          onClick={triggerBrowse}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerBrowse();
+          }}
           leftIcon={<FileText className="h-4 w-4" />}
           className="w-full sm:w-auto min-h-[44px] justify-center shadow-[var(--shadow-subtle)]"
         >

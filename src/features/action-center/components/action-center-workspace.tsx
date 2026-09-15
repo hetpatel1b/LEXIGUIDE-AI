@@ -118,6 +118,22 @@ export function ActionCenterWorkspace() {
       });
     });
 
+    // 5. From comparison custom action items in sessionStorage
+    try {
+      if (typeof window !== "undefined") {
+        const rawCustom = window.sessionStorage.getItem("lexiguide_custom_action_items");
+        if (rawCustom) {
+          const customList = JSON.parse(rawCustom) as ActionItem[];
+          customList.forEach((c) => {
+            generatedItems.push({
+              ...c,
+              isChecked: checkedIds.has(c.id),
+            });
+          });
+        }
+      }
+    } catch {}
+
     return generatedItems;
   }, [analysis, checkedIds]);
 

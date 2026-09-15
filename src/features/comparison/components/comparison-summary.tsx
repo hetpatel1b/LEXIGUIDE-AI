@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Layers, GitCompare, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Layers, GitCompare, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import type { ComparisonSummaryMetrics } from "@/types";
+import type { ComparisonSummaryMetrics } from "@/types/comparison";
 
 export interface ComparisonSummaryProps {
   metrics?: ComparisonSummaryMetrics;
@@ -16,11 +16,14 @@ const DEFAULT_METRICS: ComparisonSummaryMetrics = {
   moderateChanges: 0,
   minorChanges: 0,
   unchangedCount: 0,
+  potentialInconsistencies: 0,
 };
 
 export function ComparisonSummary({
   metrics = DEFAULT_METRICS,
 }: ComparisonSummaryProps) {
+  const hasInconsistencies = (metrics.potentialInconsistencies || 0) > 0;
+
   const cards = [
     {
       label: "Sections Compared",
@@ -32,7 +35,7 @@ export function ComparisonSummary({
     {
       label: "Changes Identified",
       value: metrics.changesIdentified,
-      secondary: "Clause-level diffs",
+      secondary: "Substantive diffs",
       icon: GitCompare,
       accent: "text-[var(--primary)]",
     },
@@ -41,19 +44,36 @@ export function ComparisonSummary({
       value: metrics.majorChanges,
       secondary: "Deserves closer review",
       icon: AlertCircle,
-      accent: "text-amber-600",
+      accent: "text-amber-600 dark:text-amber-400",
     },
+    ...(hasInconsistencies
+      ? [
+          {
+            label: "Potential Inconsistencies",
+            value: metrics.potentialInconsistencies || 0,
+            secondary: "Internal conflicts flagged",
+            icon: AlertTriangle,
+            accent: "text-amber-600 dark:text-amber-400",
+          },
+        ]
+      : []),
     {
       label: "Unchanged Sections",
       value: metrics.unchangedCount,
       secondary: "Identical substantive terms",
       icon: CheckCircle2,
-      accent: "text-emerald-600",
+      accent: "text-emerald-600 dark:text-emerald-400",
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left items-stretch w-full">
+    <div
+      className={`grid gap-3 sm:gap-4 text-left items-stretch w-full ${
+        hasInconsistencies
+          ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+          : "grid-cols-2 lg:grid-cols-4"
+      }`}
+    >
       {cards.map((card) => {
         const Icon = card.icon;
         return (

@@ -4,3 +4,4 @@ export * from "./components/comparison-summary";
 export * from "./components/comparison-filters";
 export * from "./components/comparison-change-card";
 export * from "./components/unchanged-section-card";
+export * from "./components/inconsistency-card";

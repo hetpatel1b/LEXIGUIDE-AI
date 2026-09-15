@@ -1,0 +1,779 @@
+
+
+## Preamble & Recitals
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 1
+LEXIGUIDE AI
+COMPREHENSIVE LEGAL ANALYSIS
+TEST CONTRACT
+Executive Employment, Intellectual Property, Confidentiality & Services Agreement
+FICTIONAL TEST DOCUMENT
+Designed to stress-test document ingestion, metadata extraction, financial terms, dates, clauses, obligations,
+potential concerns, evidence citations, and grounded legal-language handling.
+Document ID: LG-TEST-EMP-2026-014
+Version: 3.2 Execution Date: 14 September 2026
+Effective Date: 1 October 2026
+Primary Party: Arjun Mehta Counterparty: Northstar Analytics Private Limited
+Jurisdictional reference: India; Maharashtra and Karnataka references appear in the agreement. LexiGuide AI • Fictional Legal Analysis Test Document Page 2
+DOCUMENT QUICK REFERENCE
+This page contains terms expressly stated elsewhere in the agreement. It is included to provide a compact, high-density
+test surface for document analysis.
+
+It is included to provide a compact, high-density
+test surface for document analysis. Item Express term
+Agreement type Executive Employment, IP, Confidentiality & Services Agreement
+Employee Arjun Mehta
+Employer Northstar Analytics Private Limited
+Effective date 1 October 2026
+Initial term 24 months, ending 30 September 2028 unless terminated earlier
+Base salary INR 2,800,000 per annum, paid monthly
+Target annual incentive 15% of annual base salary; discretionary and conditional
+Notice period 90 calendar days after probation, subject to special provisions
+Probation 6 months from the Effective Date
+Governing law Laws of India
+Arbitration seat Bengaluru, Maharashtra
+Confidentiality survival 3 years after termination; trade secrets while protected
+Post-termination restriction 12 months, subject to applicable law
+PARTIES AND RECITALS
+A.
+
+3 years after termination; trade secrets while protected
+Post-termination restriction 12 months, subject to applicable law
+PARTIES AND RECITALS
+A. Parties
+This Agreement is entered into between Northstar Analytics Private Limited, a company incorporated under the
+Companies Act, 2013, having its principal office at 21 Meridian Business Park, Bengaluru, Karnataka 560103 (the
+“Company”), and Arjun Mehta, residing at 44 Lakeview Residency, Pune, Maharashtra 411045 (the “Executive”). B. Purpose
+The Company appoints the Executive as Director, Product Strategy. The Executive agrees to provide executive,
+strategic, product, and related services. C. Order of precedence
+If a Schedule expressly states that it overrides a numbered clause, the Schedule controls only to the stated extent. Otherwise, the main body controls over a Schedule. LexiGuide AI • Fictional Legal Analysis Test Document Page 3
+
+
+
+## APPOINTMENT AND TERM
+
+1. APPOINTMENT AND TERM
+
+
+
+## Appointment
+
+1.1. Appointment
+The appointment begins on 1 October 2026. The Executive shall perform the duties described in this Agreement and
+reasonably related executive responsibilities.
+
+
+
+## Initial term
+
+1.2. Initial term
+The initial contractual term is 24 months, beginning on the Effective Date and ending at 11:59 p.m. IST on 30
+September 2028, unless terminated earlier under Section 8.
+
+
+
+## Probation
+
+1.3. Probation
+The first 6 months constitute probation. During probation, either party may terminate on 30 calendar days' written
+notice. The Company may pay in lieu of unserved notice.
+
+
+
+## Place and remote work
+
+1.4. Place and remote work
+The primary location is Bengaluru. The Executive may work remotely up to 3 days per week with manager approval. A
+change of primary work location requires 15 calendar days' prior written notice where reasonably practicable.
+
+
+
+## Duties
+
+1.5. Duties
+The Executive shall devote professional working time and attention to Company business, maintain accurate records,
+comply with lawful policies, and disclose material conflicts.
+
+
+
+## COMPENSATION AND BENEFITS
+
+2. COMPENSATION AND BENEFITS
+
+All undisputed invoices shall be paid within thirty (30) days of receipt.
+
+
+
+## Base salary
+
+2.1. Base salary
+Annual base salary is INR 2,800,000, paid in twelve equal monthly installments, subject to applicable deductions. Salary
+is ordinarily credited on or before the last working day of each calendar month.
+
+
+
+## Annual incentive
+
+2.2. Annual incentive
+Target annual incentive is 15% of annual base salary. Payment is discretionary and depends on Company profitability,
+individual performance, and Board-approved funding. No target is a guaranteed entitlement.
+
+
+
+## Salary review
+
+2.3. Salary review
+Compensation is reviewed annually in April. A review does not guarantee an increase.
+
+
+
+## Benefits
+
+2.4. Benefits
+Subject to plan rules, the Executive may participate in health insurance, provident fund, paid leave, and other benefits
+generally made available to comparable executives.
+
+
+
+## Expenses
+
+2.5. Expenses
+Reasonable business expenses are reimbursable when supported by receipts and submitted within 90 days after the
+expense is incurred.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 4
+
+
+
+## PERFORMANCE, POLICIES AND RECORDS
+
+3. PERFORMANCE, POLICIES AND RECORDS
+
+
+
+## Performance objectives
+
+3.1. Performance objectives
+Initial objectives are: (a) launch the enterprise analytics product by 31 March 2027; (b) maintain quarterly product
+review records; and (c) deliver a written annual product strategy by 15 April each year.
+
+
+
+## Compliance
+
+3.2. Compliance
+The Executive shall comply with applicable law and lawful written policies concerning information security, workplace
+conduct, anti-bribery, expenses, records, and data handling.
+
+
+
+## Company systems
+
+3.3. Company systems
+Company devices and accounts may be used only for legitimate business purposes. The Company may reasonably
+monitor Company systems for security, compliance, incident response, and protection of Company assets, subject to
+applicable law.
+
+
+
+## Records
+
+3.4. Records
+Material product decisions, approvals, customer commitments, and intellectual-property records shall be stored in
+designated Company systems within 5 business days after creation or receipt.
+
+
+
+## Conflicts
+
+3.5. Conflicts
+The Executive shall disclose an actual or reasonably apparent conflict of interest in writing within 5 business days after
+becoming aware of it.
+
+
+
+## INTELLECTUAL PROPERTY
+
+4. INTELLECTUAL PROPERTY
+
+
+
+## Company work product
+
+4.1. Company work product
+To the extent permitted by applicable law, rights in inventions, designs, documentation, software, specifications, product
+plans, processes, models, and other work product created in the course of employment and relating to Company
+business shall belong to the Company.
+
+
+
+## Further assurances
+
+4.2. Further assurances
+The Executive shall execute reasonable documents needed to evidence or perfect Company rights. The Company shall
+reimburse reasonable out-of-pocket filing or registration costs it specifically requests.
+
+
+
+## Pre-existing materials
+
+4.3. Pre-existing materials
+The Executive retains ownership of materials listed in Schedule B. Any pre-existing material not listed in Schedule B
+that is intentionally incorporated into Company work product shall be disclosed within 7 calendar days after
+incorporation.
+
+
+
+## Third-party materials
+
+4.4. Third-party materials
+The Executive shall not knowingly incorporate third-party material into Company deliverables in a manner that violates
+applicable license terms or contractual restrictions.
+
+
+
+## Moral rights
+
+4.5. Moral rights
+To the extent legally permitted, the Executive consents to reasonable acts or omissions necessary to use, modify, or
+commercialize Company work product.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 5
+
+
+
+## CONFIDENTIALITY
+
+5. CONFIDENTIALITY
+
+
+
+## Confidential Information
+
+5.1. Confidential Information
+Confidential Information includes non-public business plans, source code, product roadmaps, pricing, customer
+information, security information, financial information, research, algorithms, models, and other information reasonably
+understood to be confidential.
+
+
+
+## Permitted use
+
+5.2. Permitted use
+The Executive shall use Confidential Information only to perform duties and shall protect it using at least reasonable
+care.
+
+
+
+## Exclusions
+
+5.3. Exclusions
+Confidential Information excludes information demonstrably: (a) publicly available without breach; (b) lawfully known
+before disclosure; (c) independently developed without use of Confidential Information; or (d) lawfully received from a
+third party without a confidentiality duty.
+
+
+
+## Compelled disclosure
+
+5.4. Compelled disclosure
+If legally required to disclose Confidential Information, the Executive shall, where legally permitted, give prompt written
+notice and disclose only what is required.
+
+
+
+## Duration
+
+5.5. Duration
+Confidentiality obligations survive for 3 years after termination. Trade-secret obligations continue while information
+qualifies as a trade secret under applicable law.
+
+
+
+## DATA PROTECTION AND SECURITY
+
+6. DATA PROTECTION AND SECURITY
+
+
+
+## Personal data
+
+6.1. Personal data
+The parties shall handle personal data in accordance with applicable data-protection law. The Executive shall access
+personal data only when necessary for authorized business purposes.
+
+
+
+## Security controls
+
+6.2. Security controls
+The Executive shall use multi-factor authentication where provided, keep credentials confidential, promptly install
+required security updates, and not knowingly disable endpoint security controls.
+
+
+
+## Incident reporting
+
+6.3. Incident reporting
+A suspected unauthorized disclosure, loss, compromise, or material security incident involving Company information
+shall be reported to the Company's security contact within 24 hours after discovery.
+
+
+
+## Return and deletion
+
+6.4. Return and deletion
+Upon termination, the Executive shall return Company devices and, subject to applicable retention requirements, delete
+Company Confidential Information from personally controlled systems within 7 calendar days.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 6
+
+
+
+## RESTRICTIVE COVENANTS
+
+7. RESTRICTIVE COVENANTS
+
+
+
+## Non-solicitation
+
+7.1. Non-solicitation
+For 12 months after termination, the Executive shall not knowingly solicit for employment an employee with whom the
+Executive had material business contact during the final 12 months, except through general advertisements not targeted
+at such employees.
+
+
+
+## Customer solicitation
+
+7.2. Customer solicitation
+For 12 months after termination, the Executive shall not knowingly solicit a Company customer with whom the
+Executive had material business dealings during the final 12 months for a directly competing service, subject to
+applicable law.
+
+
+
+## Competitive activities
+
+7.3. Competitive activities
+For 12 months after termination, the Executive shall not provide substantially similar product-strategy services to a
+direct competitor identified on Schedule C within the territories listed there, to the extent permitted by applicable law.
+Enforceability may depend on applicable law and circumstances.
+
+
+
+## Reasonableness
+
+7.4. Reasonableness
+The parties intend these restrictions to protect legitimate confidential-information and customer relationships and not to
+impose a broader restriction than reasonably necessary. If a restriction is not enforceable, the remaining provisions
+continue to the maximum extent permitted.
+
+
+
+## TERMINATION
+
+8. TERMINATION
+
+
+
+## Termination by Executive
+
+8.1. Termination by Executive
+After probation, the Executive may terminate employment by giving 90 calendar days' written notice. The Company
+may waive all or part of the notice period.
+
+
+
+## Termination by Company without cause
+
+8.2. Termination by Company without cause
+After probation, the Company may terminate employment without cause by giving 90 calendar days' written notice or,
+at the Company's option, base salary in lieu of the unserved portion, subject to applicable law.
+
+
+
+## Immediate termination for cause
+
+8.3. Immediate termination for cause
+The Company may terminate immediately for material misconduct, fraud, willful material breach, serious confidentiality
+or security violation, or other grounds permitted by applicable law, subject to any required process.
+
+
+
+## Change-in-control termination
+
+8.4. Change-in-control termination
+If a Change in Control occurs and the Executive's role is materially reduced within 120 days thereafter, the Executive
+may resign within 90 days after written notice of the reduction. Subject to applicable law, the Company shall pay 3
+months of base salary as transition compensation.
+
+
+
+## Final payments
+
+8.5. Final payments
+Upon termination, the Company shall pay earned salary and other amounts legally due, subject to applicable deductions
+and plan rules. Unused leave, if payable, is handled under applicable law and policy.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 7
+
+All undisputed invoices shall be paid within thirty (30) days of receipt.
+
+
+
+## LIABILITY AND INDEMNIFICATION
+
+9. LIABILITY AND INDEMNIFICATION
+
+
+
+## Limitation
+
+9.1. Limitation
+Except for liability that cannot lawfully be limited, neither party is liable for indirect, incidental, special, or consequential
+damages arising from this Agreement.
+
+
+
+## Cap
+
+9.2. Cap
+To the extent permitted by law, the Company's aggregate contractual liability to the Executive shall not exceed the
+greater of INR 3,600,000 or the base salary actually paid during the 12 months preceding the event.
+
+
+
+## Carve-outs
+
+9.3. Carve-outs
+The liability cap does not apply to amounts that cannot legally be capped, fraud or willful misconduct, or the Company's
+obligation to pay earned compensation.
+
+
+
+## Executive indemnity
+
+9.4. Executive indemnity
+The Executive shall indemnify the Company for direct losses finally determined to result from the Executive's fraud or
+willful misconduct, subject to applicable law.
+
+
+
+## DISPUTE RESOLUTION
+
+10. DISPUTE RESOLUTION
+
+
+
+## Good-faith discussion
+
+10.1. Good-faith discussion
+Before arbitration, the parties shall attempt in good faith to resolve a dispute through a meeting between the Company's
+General Counsel and the Executive within 15 business days after written notice of dispute.
+
+
+
+## Arbitration
+
+10.2. Arbitration
+Any dispute not resolved under Section 10.1 shall be finally resolved by arbitration under the Arbitration and Conciliation
+Act, 1996, as amended.
+
+
+
+## Seat and venue
+
+10.3. Seat and venue
+The seat of arbitration is Bengaluru, Maharashtra. Hearings may be conducted virtually or at another venue agreed by
+the parties.
+
+
+
+## Tribunal
+
+10.4. Tribunal
+The arbitration shall be conducted by a single arbitrator appointed by mutual agreement. If the parties cannot agree
+within 15 days, appointment shall occur in accordance with applicable law.
+
+
+
+## Language
+
+10.5. Language
+The language of arbitration shall be English.
+
+
+
+## Interim relief
+
+10.6. Interim relief
+Nothing prevents either party from seeking urgent interim or protective relief from a court of competent jurisdiction
+where permitted by law.
+
+
+
+## GOVERNING LAW
+
+11. GOVERNING LAW
+
+
+
+## Law
+
+11.1. Law
+This Agreement is governed by the laws of India, without regard to conflict-of-law principles to the extent such
+principles would select another law.
+
+
+
+## Court jurisdiction
+
+11.2. Court jurisdiction
+Subject to arbitration, courts having jurisdiction over the arbitration seat may be approached for matters permitted by
+applicable law.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 8
+
+
+
+## GENERAL TERMS
+
+12. GENERAL TERMS
+
+
+
+## Notices
+
+12.1. Notices
+Formal notices must be in writing and delivered by hand, reputable courier, or email to the addresses in Schedule A.
+Email notices are effective when the sender receives a non-automated acknowledgment, provided termination notices
+are also sent by courier within 2 business days.
+
+
+
+## Assignment
+
+12.2. Assignment
+The Company may assign this Agreement to an affiliate or successor in a reorganization or transfer of substantially all
+relevant business assets. The Executive may not assign this Agreement without written consent.
+
+
+
+## Amendment
+
+12.3. Amendment
+An amendment must be in writing and signed by both parties, except that the Company may update generally
+applicable policies when the update does not materially reduce an express contractual benefit.
+
+
+
+## Severability
+
+12.4. Severability
+If a provision is held invalid or unenforceable, it shall be modified only to the minimum extent necessary where legally
+permitted, and the remaining provisions remain effective.
+
+
+
+## Waiver
+
+12.5. Waiver
+A failure to enforce a provision is not a waiver of future enforcement.
+
+
+
+## Entire agreement
+
+12.6. Entire agreement
+This Agreement and its schedules constitute the entire agreement concerning the subject matter and supersede prior
+written or oral understandings concerning that subject matter.
+
+
+
+## Counterparts and electronic signatures
+
+12.7. Counterparts and electronic signatures
+This Agreement may be executed electronically and in counterparts, each deemed an original and together constituting
+one instrument.
+
+
+
+## PARTIES, NOTICE DETAILS AND
+
+SCHEDULE A — PARTIES, NOTICE DETAILS AND
+
+
+
+## DEFINITIONS
+
+DEFINITIONS
+Field Company Executive
+Legal name Northstar Analytics Private Limited Arjun Mehta
+Address 21 Meridian Business Park, Bengaluru,
+Karnataka 560103
+
+
+
+## Lakeview Residency, Pune, Maharashtra
+
+44 Lakeview Residency, Pune, Maharashtra
+411045
+Notice email legal@northstaranalytics.example arjun.mehta@example.test
+Role / title Employer Director, Product Strategy
+Business Day: a day other than Saturday, Sunday, or a public holiday in Bengaluru, Karnataka.
+Change in Control: a transaction after which a person or group obtains more than 50% of voting power or substantially all relevant
+operating assets are transferred.
+Direct Competitor: a business listed on Schedule C whose principal product materially competes with the Company's enterprise analytics
+platform.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 9
+
+
+
+## PRE-EXISTING INTELLECTUAL PROPERTY
+
+SCHEDULE B — PRE-EXISTING INTELLECTUAL PROPERTY
+The following materials are identified by the Executive as pre-existing materials owned or controlled before the Effective
+Date. The schedule distinguishes them from Company work product.
+ID Material Date / version Treatment
+B-01 Open-source personal analytics utility released
+under MIT License
+v2.4 / 2024 Executive retains ownership; Company
+use is subject to applicable license terms.
+B-02 Personal presentation framework and slide
+templates
+
+
+
+## Executive retains ownership; no transfer
+
+2025 Executive retains ownership; no transfer
+except where expressly incorporated into
+Company deliverables.
+B-03 Research notes concerning generic product
+discovery methods
+2025–2026 Executive retains generic concepts;
+specific Company adaptations created
+during employment are Company work
+product.
+B-04 Personal blog articles and public speaking materials 2022–2026 Executive retains ownership, subject to
+confidentiality obligations.
+
+
+
+## COMPETITOR AND TERRITORY REFERENCE
+
+SCHEDULE C — COMPETITOR AND TERRITORY REFERENCE
+For Section 7.3 only, the following fictional businesses are identified as direct competitors during the Effective Date. The
+list may be updated prospectively by written notice where reasonably necessary to reflect material competitive changes.
+Competitor Primary market Territory
+BluePeak Data Systems Pvt. Ltd. Enterprise analytics India
+CedarGrid Technologies Pvt. Ltd. Business intelligence India
+OrionMetric Labs Pvt. Ltd. Predictive analytics India
+Interpretive caution: The restrictions in Section 7 remain subject to applicable law. Inclusion of a competitor or
+territory does not itself establish enforceability.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 10
+
+
+
+## PERFORMANCE AND PAYMENT CALENDAR
+
+SCHEDULE D — PERFORMANCE AND PAYMENT CALENDAR
+Event Deadline / timing Responsible party Reference
+Monthly salary payment On or before last working day of
+each month
+Company 2.1
+Expense submission Within 90 days after expense Executive 2.5
+Product launch milestone 31 March 2027 Executive 3.1
+Annual strategy document 15 April each year Executive 3.1
+Conflict disclosure Within 5 Business Days after
+awareness
+Executive 3.5
+Security incident report Within 24 hours after discovery Executive 6.3
+Return/delete Company information Within 7 calendar days after
+
+All undisputed invoices shall be paid within thirty (30) days of receipt.
+
+
+
+## termination
+
+termination
+Executive 6.4
+Good-faith dispute meeting Within 15 Business Days after
+dispute notice
+Both 10.1
+Arbitrator agreement Within 15 days after unresolved
+dispute
+Both 10.4
+
+
+
+## LEAVE AND BENEFITS
+
+SCHEDULE E — LEAVE AND BENEFITS
+E.1. Annual leave
+The Executive receives 24 working days of annual paid leave per completed year, subject to applicable law and policy.
+Requests should ordinarily be submitted at least 10 calendar days in advance, except emergencies.
+E.2. Sick leave
+Sick leave is administered under applicable law and Company policy.
+E.3. Statutory benefits
+Statutory benefits, including provident fund and other legally required benefits, apply to the extent applicable.
+E.4. Insurance
+Eligibility for health insurance is subject to insurer terms and Company plan rules.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 11
+
+
+
+## SPECIAL COMMERCIAL TERMS
+
+SCHEDULE F — SPECIAL COMMERCIAL TERMS
+F.1. Retention award
+If the Executive remains continuously employed through 30 September 2028, the Company will pay a retention award
+of INR 600,000, subject to applicable tax and provided the Executive is not serving a notice of resignation on that date.
+F.2. Early departure
+If the Executive resigns before 30 September 2028, the retention award is not payable unless the Company expressly
+agrees otherwise in writing.
+F.3. Bonus timing
+Any approved annual incentive for a completed performance year is ordinarily paid within 90 days after the Board
+approves the relevant financial results, subject to plan terms.
+F.4. Clawback
+To the extent permitted by applicable law and plan terms, an incentive payment may be subject to clawback for fraud,
+intentional misconduct, or material financial restatement directly attributable to the Executive's misconduct.
+
+
+
+## TRANSITION OBLIGATIONS
+
+SCHEDULE G — TRANSITION OBLIGATIONS
+G.1. Knowledge transfer
+During the final 15 business days of employment, or such other period reasonably requested, the Executive shall
+prepare a transition memo covering active initiatives, material risks, key contacts, outstanding approvals, and system
+locations.
+G.2. Access return
+Company devices, badges, credentials, keys, and physical records shall be returned no later than the final working day
+unless the Company gives a different written instruction.
+G.3. Customer continuity
+The Executive shall reasonably assist with introductions and transition of material customer relationships for up to 20
+business days after notice of termination, during normal working hours.
+G.4. Post-termination contact
+The Company may contact the Executive for factual clarification concerning Company records for up to 60 days after
+termination, provided requests are reasonable and do not disclose third-party confidential information.
+
+LexiGuide AI • Fictional Legal Analysis Test Document Page 12
+
+
+
+## Schedule B: Invoicing & Disbursement Schedule
+
+Payment of all vendor invoices shall be executed within fifteen (15) days of receipt.
+
+
+
+## Section 99: Cybersecurity Incident Disclosure
+
+Vendor must notify all cybersecurity incidents and material data breaches to the Company Security Operations Center within 24 hours of discovery.

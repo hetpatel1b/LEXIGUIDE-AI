@@ -14,7 +14,7 @@ export function isLegacyDemoDocument(doc: Partial<NormalizedDocument>): boolean 
   if (typeof doc.id === "string" && (doc.id.startsWith("doc_test_") || doc.id.startsWith("doc-test"))) return true;
   if (doc.source === "test-fixture") return true;
 
-  // Authentic user uploads must NEVER be purged based on filename alone
+  // Authentic user uploads must NEVER be purged
   if (doc.source === "user-upload") {
     return false;
   }
@@ -93,14 +93,14 @@ export function setActiveDocument(doc: NormalizedDocument): void {
   if (typeof window === "undefined") return;
 
   try {
-    if (isLegacyDemoDocument(doc)) {
-      clearActiveDocument();
-      return;
-    }
-
     // Stamp provenance if missing
     if (!doc.source) {
       doc.source = "user-upload";
+    }
+
+    if (isLegacyDemoDocument(doc)) {
+      clearActiveDocument();
+      return;
     }
 
     window.sessionStorage.setItem(ACTIVE_DOC_STORAGE_KEY, JSON.stringify(doc));
@@ -174,6 +174,10 @@ export function saveSessionDocument(doc: NormalizedDocument): void {
   if (typeof window === "undefined") return;
 
   try {
+    if (!doc.source) {
+      doc.source = "user-upload";
+    }
+
     if (isLegacyDemoDocument(doc)) return;
 
     const currentDocs = getSessionDocuments();
@@ -188,6 +192,9 @@ export function saveSessionDocument(doc: NormalizedDocument): void {
     }
 
     window.sessionStorage.setItem(SESSION_DOCS_STORAGE_KEY, JSON.stringify(updated));
+    if (typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new Event("lexiguide-doc-update"));
+    }
   } catch (err) {
     console.warn("Failed to update session documents list in sessionStorage:", err);
   }
@@ -206,6 +213,9 @@ export function switchActiveDocument(docId: string): NormalizedDocument | null {
 
   try {
     window.sessionStorage.setItem(ACTIVE_DOC_STORAGE_KEY, JSON.stringify(target));
+    if (typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new Event("lexiguide-doc-update"));
+    }
     return target;
   } catch (err) {
     console.warn("Failed to switch active document in sessionStorage:", err);
@@ -230,6 +240,10 @@ export function removeSessionDocument(docId: string): void {
         setActiveDocument(updated[0]);
       } else {
         clearActiveDocument();
+      }
+    } else {
+      if (typeof window.dispatchEvent === "function") {
+        window.dispatchEvent(new Event("lexiguide-doc-update"));
       }
     }
   } catch (err) {

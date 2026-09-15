@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { NormalizedDocument } from "@/types/document";
-import { setActiveDocument } from "@/lib/document-storage";
+import { setActiveDocument, saveSessionDocument } from "@/lib/document-storage";
 
 export type UploadProcessingStatus =
   | "idle"
@@ -101,8 +101,9 @@ export function useDocumentUpload(): UseDocumentUploadReturn {
         setStageMessage("Document processed and structured successfully.");
         setProcessedDocument(normalized);
 
-        // Persist to client session storage so /analyze can read it immediately
+        // Persist to client session storage so /analyze and /compare can read it immediately
         setActiveDocument(normalized);
+        saveSessionDocument(normalized);
 
         return normalized;
       } catch (err) {

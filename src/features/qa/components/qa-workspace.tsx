@@ -18,7 +18,7 @@ import { WorkspaceEmpty } from "@/features/analysis/components/states/workspace-
 import { QATopicGroups } from "./qa-topic-groups";
 import { QAConversation } from "./qa-conversation";
 import { QAInput } from "./qa-input";
-import { getActiveDocument } from "@/lib/document-storage";
+import { getActiveDocument, switchActiveDocument } from "@/lib/document-storage";
 import type { NormalizedDocument } from "@/types/document";
 import type { QuestionMessage, EvidenceCitation } from "@/types";
 
@@ -28,6 +28,7 @@ export function QAWorkspace() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q");
+  const targetDocId = searchParams.get("documentId");
 
   const hasMounted = React.useSyncExternalStore(
     emptySubscribe,
@@ -49,6 +50,13 @@ export function QAWorkspace() {
     if (!hasMounted) return null;
     return getActiveDocument();
   }, [hasMounted]);
+
+  // Synchronize active document if targetDocId is provided in URL
+  React.useEffect(() => {
+    if (targetDocId && (!activeDoc || activeDoc.id !== targetDocId)) {
+      switchActiveDocument(targetDocId);
+    }
+  }, [targetDocId, activeDoc]);
 
   // Document-isolated Q&A history
   const qaHistory = React.useMemo(() => {

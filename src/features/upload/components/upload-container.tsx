@@ -57,7 +57,7 @@ export function UploadContainer() {
     return { isValid: true };
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     setValidationError(null);
     resetUpload();
 
@@ -68,6 +68,10 @@ export function UploadContainer() {
     }
 
     setSelectedFile(file);
+    const doc = await uploadAndProcess(file);
+    if (doc) {
+      router.push(returnTo || "/analyze");
+    }
   };
 
   const handleMultipleFilesRejected = (count: number) => {
@@ -83,16 +87,27 @@ export function UploadContainer() {
     resetUpload();
   };
 
+  const [returnTo] = React.useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get("returnTo");
+      if (target && target.startsWith("/")) {
+        return target;
+      }
+    }
+    return null;
+  });
+
   const handleStartProcessing = async () => {
     if (!selectedFile) return;
     const doc = await uploadAndProcess(selectedFile);
     if (doc) {
-      router.push("/analyze");
+      router.push(returnTo || "/analyze");
     }
   };
 
   const handleNavigateToAnalysis = () => {
-    router.push("/analyze");
+    router.push(returnTo || "/analyze");
   };
 
   const isProcessing = status === "uploading" || status === "processing";

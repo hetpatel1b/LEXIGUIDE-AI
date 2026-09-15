@@ -4,11 +4,14 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   GitCompare,
-  FileText,
   Info,
+  Loader2,
+  AlertTriangle,
+  RefreshCw,
+  UploadCloud,
+  Sparkles,
 } from "lucide-react";
 import { WorkspaceNav } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DocumentPair } from "./document-pair";
@@ -16,32 +19,18 @@ import { ComparisonSummary } from "./comparison-summary";
 import { ComparisonFilters } from "./comparison-filters";
 import { ComparisonChangeCard } from "./comparison-change-card";
 import { UnchangedSectionCard } from "./unchanged-section-card";
+import { InconsistencyCard } from "./inconsistency-card";
+import { ComparisonUploadDialog } from "./comparison-upload-dialog";
 import { WorkspaceEmpty } from "@/features/analysis/components/states/workspace-empty";
-import { getSessionDocuments } from "@/lib/document-storage";
+import { getActiveDocument } from "@/lib/document-storage";
 import type { NormalizedDocument } from "@/types/document";
 import type {
   ComparisonCategory,
   ComparisonChange,
   ComparisonDocument,
+  ComparisonResult,
   ComparisonSummaryMetrics,
-} from "@/types";
-
-interface ComparisonUnchangedItem {
-  id: string;
-  title: string;
-  sectionReference: string;
-  pageNumber: number;
-  note: string;
-}
-
-function getSectionText(doc: NormalizedDocument, sec: NormalizedDocument["sections"][0]): string {
-  const chunkText = (doc.chunks || [])
-    .filter((c) => c.sectionId === sec.sectionId)
-    .map((c) => c.text)
-    .join(" ")
-    .trim();
-  return chunkText || sec.title;
-}
+} from "@/types/comparison";
 
 const emptySubscribe = () => () => {};
 
@@ -52,295 +41,244 @@ export function ComparisonWorkspace() {
     () => true,
     () => false
   );
-  const [selectedDocAId, setSelectedDocAId] = React.useState<string>("");
-  const [selectedDocBId, setSelectedDocBId] = React.useState<string>("");
+
+  // Storage synchronization version
+  const [storageVersion, setStorageVersion] = React.useState(0);
+
+  // Document A: Always the current active user document
+  const activeDoc = React.useMemo(() => {
+    if (!hasMounted) return null;
+    void storageVersion;
+    return getActiveDocument();
+  }, [hasMounted, storageVersion]);
+
+  // Document B: Fresh, ephemeral upload scoped strictly to this comparison session
+  const [tempDocB, setTempDocB] = React.useState<NormalizedDocument | null>(null);
+  const [comparisonId, setComparisonId] = React.useState<string | undefined>(undefined);
+
+  // Filter & Evidence Modal State
   const [selectedCategory, setSelectedCategory] = React.useState<ComparisonCategory>("All");
   const [activeEvidenceChange, setActiveEvidenceChange] = React.useState<ComparisonChange | null>(null);
   const [isEvidenceModalOpen, setIsEvidenceModalOpen] = React.useState(false);
   const [copiedCitation, setCopiedCitation] = React.useState(false);
 
-  const sessionDocs = React.useMemo(() => {
-    if (!hasMounted) return [];
-    return getSessionDocuments();
-  }, [hasMounted]);
+  // In-Workspace Document B Upload Dialog State
+  const [isUploadOpen, setIsUploadOpen] = React.useState(false);
 
-  const docA = React.useMemo(() => {
-    if (!sessionDocs.length) return null;
-    return sessionDocs.find((d) => d.id === selectedDocAId) || sessionDocs[0] || null;
-  }, [sessionDocs, selectedDocAId]);
+  // Async Comparison State
+  const [comparisonResult, setComparisonResult] = React.useState<ComparisonResult | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [loadingStage, setLoadingStage] = React.useState<string>("Preparing documents…");
+  const [comparisonError, setComparisonError] = React.useState<string | null>(null);
 
-  const docB = React.useMemo(() => {
-    if (sessionDocs.length < 2) return null;
-    return sessionDocs.find((d) => d.id === selectedDocBId) || sessionDocs[1] || null;
-  }, [sessionDocs, selectedDocBId]);
+  // Listen for storage updates in other tabs/windows or local updates
+  React.useEffect(() => {
+    const handleStorage = () => {
+      setStorageVersion((v) => v + 1);
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("lexiguide-doc-update", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("lexiguide-doc-update", handleStorage);
+    };
+  }, []);
 
-  // Compute clause-level differences and unchanged sections dynamically between docA and docB
-  const { changes, unchangedSections, metrics } = React.useMemo(() => {
-    if (!docA || !docB) {
-      return {
-        changes: [] as ComparisonChange[],
-        unchangedSections: [] as ComparisonUnchangedItem[],
-        metrics: {
-          sectionsCompared: 0,
-          changesIdentified: 0,
-          majorChanges: 0,
-          moderateChanges: 0,
-          minorChanges: 0,
-          unchangedCount: 0,
-        } as ComparisonSummaryMetrics,
-      };
+  // Stale state protection: Invalidate comparison if active Document A changes
+  const prevActiveDocIdRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (activeDoc) {
+      if (prevActiveDocIdRef.current && prevActiveDocIdRef.current !== activeDoc.id) {
+        setTempDocB(null);
+        setComparisonResult(null);
+        setComparisonError(null);
+        setComparisonId(undefined);
+      }
+      prevActiveDocIdRef.current = activeDoc.id;
     }
+  }, [activeDoc]);
 
-    const calculatedChanges: ComparisonChange[] = [];
-    const calculatedUnchanged: ComparisonUnchangedItem[] = [];
+  // Upload handler for Document B
+  const handleUploadSuccess = (newDoc: NormalizedDocument, compId?: string) => {
+    setTempDocB(newDoc);
+    if (compId) {
+      setComparisonId(compId);
+    }
+    setComparisonResult(null);
+    setComparisonError(null);
+  };
 
-    const sectionsA = docA.sections || [];
-    const sectionsB = docB.sections || [];
+  // Replace Document B (clears only Document B, preserves Document A)
+  const handleReplaceDocB = () => {
+    setTempDocB(null);
+    setComparisonResult(null);
+    setComparisonError(null);
+    setComparisonId(undefined);
+  };
 
-    // Map sections from docB by normalized title for quick comparison
-    const bMap = new Map(sectionsB.map((s) => [s.title.toLowerCase().trim(), s]));
+  // Compare With Another Document (clears B and opens fresh upload)
+  const handleCompareWithAnother = () => {
+    setTempDocB(null);
+    setComparisonResult(null);
+    setComparisonError(null);
+    setComparisonId(undefined);
+    setIsUploadOpen(true);
+  };
 
-    sectionsA.forEach((secA, idx) => {
-      const matchKey = secA.title.toLowerCase().trim();
-      const secB = bMap.get(matchKey);
+  // Perform Real Comparison Pipeline via POST /api/comparison
+  const runComparison = React.useCallback(
+    async (targetA: NormalizedDocument, targetB: NormalizedDocument, compId?: string) => {
+      if (!targetA || !targetB) return;
+      if (targetA.id === targetB.id) {
+        setComparisonError("Select two different documents to compare.");
+        setComparisonResult(null);
+        return;
+      }
 
-      if (secB) {
-        // Both documents have this section title
-        const textA = getSectionText(docA, secA);
-        const textB = getSectionText(docB, secB);
+      setIsLoading(true);
+      setComparisonError(null);
+      setLoadingStage("Preparing documents…");
 
-        if (textA === textB) {
-          calculatedUnchanged.push({
-            id: `unchanged-${idx}`,
-            title: secA.title,
-            sectionReference: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
-            pageNumber: secA.pageReferences[0] || 1,
-            note: "Identical substantive wording preserved across both document versions.",
-          });
+      const stageTimer1 = setTimeout(() => {
+        setLoadingStage("Mapping corresponding sections…");
+      }, 300);
+      const stageTimer2 = setTimeout(() => {
+        setLoadingStage("Checking clause changes…");
+      }, 700);
+      const stageTimer3 = setTimeout(() => {
+        setLoadingStage("Reviewing significant differences…");
+      }, 1400);
+
+      try {
+        const response = await fetch("/api/comparison", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            documentAId: targetA.id,
+            documentBId: targetB.id,
+            comparisonId: compId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success && data.data) {
+          setComparisonResult(data.data as ComparisonResult);
         } else {
-          // Content differed
-          const isFinancial =
-            matchKey.includes("compensat") ||
-            matchKey.includes("salary") ||
-            matchKey.includes("fee") ||
-            matchKey.includes("bonus") ||
-            matchKey.includes("pay");
-          const isDates =
-            matchKey.includes("term") ||
-            matchKey.includes("date") ||
-            matchKey.includes("notice") ||
-            matchKey.includes("duration");
-          const isObligations =
-            matchKey.includes("duty") ||
-            matchKey.includes("obligation") ||
-            matchKey.includes("service") ||
-            matchKey.includes("compliance");
-
-          const category: "Financial" | "Obligations" | "Dates" | "Risks" = isFinancial
-            ? "Financial"
-            : isDates
-            ? "Dates"
-            : isObligations
-            ? "Obligations"
-            : "Risks";
-
-          const lengthDelta = Math.abs(textA.length - textB.length);
-          const changeSeverity: "major" | "moderate" =
-            lengthDelta > 150 ? "major" : "moderate";
-
-          calculatedChanges.push({
-            id: `change-${idx}`,
-            clauseTitle: secA.title,
-            category,
-            changeSeverity,
-            sectionA: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
-            sectionB: secB.sectionNumber ? `Section ${secB.sectionNumber}` : `Section ${secB.title}`,
-            pageA: secA.pageReferences[0] || 1,
-            pageB: secB.pageReferences[0] || 1,
-            docAContent: textA.slice(0, 300) || "Original section provision.",
-            docBContent: textB.slice(0, 300) || "Updated section provision.",
-            summaryChange: `Revisions identified between ${docA.displayName} and ${docB.displayName}.`,
-            whyItMatters:
-              changeSeverity === "major"
-                ? "Substantive length and language modification. Review obligations closely."
-                : undefined,
-          });
+          const errMsg = data?.error?.message || "Unable to compare the selected documents.";
+          setComparisonError(errMsg);
+          setComparisonResult(null);
         }
-      } else {
-        // Section exists in A but not directly matched by title in B
-        const textA = getSectionText(docA, secA);
-        calculatedChanges.push({
-          id: `diff-removed-${idx}`,
-          clauseTitle: secA.title,
-          category: "Obligations",
-          changeSeverity: "major",
-          sectionA: secA.sectionNumber ? `Section ${secA.sectionNumber}` : `Section ${idx + 1}`,
-          sectionB: "Omitted / Replaced",
-          pageA: secA.pageReferences[0] || 1,
-          pageB: 1,
-          docAContent: textA.slice(0, 300),
-          docBContent: "Provision not directly found under this section header in target version.",
-          summaryChange: `Section "${secA.title}" is present in Document A but omitted or relocated in Document B.`,
-          whyItMatters: "Verify whether omitted provisions were consolidated into another clause or intentionally removed.",
-        });
+      } catch {
+        setComparisonError("Network error occurred while connecting to comparison engine.");
+        setComparisonResult(null);
+      } finally {
+        clearTimeout(stageTimer1);
+        clearTimeout(stageTimer2);
+        clearTimeout(stageTimer3);
+        setIsLoading(false);
       }
+    },
+    []
+  );
+
+  // Evidence Modal Handler
+  const handleOpenEvidence = (change: ComparisonChange) => {
+    setActiveEvidenceChange(change);
+    setIsEvidenceModalOpen(true);
+    setCopiedCitation(false);
+  };
+
+  const handleCopyCitation = () => {
+    if (!activeEvidenceChange) return;
+    const citation = `[Comparison Citation] ${activeEvidenceChange.clauseTitle} | Section ${activeEvidenceChange.sectionA} (Page ${activeEvidenceChange.pageA}) vs Section ${activeEvidenceChange.sectionB} (Page ${activeEvidenceChange.pageB}): "${activeEvidenceChange.docBContent}"`;
+    navigator.clipboard.writeText(citation).then(() => {
+      setCopiedCitation(true);
+      setTimeout(() => setCopiedCitation(false), 2000);
     });
+  };
 
-    // Check for sections in B that were not in A
-    const aMap = new Map(sectionsA.map((s) => [s.title.toLowerCase().trim(), s]));
-    sectionsB.forEach((secB, idx) => {
-      const matchKey = secB.title.toLowerCase().trim();
-      if (!aMap.has(matchKey)) {
-        const textB = getSectionText(docB, secB);
-        calculatedChanges.push({
-          id: `diff-added-${idx}`,
-          clauseTitle: secB.title,
-          category: "Risks",
-          changeSeverity: "major",
-          sectionA: "Not in Document A",
-          sectionB: secB.sectionNumber ? `Section ${secB.sectionNumber}` : `Section ${idx + 1}`,
-          pageA: 1,
-          pageB: secB.pageReferences[0] || 1,
-          docAContent: "Provision was not present in the original document baseline.",
-          docBContent: textB.slice(0, 300),
-          summaryChange: `New section "${secB.title}" added to Document B.`,
-          whyItMatters: "Carefully inspect new clauses for newly imposed covenants or liabilities.",
-        });
-      }
-    });
+  // Filtered Changes & Categorization
+  const changes = React.useMemo(() => comparisonResult?.changes || [], [comparisonResult]);
+  const inconsistencies = React.useMemo(() => comparisonResult?.inconsistencies || [], [comparisonResult]);
+  const unchangedSections = React.useMemo(() => comparisonResult?.unchangedSections || [], [comparisonResult]);
 
-    const calculatedMetrics: ComparisonSummaryMetrics = {
-      sectionsCompared: Math.max(sectionsA.length, sectionsB.length),
-      changesIdentified: calculatedChanges.length,
-      majorChanges: calculatedChanges.filter((c) => c.changeSeverity === "major").length,
-      moderateChanges: calculatedChanges.filter((c) => c.changeSeverity === "moderate").length,
-      minorChanges: 0,
-      unchangedCount: calculatedUnchanged.length,
-    };
-
-    return {
-      changes: calculatedChanges,
-      unchangedSections: calculatedUnchanged,
-      metrics: calculatedMetrics,
-    };
-  }, [docA, docB]);
-
-  // Compute category counts
-  const counts: Record<ComparisonCategory, number> = React.useMemo(() => {
-    return {
-      All: changes.length + unchangedSections.length,
-      "Major Changes": changes.filter((c) => c.changeSeverity === "major").length,
-      "Moderate Changes": changes.filter((c) => c.changeSeverity === "moderate").length,
-      Unchanged: unchangedSections.length,
-      Financial: changes.filter((c) => c.category === "Financial").length,
-      Obligations: changes.filter((c) => c.category === "Obligations").length,
-      Dates: changes.filter((c) => c.category === "Dates").length,
-      Risks: changes.filter((c) => c.category === "Risks").length,
-    };
-  }, [changes, unchangedSections]);
-
-  // Filtered change list
   const filteredChanges = React.useMemo(() => {
     if (selectedCategory === "All") return changes;
-    if (selectedCategory === "Major Changes") {
-      return changes.filter((c) => c.changeSeverity === "major");
-    }
-    if (selectedCategory === "Moderate Changes") {
-      return changes.filter((c) => c.changeSeverity === "moderate");
-    }
+    if (selectedCategory === "Major Changes") return changes.filter((c) => c.changeSeverity === "major");
+    if (selectedCategory === "Moderate Changes") return changes.filter((c) => c.changeSeverity === "moderate");
+    if (selectedCategory === "Minor Changes") return changes.filter((c) => c.changeSeverity === "minor");
     if (selectedCategory === "Unchanged") return [];
     return changes.filter((c) => c.category === selectedCategory);
   }, [changes, selectedCategory]);
 
-  const showUnchanged =
-    selectedCategory === "All" || selectedCategory === "Unchanged";
+  const showUnchanged = selectedCategory === "All" || selectedCategory === "Unchanged";
 
-  const handleOpenEvidence = (change: ComparisonChange) => {
-    setActiveEvidenceChange(change);
-    setIsEvidenceModalOpen(true);
+  const counts: Record<ComparisonCategory, number> = {
+    All: changes.length,
+    "Major Changes": changes.filter((c) => c.changeSeverity === "major").length,
+    "Moderate Changes": changes.filter((c) => c.changeSeverity === "moderate").length,
+    "Minor Changes": changes.filter((c) => c.changeSeverity === "minor").length,
+    Unchanged: unchangedSections.length,
+    Financial: changes.filter((c) => c.category === "Financial").length,
+    Obligations: changes.filter((c) => c.category === "Obligations").length,
+    Dates: changes.filter((c) => c.category === "Dates").length,
+    Risks: changes.filter((c) => c.category === "Risks").length,
+    Legal: changes.filter((c) => c.category === "Legal").length,
   };
 
-  const handleCopyCitation = async () => {
-    if (!activeEvidenceChange) return;
-    const text = `Comparison: ${activeEvidenceChange.clauseTitle}\nDoc A (${activeEvidenceChange.sectionA}, p.${activeEvidenceChange.pageA}): "${activeEvidenceChange.docAContent}"\nDoc B (${activeEvidenceChange.sectionB}, p.${activeEvidenceChange.pageB}): "${activeEvidenceChange.docBContent}"`;
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedCitation(true);
-      setTimeout(() => setCopiedCitation(false), 2000);
-    } catch {
-      setCopiedCitation(true);
-      setTimeout(() => setCopiedCitation(false), 2000);
-    }
+  const metrics: ComparisonSummaryMetrics = comparisonResult?.metrics || {
+    sectionsCompared: (activeDoc?.sections.length || 0) + (tempDocB?.sections.length || 0),
+    changesIdentified: changes.length,
+    majorChanges: changes.filter((c) => c.changeSeverity === "major").length,
+    moderateChanges: changes.filter((c) => c.changeSeverity === "moderate").length,
+    minorChanges: changes.filter((c) => c.changeSeverity === "minor").length,
+    unchangedCount: unchangedSections.length,
+    potentialInconsistencies: inconsistencies.length,
   };
 
-  // Prevent flash of empty state during hydration
-  if (!hasMounted) {
+  // STATE 0: No Active Document A
+  if (!activeDoc) {
     return (
       <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
         <WorkspaceNav />
-        <div className="flex-1 flex items-center justify-center p-6 text-xs text-[var(--foreground-muted)]">
-          Loading comparison workspace…
-        </div>
-      </div>
-    );
-  }
-
-  // 0 Documents State
-  if (sessionDocs.length === 0) {
-    return (
-      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
-        <WorkspaceNav />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <WorkspaceEmpty
-            title="Documents needed for comparison"
-            description="Upload at least two legal documents in the Analysis workspace to compare clauses, duties, and terms side by side."
-            onUploadClick={() => router.push("/analyze")}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // 1 Document State
-  if (sessionDocs.length === 1) {
-    const singleDoc = sessionDocs[0];
-    return (
-      <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)]">
-        <WorkspaceNav
-          documentName={singleDoc.displayName}
-          documentType={singleDoc.format.toUpperCase()}
+        <WorkspaceEmpty
+          title="No document selected"
+          description="Upload a legal document first. It will become the document you can analyze and compare."
+          actionText="Upload Document"
+          actionHref="/#upload-section"
         />
-        <div className="flex-1 flex items-center justify-center p-6">
-          <WorkspaceEmpty
-            title="Second document needed for comparison"
-            description={`"${singleDoc.displayName}" is active. Upload a second document in the Analysis workspace to compare them side by side.`}
-            onUploadClick={() => router.push("/analyze")}
-          />
-        </div>
       </div>
     );
   }
 
-  // 2+ Documents State
+  // Prepared Comparison Document Objects
   const compDocA: ComparisonDocument = {
-    id: docA!.id,
-    name: docA!.displayName,
-    versionLabel: "Document A",
-    type: docA!.format.toUpperCase(),
-    pageCount: docA!.pageCount || 1,
-    sizeBytes: docA!.sizeBytes,
+    id: activeDoc.id,
+    name: activeDoc.displayName,
+    versionLabel: "Document A (Baseline)",
+    type: (activeDoc.format || "PDF").toUpperCase(),
+    pageCount: activeDoc.pageCount || 1,
+    sizeBytes: activeDoc.sizeBytes,
   };
 
-  const compDocB: ComparisonDocument = {
-    id: docB!.id,
-    name: docB!.displayName,
-    versionLabel: "Document B",
-    type: docB!.format.toUpperCase(),
-    pageCount: docB!.pageCount || 1,
-    sizeBytes: docB!.sizeBytes,
-  };
+  const compDocB: ComparisonDocument | null = tempDocB
+    ? {
+        id: tempDocB.id,
+        name: tempDocB.displayName,
+        versionLabel: "Document B (Target)",
+        type: (tempDocB.format || "PDF").toUpperCase(),
+        pageCount: tempDocB.pageCount || 1,
+        sizeBytes: tempDocB.sizeBytes,
+      }
+    : null;
 
-  const workspaceTitle = `${docA!.displayName} vs ${docB!.displayName}`;
+  const isSameDoc = tempDocB ? activeDoc.id === tempDocB.id : false;
+  const workspaceTitle = tempDocB
+    ? `${activeDoc.displayName} vs ${tempDocB.displayName}`
+    : `Compare: ${activeDoc.displayName}`;
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] overflow-x-hidden">
@@ -364,82 +302,191 @@ export function ComparisonWorkspace() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-[var(--foreground-muted)] max-w-4xl leading-relaxed">
-              Review clause-level differences between {docA!.displayName} and {docB!.displayName}.
+              Review clause-level differences and potential inconsistencies between your active document and a second document you upload.
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
-            <Badge variant="brand" size="sm" dot>
-              Active Session ({sessionDocs.length} Documents)
-            </Badge>
-          </div>
+          {tempDocB && comparisonResult && (
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCompareWithAnother}
+                leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
+                className="text-xs"
+              >
+                Compare With Another Document
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Document Pair Cards */}
+        {/* Document Pair Cards (Active Baseline A vs Ephemeral Target B) */}
         <section aria-label="Compared Documents" className="w-full">
           <DocumentPair
             docA={compDocA}
             docB={compDocB}
+            onUploadDocB={() => setIsUploadOpen(true)}
+            onReplaceDocB={handleReplaceDocB}
+            isProcessingB={isLoading}
           />
         </section>
 
-        {/* Comparison Summary Metrics */}
-        <section aria-label="Comparison Summary Metrics" className="w-full">
-          <ComparisonSummary metrics={metrics} />
-        </section>
-
-        {/* Filter Bar */}
-        <div className="pt-1 w-full">
-          <ComparisonFilters
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            counts={counts}
-          />
-        </div>
-
-        {/* Clause-Level Differences List */}
-        <section aria-label="Clause Differences" className="space-y-4 pt-1 w-full">
-          {filteredChanges.length === 0 && (
-            <div className="p-8 text-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
-              No clause differences detected for the selected filter category.
+        {/* Same Document Conflict Alert */}
+        {isSameDoc && (
+          <div className="p-4 rounded-[var(--radius-lg)] border border-amber-300 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" aria-hidden="true" />
+              <span className="font-medium">
+                Document A and Document B are identical. Please upload a different document version to detect changes.
+              </span>
             </div>
-          )}
+          </div>
+        )}
 
-          {filteredChanges.map((change) => (
-            <ComparisonChangeCard
-              key={change.id}
-              change={change}
-              onViewEvidence={handleOpenEvidence}
-            />
-          ))}
-
-          {/* Unchanged Clauses Section */}
-          {showUnchanged && unchangedSections.length > 0 && (
-            <div className="space-y-3 pt-5 border-t border-[var(--border-muted)] w-full">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
-                  Unchanged Substantive Sections ({unchangedSections.length})
-                </h3>
-                <span className="text-[11px] text-[var(--foreground-muted)]">
-                  Verified identical across Document A and B
-                </span>
-              </div>
-
-              <div className="space-y-2.5 w-full">
-                {unchangedSections.map((sec) => (
-                  <UnchangedSectionCard key={sec.id} section={sec} />
-                ))}
-              </div>
+        {/* Ready to Compare Banner (When Document B is uploaded, but comparison not yet run) */}
+        {tempDocB && !isSameDoc && !comparisonResult && !isLoading && (
+          <div className="p-5 rounded-[var(--radius-xl)] border border-[var(--primary)]/30 bg-blue-50/50 dark:bg-blue-950/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <h3 className="text-sm font-semibold text-[var(--foreground)]">
+                Second Document Ready for Comparison
+              </h3>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Both documents are indexed. Run clause-level diff analysis and inconsistency detection.
+              </p>
             </div>
-          )}
-        </section>
+
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => runComparison(activeDoc, tempDocB, comparisonId)}
+              leftIcon={<Sparkles className="h-4 w-4" />}
+              className="w-full sm:w-auto px-6 justify-center shadow-sm"
+            >
+              Compare Documents
+            </Button>
+          </div>
+        )}
+
+        {/* Comparison Error State */}
+        {comparisonError && !isSameDoc && (
+          <div className="p-4 rounded-[var(--radius-lg)] border border-red-200 dark:border-red-900/60 bg-red-50/70 dark:bg-red-950/20 text-xs text-red-950 dark:text-red-200 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" aria-hidden="true" />
+              <span>{comparisonError}</span>
+            </div>
+            {tempDocB && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => runComparison(activeDoc, tempDocB, comparisonId)}
+                leftIcon={<RefreshCw className="h-3 w-3" />}
+                className="text-xs shrink-0"
+              >
+                Retry
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="p-12 text-center rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface-muted)] space-y-3">
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--primary)] mx-auto" />
+            <p className="text-xs font-medium text-[var(--foreground)]">{loadingStage}</p>
+            <p className="text-[11px] text-[var(--foreground-muted)]">
+              Identifying substantive clause modifications and potential cross-provision conflicts.
+            </p>
+          </div>
+        )}
+
+        {/* Comparison Results Content */}
+        {!isLoading && !isSameDoc && comparisonResult && (
+          <>
+            {/* Comparison Summary Metrics */}
+            <section aria-label="Comparison Summary Metrics" className="w-full">
+              <ComparisonSummary metrics={metrics} />
+            </section>
+
+            {/* Potential Inconsistencies Section (when present) */}
+            {inconsistencies.length > 0 && (
+              <section aria-label="Potential Inconsistencies" className="space-y-3 pt-2 w-full">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <h2 className="text-sm font-bold tracking-tight text-[var(--foreground)]">
+                      Potential Inconsistencies &amp; Conflicts ({inconsistencies.length})
+                    </h2>
+                  </div>
+                  <span className="text-[11px] text-[var(--foreground-muted)]">
+                    Discrepancies identified between contract provisions
+                  </span>
+                </div>
+
+                <div className="space-y-3 w-full">
+                  {inconsistencies.map((inc) => (
+                    <InconsistencyCard key={inc.id} inconsistency={inc} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Filter Bar */}
+            <div className="pt-1 w-full">
+              <ComparisonFilters
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+                counts={counts}
+              />
+            </div>
+
+            {/* Clause-Level Differences List */}
+            <section aria-label="Clause Differences" className="space-y-4 pt-1 w-full">
+              {filteredChanges.length === 0 && selectedCategory !== "Unchanged" && (
+                <div className="p-8 text-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] text-xs text-[var(--foreground-muted)]">
+                  {changes.length === 0
+                    ? "No substantive changes detected. The compared documents appear identical in core terms."
+                    : "No clause differences detected for the selected filter category."}
+                </div>
+              )}
+
+              {filteredChanges.map((change) => (
+                <ComparisonChangeCard
+                  key={change.id}
+                  change={change}
+                  onViewEvidence={handleOpenEvidence}
+                />
+              ))}
+
+              {/* Unchanged Clauses Section */}
+              {showUnchanged && unchangedSections.length > 0 && (
+                <div className="space-y-3 pt-5 border-t border-[var(--border-muted)] w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--foreground-muted)]">
+                      Unchanged Substantive Sections ({unchangedSections.length})
+                    </h3>
+                    <span className="text-[11px] text-[var(--foreground-muted)]">
+                      Verified identical wording across Document A and B
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 w-full">
+                    {unchangedSections.map((sec) => (
+                      <UnchangedSectionCard key={sec.id} section={sec} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        )}
 
         {/* Statutory Informational Guidance Footer */}
         <div className="rounded-[var(--radius-lg)] border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/20 p-4 flex items-start gap-3 text-xs text-blue-950 dark:text-blue-200 shadow-2xs w-full">
           <Info className="h-4.5 w-4.5 shrink-0 mt-0.5 text-[var(--primary)]" aria-hidden="true" />
           <div className="leading-relaxed max-w-5xl">
             <span className="font-bold mr-1.5 text-blue-950 dark:text-blue-100">Comparison Guidance:</span>
-            Differences highlighted indicate contractual revisions between the original document and the updated draft. LexiGuide AI provides comparative intelligence for informational convenience and does not provide formal legal counsel.
+            Differences highlighted indicate contractual revisions between Document A and Document B. LexiGuide AI provides comparative legal intelligence for informational convenience and does not provide formal legal counsel.
           </div>
         </div>
       </main>
@@ -452,7 +499,7 @@ export function ComparisonWorkspace() {
         description="Verbatim contract wording extracted from Document A and Document B."
         className="max-w-3xl"
       >
-        {activeEvidenceChange && (
+        {activeEvidenceChange && tempDocB && (
           <div className="space-y-4 text-left">
             <div className="flex items-center justify-between gap-2 p-2.5 rounded-[var(--radius-md)] bg-[var(--surface-muted)] text-xs">
               <span className="font-semibold text-[var(--foreground)]">
@@ -467,7 +514,7 @@ export function ComparisonWorkspace() {
               {/* Doc A */}
               <div className="p-3.5 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-2 flex flex-col justify-between">
                 <div className="flex items-center justify-between text-[11px] text-[var(--foreground-muted)] font-semibold pb-1.5 border-b border-[var(--border-muted)]">
-                  <span>Document A ({docA!.displayName})</span>
+                  <span>Document A ({activeDoc.displayName})</span>
                   <span className="font-mono">Page {activeEvidenceChange.pageA}</span>
                 </div>
                 <div className="flex-1 py-1">
@@ -480,7 +527,7 @@ export function ComparisonWorkspace() {
               {/* Doc B */}
               <div className="p-3.5 rounded-[var(--radius-lg)] border border-[var(--primary)]/40 bg-blue-50/40 dark:bg-blue-950/20 space-y-2 flex flex-col justify-between">
                 <div className="flex items-center justify-between text-[11px] text-[var(--primary)] font-semibold pb-1.5 border-b border-[var(--primary)]/20">
-                  <span>Document B ({docB!.displayName})</span>
+                  <span>Document B ({tempDocB.displayName})</span>
                   <span className="font-mono text-[var(--foreground-muted)]">Page {activeEvidenceChange.pageB}</span>
                 </div>
                 <div className="flex-1 py-1">
@@ -518,6 +565,15 @@ export function ComparisonWorkspace() {
           </div>
         )}
       </Dialog>
+
+      {/* Ephemeral Document B Upload Dialog */}
+      <ComparisonUploadDialog
+        isOpen={isUploadOpen}
+        onClose={() => setIsUploadOpen(false)}
+        existingDocName={activeDoc.displayName}
+        comparisonId={comparisonId}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </div>
   );
 }

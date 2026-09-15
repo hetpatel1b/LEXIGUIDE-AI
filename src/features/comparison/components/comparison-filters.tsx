@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Filter } from "lucide-react";
-import type { ComparisonCategory } from "@/types";
+import type { ComparisonCategory } from "@/types/comparison";
 
 export interface ComparisonFiltersProps {
   selectedCategory: ComparisonCategory;
@@ -14,6 +14,7 @@ export const COMPARISON_FILTER_OPTIONS: ComparisonCategory[] = [
   "All",
   "Major Changes",
   "Moderate Changes",
+  "Minor Changes",
   "Unchanged",
   "Financial",
   "Obligations",
@@ -41,6 +42,11 @@ export function ComparisonFilters({
         {COMPARISON_FILTER_OPTIONS.map((cat) => {
           const isSelected = selectedCategory === cat;
           const count = counts[cat] ?? 0;
+
+          // Don't render filter pills with 0 items if they are category-specific
+          if (count === 0 && cat !== "All" && cat !== "Major Changes" && cat !== "Unchanged") {
+            return null;
+          }
 
           return (
             <button

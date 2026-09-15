@@ -7,13 +7,12 @@ import {
   Sparkles,
   CheckSquare,
   FileText,
-  AlertTriangle,
   Info,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ComparisonChange } from "@/types";
+import type { ComparisonChange } from "@/types/comparison";
 
 export interface ComparisonChangeCardProps {
   change: ComparisonChange;
@@ -51,11 +50,62 @@ export function ComparisonChangeCard({
     }
   };
 
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case "added":
+        return (
+          <Badge variant="brand" size="sm">
+            Added Clause
+          </Badge>
+        );
+      case "removed":
+        return (
+          <Badge variant="danger" size="sm">
+            Removed Clause
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const handleAddToActions = () => {
     onAddToActionCenter?.(change);
+    try {
+      if (typeof window !== "undefined") {
+        const raw = window.sessionStorage.getItem("lexiguide_custom_action_items") || "[]";
+        const customItems = JSON.parse(raw);
+        const newItem = {
+          id: `act-comp-${change.id}`,
+          category: "review",
+          status: change.changeSeverity === "major" ? "needs_review" : "confirm",
+          title: `Review revision in ${change.clauseTitle}`,
+          description: change.summaryChange,
+          whyItMatters: change.whyItMatters,
+          sourceSection: change.sectionB || change.sectionA,
+          pageNumber: change.pageB || change.pageA,
+          suggestedQuestion: change.suggestedReviewQuestion,
+          evidenceSnippet: change.docBContent || change.docAContent,
+          isChecked: false,
+        };
+        const exists = customItems.some((it: { id: string }) => it.id === newItem.id);
+        if (!exists) {
+          customItems.push(newItem);
+          window.sessionStorage.setItem("lexiguide_custom_action_items", JSON.stringify(customItems));
+        }
+      }
+    } catch {}
     setAddedToAction(true);
     setTimeout(() => setAddedToAction(false), 3000);
   };
+
+  const targetDocId = change.sourceB?.documentId || change.sourceA?.documentId || "";
+  const question =
+    change.suggestedReviewQuestion ||
+    `How does the revision to the ${change.clauseTitle} provision affect contractual obligations?`;
+  const qaHref = targetDocId
+    ? `/qa?q=${encodeURIComponent(question)}&documentId=${encodeURIComponent(targetDocId)}`
+    : `/qa?q=${encodeURIComponent(question)}`;
 
   return (
     <Card
@@ -79,6 +129,7 @@ export function ComparisonChangeCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0 self-start md:self-auto flex-wrap">
+          {statusBadge(change.status || "modified")}
           <Badge variant="neutral" size="sm">
             {change.category}
           </Badge>
@@ -96,6 +147,17 @@ export function ComparisonChangeCard({
           <span className="text-[var(--foreground-secondary)] font-medium">
             {change.summaryChange}
           </span>
+          {change.diffHighlightA && change.diffHighlightB && (
+            <div className="mt-2 flex items-center gap-2 flex-wrap text-[11px] font-mono">
+              <span className="text-red-700 dark:text-red-300 line-through bg-red-100 dark:bg-red-950/40 px-2 py-0.5 rounded">
+                {change.diffHighlightA}
+              </span>
+              <span className="text-[var(--foreground-muted)]">&rarr;</span>
+              <span className="text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-100 dark:bg-emerald-950/40 px-2 py-0.5 rounded">
+                {change.diffHighlightB}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -162,7 +224,7 @@ export function ComparisonChangeCard({
 
         <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <Button
-            href={`/qa?q=${encodeURIComponent(`Why did the ${change.clauseTitle} change between Document A and B?`)}`}
+            href={qaHref}
             variant="outline"
             size="sm"
             leftIcon={<Sparkles className="h-3 w-3 text-[var(--primary)]" />}
