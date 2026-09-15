@@ -11,9 +11,9 @@ export const AI_CONFIG = {
   defaultBaseURL: "https://integrate.api.nvidia.com/v1",
   temperature: 0.1,
   maxTokens: 4096,
-  timeoutMs: 90000,
-  firstTokenTimeoutMs: 50000,
-  maxContextChars: 20000, // ~5,000 tokens coverage-aware bounded context
+  timeoutMs: 120000,
+  firstTokenTimeoutMs: 90000,
+  maxContextChars: 18000, // ~4,500 tokens coverage-aware bounded context across all 15 categories
   schemaVersion: "1.0",
 } as const;
 

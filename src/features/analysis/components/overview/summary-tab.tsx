@@ -64,8 +64,14 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
         </div>
 
         <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
-          {analysisResult ? "Real AI Analysis · NVIDIA Nemotron" : "No Analysis Loaded"}
+          {analysisResult ? "Analysis complete" : "No Analysis Loaded"}
         </Badge>
+      </div>
+
+      {/* Informational Scope Guidance */}
+      <div className="p-3 rounded-[var(--radius-md)] bg-[var(--surface-subtle)] border border-[var(--border)] text-xs text-[var(--foreground-muted)] flex items-center gap-2">
+        <Shield className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />
+        <span>Findings are grounded in the uploaded document. Potential concerns are informational review points, not legal conclusions.</span>
       </div>
 
       {/* Main Executive Summary Card */}
@@ -132,7 +138,7 @@ export function SummaryTab({ analysisResult }: SummaryTabProps) {
               Agreement Type: {summary.documentContext.documentType}
             </p>
             <p className="text-[var(--foreground-muted)] text-[11px]">
-              Review Status: {analysisResult ? "AI Analysis Completed by Nemotron" : "Awaiting Analysis"}
+              Review Status: {analysisResult ? "Analysis complete" : "Awaiting Analysis"}
             </p>
           </div>
         </Card>

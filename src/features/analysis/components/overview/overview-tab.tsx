@@ -338,9 +338,9 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                     No concerns flagged for this document.
                   </div>
                 ) : (
-                  displayConcerns.map((concern) => (
+                  displayConcerns.map((concern, index) => (
                     <div
-                      key={concern.id}
+                      key={`${concern.id || "concern"}_${index}`}
                       className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -422,9 +422,9 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                     No clauses identified for this document.
                   </div>
                 ) : (
-                  displayClauses.map((clause) => (
+                  displayClauses.map((clause, index) => (
                     <div
-                      key={clause.id}
+                      key={`${clause.id || "clause"}_${index}`}
                       className="p-2.5 sm:p-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1.5 hover:border-[var(--border-strong)] transition-all"
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -507,9 +507,9 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                     No obligations tracked for this document.
                   </div>
                 ) : (
-                  displayObligations.map((ob) => (
+                  displayObligations.map((ob, index) => (
                     <div
-                      key={ob.id}
+                      key={`${ob.id || "ob"}_${index}`}
                       className="p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] space-y-1"
                     >
                       <div className="flex items-center justify-between text-[11px]">
@@ -565,9 +565,9 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
                     No important dates found for this document.
                   </div>
                 ) : (
-                  displayDates.map((dt) => (
+                  displayDates.map((dt, index) => (
                     <div
-                      key={dt.id}
+                      key={`${dt.id || "dt"}_${index}`}
                       className="flex items-center justify-between p-2.5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] gap-2"
                     >
                       <div className="min-w-0">

@@ -60,7 +60,7 @@ export function ConcernsTab({ analysisResult, onViewEvidence }: ConcernsTabProps
         <Info className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
         <div className="leading-relaxed">
           <span className="font-semibold mr-1">Balanced Informational Review:</span>
-          AI-generated document analysis is for general informational purposes and does not replace advice from a qualified legal professional. Items flagged below represent common contractual provisions worth discussing rather than definitive determinations of unenforceability.
+          Findings are grounded in the uploaded document. Potential concerns are informational review points, not legal conclusions. They highlight provisions worth discussing with qualified legal counsel rather than definitive determinations of enforceability or unenforceability.
         </div>
       </div>
 
@@ -71,9 +71,9 @@ export function ConcernsTab({ analysisResult, onViewEvidence }: ConcernsTabProps
             No specific high-severity review concerns were detected in this document.
           </div>
         ) : (
-          concerns.map((concern) => (
+          concerns.map((concern, index) => (
             <Card
-              key={concern.id}
+              key={`${concern.id || "concern"}_${index}`}
               density="compact"
               className="p-4 sm:p-4.5 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
             >

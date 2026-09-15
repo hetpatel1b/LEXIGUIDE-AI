@@ -342,9 +342,9 @@ export function ActionCenterWorkspace() {
 
         {/* Action Items List */}
         <section aria-label="Action Items Checklist" className="space-y-3.5 pt-1 w-full">
-          {filteredItems.map((item) => (
+          {filteredItems.map((item, index) => (
             <ActionItemCard
-              key={item.id}
+              key={`${item.id || "item"}_${index}`}
               item={item}
               onToggleCheck={handleToggleCheck}
               onViewEvidence={handleOpenEvidence}
@@ -363,7 +363,7 @@ export function ActionCenterWorkspace() {
           <Info className="h-4.5 w-4.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
           <div className="leading-relaxed max-w-5xl">
             <span className="font-bold mr-1.5 text-amber-950 dark:text-amber-100">Action Center Guidance:</span>
-            LexiGuide AI highlights practical points to consider, clarify, and discuss. Action Center items represent structured informational organization and do not constitute formal legal representation, attorney-client advice, or guaranteed outcomes.
+            Findings are grounded in the uploaded document. Action items are structured informational review points, not legal conclusions or formal legal advice. Always consult qualified legal counsel for binding legal decisions.
           </div>
         </div>
       </main>

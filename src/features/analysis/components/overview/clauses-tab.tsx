@@ -42,7 +42,7 @@ export function ClausesTab({ analysisResult, onViewEvidence }: ClausesTabProps) 
   const importanceBadge = (importance?: string) => {
     switch (importance) {
       case "critical":
-        return <Badge variant="brand" size="sm">Critical Clause</Badge>;
+        return <Badge variant="brand" size="sm">Key Provision</Badge>;
       case "standard":
         return <Badge variant="neutral" size="sm">Standard Term</Badge>;
       case "notable":
@@ -97,9 +97,9 @@ export function ClausesTab({ analysisResult, onViewEvidence }: ClausesTabProps) 
             No clauses found under &ldquo;{selectedCategory}&rdquo;.
           </div>
         ) : (
-          filteredClauses.map((clause) => (
+          filteredClauses.map((clause, index) => (
             <Card
-              key={clause.id}
+              key={`${clause.id || "clause"}_${index}`}
               density="compact"
               className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
             >

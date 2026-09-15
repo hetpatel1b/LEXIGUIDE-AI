@@ -117,9 +117,9 @@ export function ObligationsTab({ analysisResult }: ObligationsTabProps) {
                 No specific individual duties identified.
               </div>
             ) : (
-              firstPartyList.map((ob) => (
+              firstPartyList.map((ob, index) => (
                 <Card
-                  key={ob.id}
+                  key={`${ob.id || "ob1"}_${index}`}
                   density="compact"
                   className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2"
                 >
@@ -157,18 +157,20 @@ export function ObligationsTab({ analysisResult }: ObligationsTabProps) {
           </div>
         </div>
 
-        {/* Right Column: Counterparty Obligations */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-muted)]">
-            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
-              <Building2 className="h-4 w-4" aria-hidden="true" />
-            </div>
+        {/* Counterparty Obligations Column */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[var(--border-muted)]">
             <div>
               <h3 className="text-sm font-semibold text-[var(--foreground)]">
-                Counterparty Obligations
+                {secondPartyName}
               </h3>
-              <p className="text-[11px] text-[var(--foreground-muted)]">{secondPartyName}</p>
+              <p className="text-[11px] text-[var(--foreground-muted)]">
+                Assigned Counterparty Duties
+              </p>
             </div>
+            <Badge variant="neutral" size="sm">
+              {secondPartyList.length} Duties
+            </Badge>
           </div>
 
           <div className="space-y-3">
@@ -177,9 +179,9 @@ export function ObligationsTab({ analysisResult }: ObligationsTabProps) {
                 No specific counterparty duties identified.
               </div>
             ) : (
-              secondPartyList.map((ob) => (
+              secondPartyList.map((ob, index) => (
                 <Card
-                  key={ob.id}
+                  key={`${ob.id || "ob2"}_${index}`}
                   density="compact"
                   className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2"
                 >

@@ -66,9 +66,9 @@ export function DatesTab({ analysisResult }: DatesTabProps) {
             No specific dates or notice periods identified in this document.
           </div>
         ) : (
-          dates.map((dateItem) => (
+          dates.map((dateItem, index) => (
             <Card
-              key={dateItem.id}
+              key={`${dateItem.id || "date"}_${index}`}
               density="compact"
               className="p-4 bg-[var(--surface)] hover:border-[var(--border-strong)] transition-all space-y-2.5"
             >

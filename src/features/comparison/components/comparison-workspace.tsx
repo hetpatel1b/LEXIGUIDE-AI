@@ -457,8 +457,8 @@ export function ComparisonWorkspace() {
                 </div>
 
                 <div className="space-y-3 w-full">
-                  {inconsistencies.map((inc) => (
-                    <InconsistencyCard key={inc.id} inconsistency={inc} />
+                  {inconsistencies.map((inc, index) => (
+                    <InconsistencyCard key={`${inc.id || "inc"}_${index}`} inconsistency={inc} />
                   ))}
                 </div>
               </section>
@@ -483,9 +483,9 @@ export function ComparisonWorkspace() {
                 </div>
               )}
 
-              {filteredChanges.map((change) => (
+              {filteredChanges.map((change, index) => (
                 <ComparisonChangeCard
-                  key={change.id}
+                  key={`${change.id || "change"}_${index}`}
                   change={change}
                   onViewEvidence={handleOpenEvidence}
                 />
@@ -504,8 +504,8 @@ export function ComparisonWorkspace() {
                   </div>
 
                   <div className="space-y-2.5 w-full">
-                    {unchangedSections.map((sec) => (
-                      <UnchangedSectionCard key={sec.id} section={sec} />
+                    {unchangedSections.map((sec, index) => (
+                      <UnchangedSectionCard key={`${sec.id || "sec"}_${index}`} section={sec} />
                     ))}
                   </div>
                 </div>
@@ -519,7 +519,7 @@ export function ComparisonWorkspace() {
           <Info className="h-4.5 w-4.5 shrink-0 mt-0.5 text-[var(--primary)]" aria-hidden="true" />
           <div className="leading-relaxed max-w-5xl">
             <span className="font-bold mr-1.5 text-blue-950 dark:text-blue-100">Comparison Guidance:</span>
-            Differences highlighted indicate contractual revisions between Document A and Document B. LexiGuide AI provides comparative legal intelligence for informational convenience and does not provide formal legal counsel.
+            Findings are grounded in the uploaded document. Potential concerns and identified discrepancies are informational review points, not legal conclusions. Always consult qualified legal counsel for binding legal advice.
           </div>
         </div>
       </main>

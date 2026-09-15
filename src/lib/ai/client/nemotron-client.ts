@@ -65,7 +65,7 @@ export class NemotronClient implements AiProvider {
     const reqTag = options?.requestId ? `[${options.requestId}]` : "";
     console.log(`[AI-DIAG]${reqTag} provider=${this.config.provider} model=${targetModel}`);
 
-    const retryDelays = [1500, 3000];
+    const retryDelays = [2500, 5000];
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
@@ -81,7 +81,8 @@ export class NemotronClient implements AiProvider {
           (err.statusCode === 429 ||
             err.statusCode === 500 ||
             err.statusCode === 502 ||
-            err.statusCode === 503);
+            err.statusCode === 503 ||
+            err.statusCode === 504);
 
         if (isTransient && attempt < retryDelays.length) {
           const delay = retryDelays[attempt];
