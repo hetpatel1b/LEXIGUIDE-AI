@@ -222,7 +222,8 @@ export function extractCandidateObligations(
       lower.includes("paid") ||
       lower.includes("payable") ||
       lower.includes("disburs") ||
-      lower.includes("remit");
+      lower.includes("remit") ||
+      lower.includes("settle");
 
     if (
       mentionsInvoice &&

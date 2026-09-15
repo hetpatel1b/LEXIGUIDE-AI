@@ -584,3 +584,30 @@ test("Scenario 20: Ambiguous semantic overlap without exact obligation key match
   const incs = detectInternalInconsistencies(doc);
   assert.strictEqual(incs.length, 0, "Operational meetings vs vendor invoices must not conflict");
 });
+
+// 21. OBLIGATION-KEY FLEXIBILITY: Flexible semantic wording ("pay" vs "settle")
+test("Scenario 21: Flexible semantic phrasing ('shall pay approved invoices' vs 'approved invoices must be settled') matches identical obligation", () => {
+  const doc = createMockDoc("doc_flex", "Flexible_Phrasing.pdf", [
+    {
+      id: "sec4",
+      number: "4",
+      title: "Section 4: Invoicing",
+      text: "Company shall pay approved invoices within thirty (30) days of receipt.",
+      page: 3,
+    },
+    {
+      id: "sched_b",
+      number: "Schedule B",
+      title: "Schedule B: Disbursement",
+      text: "Approved invoices must be settled within fifteen (15) days of receipt.",
+      page: 12,
+    },
+  ]);
+
+  const incs = detectInternalInconsistencies(doc);
+  assert.strictEqual(incs.length, 1);
+  assert.strictEqual(incs[0].title, "Potential Inconsistency in Payment Deadline");
+  assert.ok(incs[0].explanation.includes("30 days"));
+  assert.ok(incs[0].explanation.includes("15 days"));
+});
+
