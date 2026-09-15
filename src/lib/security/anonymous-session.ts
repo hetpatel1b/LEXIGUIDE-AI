@@ -25,12 +25,15 @@ export function resolveAnonymousSession(request: NextRequest): AnonymousSession 
   }
 
   // 2. Check x-anonymous-session-id header (for automated testing or direct API clients)
-  const headerValue = request.headers.get("x-anonymous-session-id")?.trim();
-  if (headerValue && UUID_REGEX.test(headerValue)) {
-    return {
-      sessionId: headerValue.toLowerCase(),
-      isNew: false,
-    };
+  // SECURITY FIX (P0 Quota Bypass): Only trust header in non-production environments
+  if (process.env.NODE_ENV !== "production") {
+    const headerValue = request.headers.get("x-anonymous-session-id")?.trim();
+    if (headerValue && UUID_REGEX.test(headerValue)) {
+      return {
+        sessionId: headerValue.toLowerCase(),
+        isNew: false,
+      };
+    }
   }
 
   // 3. Mint fresh cryptographic UUID

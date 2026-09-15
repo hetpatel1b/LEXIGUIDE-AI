@@ -17,7 +17,11 @@ function sanitizeDocumentText(text: string): string {
     .replace(/<\|im_start\|>/gi, "[im_start]")
     .replace(/<\|im_end\|>/gi, "[im_end]")
     .replace(/\[SYSTEM_PROMPT\]/gi, "[DOCUMENT_TEXT: SYSTEM_PROMPT]")
-    .replace(/\[INSTRUCTIONS\]/gi, "[DOCUMENT_TEXT: INSTRUCTIONS]");
+    .replace(/\[INSTRUCTIONS\]/gi, "[DOCUMENT_TEXT: INSTRUCTIONS]")
+    // Defend against XML breakout attacks
+    .replace(/<\/untrusted_document_context>/gi, "[/untrusted_document_context]")
+    .replace(/<\/document_evidence>/gi, "[/document_evidence]")
+    .replace(/<\/untrusted_comparison_clauses>/gi, "[/untrusted_comparison_clauses]");
 }
 
 /**
@@ -161,7 +165,9 @@ export function buildAnalysisContext(
   const { selectedChunks, coverage } = selectCoverageAwareChunks(document, maxChars, index);
 
   const formattedBlocks = selectedChunks.map(formatChunkForPrompt);
-  const contextText = formattedBlocks.join("\n\n");
+  let contextText = formattedBlocks.join("\n\n");
+  // SECURITY FIX (P1 Prompt Injection): Wrap context to align with Analysis SYSTEM_PROMPT_V1
+  contextText = `<untrusted_document_context>\n${contextText}\n</untrusted_document_context>`;
   const estimatedTokens = Math.ceil(contextText.length / 4);
 
   console.log(

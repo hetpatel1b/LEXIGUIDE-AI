@@ -78,3 +78,53 @@ test("Anonymous Identity - attaches secure cookie with HttpOnly, SameSite=Lax, a
   assert.strictEqual(cookie.path, "/");
   assert.strictEqual(cookie.maxAge, SESSION_CONFIG.cookieMaxAgeSeconds);
 });
+
+test("Anonymous Identity - REGRESSION (P0 Quota Bypass) - ignores x-anonymous-session-id in production mode", () => {
+  const originalEnv = process.env.NODE_ENV;
+  (process.env as any).NODE_ENV = "production";
+  
+  try {
+    const maliciousUuid = "99999999-9999-4999-8999-999999999999";
+    const req = new NextRequest("http://localhost:3000/api/documents/process", {
+      method: "POST",
+      headers: {
+        "x-anonymous-session-id": maliciousUuid,
+      },
+    });
+
+    const session = resolveAnonymousSession(req);
+
+    // Should NOT use the malicious UUID, should mint a new one
+    assert.strictEqual(session.isNew, true);
+    assert.notStrictEqual(session.sessionId, maliciousUuid);
+    assert.match(
+      session.sessionId,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+  } finally {
+    (process.env as any).NODE_ENV = originalEnv;
+  }
+});
+
+test("Anonymous Identity - allows x-anonymous-session-id in non-production mode for testing", () => {
+  const originalEnv = process.env.NODE_ENV;
+  (process.env as any).NODE_ENV = "test";
+  
+  try {
+    const testUuid = "88888888-8888-4888-8888-888888888888";
+    const req = new NextRequest("http://localhost:3000/api/documents/process", {
+      method: "POST",
+      headers: {
+        "x-anonymous-session-id": testUuid,
+      },
+    });
+
+    const session = resolveAnonymousSession(req);
+
+    // Should use the test UUID
+    assert.strictEqual(session.isNew, false);
+    assert.strictEqual(session.sessionId, testUuid);
+  } finally {
+    (process.env as any).NODE_ENV = originalEnv;
+  }
+});
