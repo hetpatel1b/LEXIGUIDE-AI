@@ -140,11 +140,9 @@ function selectCoverageAwareChunks(
   }
 
   // 4. Fill remaining budget with sequential document order chunks
-  for (const chunk of chunks) {
-    if (!tryAddChunk(chunk) && currentChars >= maxChars) {
-      break;
-    }
-  }
+  // FIX 1: Removed sequential padding. We only need identity chunks, guaranteed category chunks, 
+  // and structural distribution (section headers) to satisfy evidence requirements. 
+  // Padding with random sequential text unnecessarily inflates TTFT and tokens.
 
   // Sort selected chunks back to original document order
   const sorted = selected.sort((a, b) => a.chunkIndex - b.chunkIndex);

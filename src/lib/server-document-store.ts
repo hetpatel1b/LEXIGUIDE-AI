@@ -24,7 +24,7 @@ if (!g.__lexiguide_server_active_doc_map__) {
 const store = g.__lexiguide_server_doc_store__;
 const activeSessionMap = g.__lexiguide_server_active_doc_map__;
 
-const DEFAULT_SERVER_DOC_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours of inactivity
+const DEFAULT_SERVER_DOC_TTL_MS = 1 * 60 * 60 * 1000; // 1 hour of inactivity (Efficiency Fix)
 
 /**
  * Server-side in-memory registry of authoritative NormalizedDocuments.

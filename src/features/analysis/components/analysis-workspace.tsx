@@ -78,10 +78,27 @@ export function AnalysisWorkspace() {
   }, []);
 
   // Real Uploaded Document from Session Storage (client-only after mount)
-  const uploadedDoc = React.useMemo(() => {
-    if (!hasMounted) return null;
-    void storageVersion;
-    return getActiveDocument();
+  const [uploadedDoc, setUploadedDoc] = React.useState<NormalizedDocument | null>(null);
+
+  React.useEffect(() => {
+    if (!hasMounted) return;
+    const baseDoc = getActiveDocument();
+    if (!baseDoc) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUploadedDoc(null);
+      return;
+    }
+    
+    // Efficiency Fix 2: Hydrate large arrays from IndexedDB
+    import("@/lib/idb").then(({ idbGetDocumentArrays }) => {
+      idbGetDocumentArrays(baseDoc.id).then((arrays) => {
+        if (arrays) {
+          setUploadedDoc({ ...baseDoc, ...arrays } as NormalizedDocument);
+        } else {
+          setUploadedDoc(baseDoc);
+        }
+      });
+    });
   }, [hasMounted, storageVersion]);
 
   // AI Analysis State Machine

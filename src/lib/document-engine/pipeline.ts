@@ -133,23 +133,29 @@ export async function processDocument(
     }
   );
 
-  // 7. Clone and overwrite request-specific metadata
-  const clonedDoc = JSON.parse(JSON.stringify(cachedResult)) as NormalizedDocument;
-  
-  clonedDoc.id = documentId;
-  clonedDoc.originalFilename = rawFilename;
-  clonedDoc.displayName = validated.filenameInfo.displayName;
-  clonedDoc.uploadedAt = new Date().toISOString();
+  // 7. Clone and overwrite request-specific metadata (Efficiency Fix: Shallow immutable clone)
+  const clonedDoc: NormalizedDocument = {
+    ...cachedResult,
+    id: documentId,
+    originalFilename: rawFilename,
+    displayName: validated.filenameInfo.displayName,
+    uploadedAt: new Date().toISOString(),
+  };
 
-  // Rewrite internal IDs if served from cache
+  // Rewrite internal IDs safely without mutating the global cache arrays
   const oldDocId = cachedResult.id;
   if (oldDocId !== documentId) {
-    for (const p of clonedDoc.pages) p.pageId = p.pageId.replace(oldDocId, documentId);
-    for (const s of clonedDoc.sections) {
-      s.sectionId = s.sectionId.replace(oldDocId, documentId);
-      s.chunkIds = s.chunkIds.map((cid) => cid.replace(oldDocId, documentId));
-    }
-    for (const c of clonedDoc.chunks) c.chunkId = c.chunkId.replace(oldDocId, documentId);
+    clonedDoc.pages = cachedResult.pages.map((p) => ({ ...p, pageId: p.pageId.replace(oldDocId, documentId) }));
+    clonedDoc.sections = cachedResult.sections.map((s) => ({
+      ...s,
+      sectionId: s.sectionId.replace(oldDocId, documentId),
+      chunkIds: s.chunkIds.map((cid) => cid.replace(oldDocId, documentId)),
+    }));
+    clonedDoc.chunks = cachedResult.chunks.map((c) => ({
+      ...c,
+      chunkId: c.chunkId.replace(oldDocId, documentId),
+      sectionId: c.sectionId.replace(oldDocId, documentId),
+    }));
   }
 
   return clonedDoc;

@@ -106,9 +106,12 @@ export class LexicalDocumentRetriever implements DocumentRetriever {
       };
     }
 
-    // Select top candidates above threshold
+    // Select top candidates above threshold, and apply relative dynamic filtering 
+    // to drop noise if a strong primary match exists (Efficiency Fix 6)
     const candidatesAboveThreshold = scoredItems.filter((item) => item.score >= threshold);
-    const topCandidates = candidatesAboveThreshold.slice(0, topK);
+    const dynamicThreshold = Math.max(threshold, highestScore * 0.4);
+    const dynamicCandidates = candidatesAboveThreshold.filter((item) => item.score >= dynamicThreshold);
+    const topCandidates = dynamicCandidates.slice(0, topK);
 
     const selectedChunkIds = new Set<string>(topCandidates.map((i) => i.chunk.chunkId));
     const retrieved: RetrievedChunk[] = topCandidates.map((item) => ({

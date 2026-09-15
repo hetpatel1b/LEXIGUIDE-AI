@@ -88,9 +88,20 @@ export function setComparisonWorkspaceState(
 
   if (typeof window !== "undefined") {
     try {
+      // Efficiency Fix 2: Strip large arrays from tempDocB to fit in sessionStorage
+      const stateToSave = { ...state };
+      if (stateToSave.tempDocB) {
+        stateToSave.tempDocB = {
+          ...stateToSave.tempDocB,
+          chunks: [],
+          sections: [],
+          pages: [],
+        };
+      }
+      
       window.sessionStorage.setItem(
         `${COMPARISON_WORKSPACE_PREFIX}${state.documentAId}`,
-        JSON.stringify(state)
+        JSON.stringify(stateToSave)
       );
     } catch (err) {
       console.warn("Failed to persist comparison workspace state to sessionStorage:", err);

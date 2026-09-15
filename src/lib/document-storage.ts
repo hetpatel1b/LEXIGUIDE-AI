@@ -86,8 +86,11 @@ export function getActiveDocument(): NormalizedDocument | null {
   }
 }
 
+import { idbSaveDocumentArrays, idbDeleteDocumentArrays, idbClearAll } from "./idb";
+
 /**
  * Persists the active document to sessionStorage and updates the session documents list.
+ * Large arrays (chunks, sections, pages) are saved to IndexedDB to avoid QuotaExceededError.
  */
 export function setActiveDocument(doc: NormalizedDocument): void {
   if (typeof window === "undefined") return;
@@ -103,7 +106,18 @@ export function setActiveDocument(doc: NormalizedDocument): void {
       return;
     }
 
-    window.sessionStorage.setItem(ACTIVE_DOC_STORAGE_KEY, JSON.stringify(doc));
+    // Efficiency Fix 2: Move large arrays to IndexedDB
+    idbSaveDocumentArrays(doc);
+
+    // Keep sessionStorage lightweight
+    const lightweightDoc = {
+      ...doc,
+      chunks: [],
+      sections: [],
+      pages: [],
+    };
+
+    window.sessionStorage.setItem(ACTIVE_DOC_STORAGE_KEY, JSON.stringify(lightweightDoc));
     saveSessionDocument(doc);
     if (typeof window.dispatchEvent === "function") {
       window.dispatchEvent(new Event("lexiguide-doc-update"));
@@ -180,15 +194,22 @@ export function saveSessionDocument(doc: NormalizedDocument): void {
 
     if (isLegacyDemoDocument(doc)) return;
 
+    const lightweightDoc = {
+      ...doc,
+      chunks: [],
+      sections: [],
+      pages: [],
+    };
+
     const currentDocs = getSessionDocuments();
     const existingIndex = currentDocs.findIndex((d) => d.id === doc.id);
 
     let updated: NormalizedDocument[];
     if (existingIndex >= 0) {
       updated = [...currentDocs];
-      updated[existingIndex] = doc;
+      updated[existingIndex] = lightweightDoc;
     } else {
-      updated = [doc, ...currentDocs];
+      updated = [lightweightDoc, ...currentDocs];
     }
 
     window.sessionStorage.setItem(SESSION_DOCS_STORAGE_KEY, JSON.stringify(updated));
@@ -233,6 +254,10 @@ export function removeSessionDocument(docId: string): void {
     const currentDocs = getSessionDocuments();
     const updated = currentDocs.filter((d) => d.id !== docId);
     window.sessionStorage.setItem(SESSION_DOCS_STORAGE_KEY, JSON.stringify(updated));
+
+    import("./idb").then(({ idbDeleteDocumentArrays }) => {
+      idbDeleteDocumentArrays(docId);
+    });
 
     const active = getActiveDocument();
     if (active && active.id === docId) {
@@ -282,6 +307,10 @@ export function clearAllDocuments(): void {
 
     window.sessionStorage.removeItem(ACTIVE_DOC_STORAGE_KEY);
     window.sessionStorage.removeItem(SESSION_DOCS_STORAGE_KEY);
+
+    import("./idb").then(({ idbClearAll }) => {
+      idbClearAll();
+    });
 
     if (typeof window.dispatchEvent === "function") {
       window.dispatchEvent(new Event("lexiguide-doc-update"));
@@ -370,6 +399,10 @@ export function resetDocumentWorkspace(): void {
     keysToRemove.forEach((key) => window.sessionStorage.removeItem(key));
 
     // 4. Dispatch events to notify all active workspace listeners
+    import("./idb").then(({ idbClearAll }) => {
+      idbClearAll();
+    });
+
     if (typeof window.dispatchEvent === "function") {
       window.dispatchEvent(new Event("lexiguide-doc-update"));
       window.dispatchEvent(new Event("lexiguide-workspace-reset"));
