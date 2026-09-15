@@ -23,6 +23,20 @@ export interface CompareDocumentsOptions {
   skipAi?: boolean;
 }
 
+interface AiEnrichmentResult {
+  aiUsed: boolean;
+  aiError?: string;
+  nvidiaTtftMs: number;
+  generationMs: number;
+  jsonParseMs: number;
+  zodMs: number;
+  sourceValidationMs: number;
+  contextChars: number;
+  estimatedInputTokens: number;
+  outputTokens: number;
+  aiCallCount: number;
+}
+
 /**
  * Strips markdown code fences (```json ... ```) from LLM output if present.
  */
@@ -85,118 +99,8 @@ export async function compareDocuments(
   console.log(`[COMP-DIAG][${requestId}] inconsistencies detected: ${inconsistencies.length}`);
 
   // 5. AI Explanation Layer (Only for changed clauses)
-  let aiUsed = false;
-  let aiError: string | undefined;
-  let nvidiaTtftMs = 0;
-  let generationMs = 0;
-  let jsonParseMs = 0;
-  let zodMs = 0;
-  let sourceValidationMs = 0;
-  let contextChars = 0;
-  let estimatedInputTokens = 0;
-  let outputTokens = 0;
-  let aiCallCount = 0;
-
-  // Filter modified / added / removed clauses that need AI explanation
   const substantiveChanges = changes.filter((c) => c.status !== "unchanged");
-
-  if (substantiveChanges.length > 0 && !options.skipAi) {
-    try {
-      const promptContext = buildComparisonAiContext(
-        docA.displayName,
-        docB.displayName,
-        substantiveChanges
-      );
-      contextChars = promptContext.contextChars;
-      estimatedInputTokens = promptContext.estimatedInputTokens;
-
-      const provider = options.aiProvider || new NemotronClient();
-      aiCallCount = 1;
-      aiUsed = true;
-
-      const aiStart = Date.now();
-      let rawAiResponse = "";
-
-      if (typeof provider.generateChatCompletionDetailed === "function") {
-        const detailed = await provider.generateChatCompletionDetailed(promptContext.messages, {
-          requestId,
-          maxTokens: 4096,
-          temperature: 0.1,
-          reasoningEffort: "none",
-        });
-        rawAiResponse = detailed.content;
-        nvidiaTtftMs = detailed.ttftMs;
-        generationMs = detailed.totalDurationMs;
-        outputTokens =
-          detailed.usage?.completionTokens ||
-          detailed.estimatedOutputTokens ||
-          Math.ceil(detailed.content.length / 4);
-      } else {
-        rawAiResponse = await provider.generateChatCompletion(promptContext.messages, {
-          requestId,
-          maxTokens: 4096,
-          temperature: 0.1,
-          reasoningEffort: "none",
-        });
-        generationMs = Date.now() - aiStart;
-        outputTokens = Math.ceil(rawAiResponse.length / 4);
-      }
-
-      // Parse JSON
-      const parseStart = Date.now();
-      const cleaned = cleanJsonOutput(rawAiResponse);
-      const parsed = JSON.parse(cleaned);
-      jsonParseMs = Date.now() - parseStart;
-
-      // Zod Validation
-      const zodStart = Date.now();
-      const zodResult = RawAiComparisonResponseSchema.safeParse(parsed);
-      zodMs = Date.now() - zodStart;
-
-      if (zodResult.success) {
-        const aiData = zodResult.data;
-        const srcStart = Date.now();
-
-        // Merge AI explanations into changes by matching changeId
-        const aiExplanationMap = new Map(aiData.changes.map((c) => [c.changeId, c]));
-
-        for (const chg of changes) {
-          const aiExp = aiExplanationMap.get(chg.id);
-          if (aiExp) {
-            chg.summaryChange = aiExp.explanation;
-            chg.whyItMatters = aiExp.whyItMatters;
-            if (aiExp.suggestedReviewQuestion) {
-              chg.suggestedReviewQuestion = aiExp.suggestedReviewQuestion;
-            }
-            if (aiExp.severity) {
-              chg.changeSeverity = aiExp.severity;
-            }
-          }
-        }
-
-        sourceValidationMs = Date.now() - srcStart;
-        console.log(`[COMP-DIAG][${requestId}] AI explanation merged and sources validated in ${sourceValidationMs}ms`);
-      } else {
-        console.warn(`[COMP-DIAG][${requestId}] Zod validation failed for comparison AI output:`, zodResult.error.message);
-        aiError = "Zod validation failed on AI output";
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[COMP-DIAG][${requestId}] Comparison AI failed gracefully: ${msg}`);
-      aiError = msg;
-      aiUsed = false;
-
-      // Graceful fallback: enrich deterministic changes with fallback note
-      for (const chg of changes) {
-        if (!chg.whyItMatters) {
-          chg.whyItMatters =
-            chg.changeSeverity === "major"
-              ? "Substantive contractual revision detected. Review the verbatim excerpts above."
-              : "Wording modification between document revisions.";
-        }
-      }
-    }
-  }
+  const aiStats = await enrichWithAiExplanation(changes, substantiveChanges, docA, docB, options, requestId);
 
   // 6. Metrics Calculation (Derived strictly from arrays - 0 hardcoding)
   const metrics: ComparisonSummaryMetrics = {
@@ -221,21 +125,21 @@ export async function compareDocuments(
     unmappedSectionCount: sectionMapping.unmappedSectionsA.length + sectionMapping.unmappedSectionsB.length,
     changedClauseCount: changes.length,
     aiClauseCount: substantiveChanges.length,
-    contextChars,
-    estimatedInputTokens,
-    outputTokens,
-    aiCallCount,
+    contextChars: aiStats.contextChars,
+    estimatedInputTokens: aiStats.estimatedInputTokens,
+    outputTokens: aiStats.outputTokens,
+    aiCallCount: aiStats.aiCallCount,
     sectionMappingMs,
     clauseMappingMs,
     diffMs: clauseMappingMs,
-    nvidiaTtftMs,
-    generationMs,
-    jsonParseMs,
-    zodMs,
-    sourceValidationMs,
+    nvidiaTtftMs: aiStats.nvidiaTtftMs,
+    generationMs: aiStats.generationMs,
+    jsonParseMs: aiStats.jsonParseMs,
+    zodMs: aiStats.zodMs,
+    sourceValidationMs: aiStats.sourceValidationMs,
     totalMs,
-    aiUsed,
-    aiError,
+    aiUsed: aiStats.aiUsed,
+    aiError: aiStats.aiError,
   };
 
   console.log(`[COMP-DIAG][${requestId}] comparison completed in ${totalMs}ms: changes=${metrics.changesIdentified}, major=${metrics.majorChanges}, moderate=${metrics.moderateChanges}, unchanged=${metrics.unchangedCount}, inconsistencies=${metrics.potentialInconsistencies}`);
@@ -272,4 +176,128 @@ export async function compareDocuments(
     },
     diagnostics,
   };
+}
+
+async function enrichWithAiExplanation(
+  changes: ComparisonChange[],
+  substantiveChanges: ComparisonChange[],
+  docA: NormalizedDocument,
+  docB: NormalizedDocument,
+  options: CompareDocumentsOptions,
+  requestId: string
+): Promise<AiEnrichmentResult> {
+  const result: AiEnrichmentResult = {
+    aiUsed: false,
+    nvidiaTtftMs: 0,
+    generationMs: 0,
+    jsonParseMs: 0,
+    zodMs: 0,
+    sourceValidationMs: 0,
+    contextChars: 0,
+    estimatedInputTokens: 0,
+    outputTokens: 0,
+    aiCallCount: 0,
+  };
+
+  if (substantiveChanges.length === 0 || options.skipAi) {
+    return result;
+  }
+
+  try {
+    const promptContext = buildComparisonAiContext(
+      docA.displayName,
+      docB.displayName,
+      substantiveChanges
+    );
+    result.contextChars = promptContext.contextChars;
+    result.estimatedInputTokens = promptContext.estimatedInputTokens;
+
+    const provider = options.aiProvider || new NemotronClient();
+    result.aiCallCount = 1;
+    result.aiUsed = true;
+
+    const aiStart = Date.now();
+    let rawAiResponse = "";
+
+    if (typeof provider.generateChatCompletionDetailed === "function") {
+      const detailed = await provider.generateChatCompletionDetailed(promptContext.messages, {
+        requestId,
+        maxTokens: 4096,
+        temperature: 0.1,
+        reasoningEffort: "none",
+      });
+      rawAiResponse = detailed.content;
+      result.nvidiaTtftMs = detailed.ttftMs;
+      result.generationMs = detailed.totalDurationMs;
+      result.outputTokens =
+        detailed.usage?.completionTokens ||
+        detailed.estimatedOutputTokens ||
+        Math.ceil(detailed.content.length / 4);
+    } else {
+      rawAiResponse = await provider.generateChatCompletion(promptContext.messages, {
+        requestId,
+        maxTokens: 4096,
+        temperature: 0.1,
+        reasoningEffort: "none",
+      });
+      result.generationMs = Date.now() - aiStart;
+      result.outputTokens = Math.ceil(rawAiResponse.length / 4);
+    }
+
+    // Parse JSON
+    const parseStart = Date.now();
+    const cleaned = cleanJsonOutput(rawAiResponse);
+    const parsed = JSON.parse(cleaned);
+    result.jsonParseMs = Date.now() - parseStart;
+
+    // Zod Validation
+    const zodStart = Date.now();
+    const zodResult = RawAiComparisonResponseSchema.safeParse(parsed);
+    result.zodMs = Date.now() - zodStart;
+
+    if (zodResult.success) {
+      const aiData = zodResult.data;
+      const srcStart = Date.now();
+
+      // Merge AI explanations into changes by matching changeId
+      const aiExplanationMap = new Map(aiData.changes.map((c) => [c.changeId, c]));
+
+      for (const chg of changes) {
+        const aiExp = aiExplanationMap.get(chg.id);
+        if (aiExp) {
+          chg.summaryChange = aiExp.explanation;
+          chg.whyItMatters = aiExp.whyItMatters;
+          if (aiExp.suggestedReviewQuestion) {
+            chg.suggestedReviewQuestion = aiExp.suggestedReviewQuestion;
+          }
+          if (aiExp.severity) {
+            chg.changeSeverity = aiExp.severity;
+          }
+        }
+      }
+
+      result.sourceValidationMs = Date.now() - srcStart;
+      console.log(`[COMP-DIAG][${requestId}] AI explanation merged and sources validated in ${result.sourceValidationMs}ms`);
+    } else {
+      console.warn(`[COMP-DIAG][${requestId}] Zod validation failed for comparison AI output:`, zodResult.error.message);
+      result.aiError = "Zod validation failed on AI output";
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[COMP-DIAG][${requestId}] Comparison AI failed gracefully: ${msg}`);
+    result.aiError = msg;
+    result.aiUsed = false;
+
+    // Graceful fallback: enrich deterministic changes with fallback note
+    for (const chg of changes) {
+      if (!chg.whyItMatters) {
+        chg.whyItMatters =
+          chg.changeSeverity === "major"
+            ? "Substantive contractual revision detected. Review the verbatim excerpts above."
+            : "Wording modification between document revisions.";
+      }
+    }
+  }
+
+  return result;
 }
