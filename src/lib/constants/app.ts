@@ -15,7 +15,7 @@ export const SUPPORTED_MIME_TYPES = [
 export const FILE_CONSTRAINTS = {
   maxFileSizeMB: 25,
   maxFileSizeBytes: 25 * 1024 * 1024,
-  maxPages: 100,
+  maxPages: 150,
   acceptedMimeTypes: SUPPORTED_MIME_TYPES,
   acceptedExtensions: SUPPORTED_FILE_EXTENSIONS,
 } as const;

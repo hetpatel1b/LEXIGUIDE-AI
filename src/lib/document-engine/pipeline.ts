@@ -4,6 +4,8 @@ import { getParserForFormat } from "./parsers";
 import { normalizeText, calculateTextStats } from "./normalizer/normalizer";
 import { detectSections } from "./section-detector";
 import { chunkDocument } from "./chunker";
+import { createDocumentError } from "./errors";
+import { FILE_CONSTRAINTS } from "@/lib/constants";
 
 export interface PipelineOptions {
   chunkerOptions?: ChunkerOptions;
@@ -35,6 +37,13 @@ export async function processDocument(
   // 2. Format-Specific Parsing
   const parser = getParserForFormat(validated.format);
   const rawParsed = await parser.parse(validated.buffer);
+
+  if (rawParsed.pages.length > FILE_CONSTRAINTS.maxPages) {
+    throw createDocumentError(
+      "PAGE_LIMIT_EXCEEDED",
+      `Document contains ${rawParsed.pages.length} pages, exceeding the maximum allowed limit of ${FILE_CONSTRAINTS.maxPages} pages.`
+    );
+  }
 
   // 3. Text Normalization & Page Mapping
   // Track continuous global document character offsets across pages

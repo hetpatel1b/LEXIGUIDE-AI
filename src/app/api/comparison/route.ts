@@ -4,6 +4,16 @@ import { ComparisonEngineError } from "@/lib/comparison/errors";
 import { serverDocumentStore } from "@/lib/server-document-store";
 import { temporaryComparisonStore } from "@/lib/comparison/temporary-comparison-store";
 import { AiEngineError, toSafeUserMessage } from "@/lib/ai/errors";
+import { ComparisonRequestSchema } from "@/schemas/api-requests";
+import {
+  resolveAnonymousSession,
+  attachSessionCookie,
+  rateLimiter,
+  quotaStore,
+  getQuotaErrorMessage,
+  concurrencyGuard,
+  validateOrigin,
+} from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,6 +23,16 @@ export const runtime = "nodejs";
  * Production comparison endpoint for real user documents.
  * Compares two NormalizedDocuments, detects section/clause diffs,
  * identifies potential inconsistencies, and enriches changes with Nemotron AI.
+ *
+ * Hardened with:
+ * - Anonymous session resolution and HttpOnly cookie attachment
+ * - CSRF origin validation
+ * - Zod request validation & same-document protection
+ * - Session-bound document authorization for Document A and temporary Document B
+ * - In-flight concurrency locking
+ * - Sliding-window rate limiting (3 comparisons / min)
+ * - Daily quota enforcement (3 comparisons / day)
+ * - Controlled, sanitized error handling
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const reqStart = Date.now();
@@ -22,133 +42,203 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   console.log(`[COMP-DIAG]${reqTag} POST /api/comparison request received`);
 
+  // 1. Origin / CSRF Validation
+  const originCheck = validateOrigin(request);
+  if (!originCheck.valid) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: originCheck.reason || "Cross-origin request rejected.",
+        },
+        requestId,
+      },
+      { status: 403, headers: { "x-comparison-request-id": requestId } }
+    );
+  }
+
+  // 2. Resolve Anonymous Session
+  const session = resolveAnonymousSession(request);
+
+  // 3. Parse and Validate Request Payload with Zod
+  const rawBody = await request.json().catch(() => null);
+  const parseResult = ComparisonRequestSchema.safeParse(rawBody);
+
+  if (!parseResult.success) {
+    const errorIssues = parseResult.error.issues.map((i) => i.message).join(" ");
+    const isConflict = errorIssues.includes("Cannot compare a document to itself");
+    console.warn(`[COMP-DIAG]${reqTag} POST /api/comparison validation failed: ${errorIssues}`);
+    const res = NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: isConflict ? "COMPARISON_CONFLICT" : "VALIDATION_ERROR",
+          message: errorIssues || "Invalid comparison request payload.",
+        },
+        requestId,
+      },
+      { status: isConflict ? 409 : 400, headers: { "x-comparison-request-id": requestId } }
+    );
+    return attachSessionCookie(res, session.sessionId);
+  }
+
+  const { documentAId, documentBId, comparisonId, skipAi } = parseResult.data;
+  if (parseResult.data.requestId && !headerReqId) {
+    requestId = String(parseResult.data.requestId);
+    reqTag = `[${requestId}]`;
+  }
+
+  // 4. Legacy Demo Document Protection
+  if (documentAId === "doc-ea-2026" || documentBId === "doc-ea-2026") {
+    const res = NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "DOCUMENT_INVALID",
+          message: "Legacy demo documents are not supported for comparison.",
+        },
+        requestId,
+      },
+      { status: 400, headers: { "x-comparison-request-id": requestId } }
+    );
+    return attachSessionCookie(res, session.sessionId);
+  }
+
+  // 5. In-Flight Concurrency Guard
+  const lockKey = `${documentAId}:${documentBId}`;
+  const lockAcquired = concurrencyGuard.acquire(session.sessionId, "comparison", lockKey);
+  if (!lockAcquired) {
+    console.warn(`[COMP-DIAG]${reqTag} In-flight duplicate comparison rejected for ${lockKey}`);
+    const res = NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "REQUEST_IN_PROGRESS",
+          message: "A comparison operation is already in progress for these documents. Please wait for it to complete.",
+        },
+        requestId,
+      },
+      { status: 429, headers: { "x-comparison-request-id": requestId } }
+    );
+    return attachSessionCookie(res, session.sessionId);
+  }
+
   try {
-    const body = await request.json().catch(() => null);
-
-    if (!body) {
-      return NextResponse.json(
+    // 6. Sliding-Window Rate Limiting
+    const rateLimit = rateLimiter.checkRateLimit(session.sessionId, "comparison");
+    if (!rateLimit.allowed) {
+      const res = NextResponse.json(
         {
           success: false,
           error: {
-            code: "VALIDATION_ERROR",
-            message: "Missing JSON request body.",
+            code: "RATE_LIMITED",
+            message: `Too many comparison requests. Please wait ${rateLimit.retryAfterSeconds} seconds before comparing again.`,
           },
+          requestId,
         },
-        { status: 400, headers: { "x-comparison-request-id": requestId } }
+        {
+          status: 429,
+          headers: {
+            "x-comparison-request-id": requestId,
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
-    if (body.requestId && !headerReqId) {
-      requestId = String(body.requestId);
-      reqTag = `[${requestId}]`;
-    }
-
-    const documentAId = typeof body.documentAId === "string" ? body.documentAId.trim() : "";
-    const documentBId = typeof body.documentBId === "string" ? body.documentBId.trim() : "";
-
-    // 1. Validation of IDs
-    if (!documentAId || !documentBId) {
-      return NextResponse.json(
+    // 7. Daily Quota Check (Enforced BEFORE expensive processing)
+    const quota = quotaStore.checkQuota(session.sessionId, "comparison");
+    if (!quota.allowed) {
+      const errorInfo = getQuotaErrorMessage("comparison", quota.limit);
+      const res = NextResponse.json(
         {
           success: false,
           error: {
-            code: "VALIDATION_ERROR",
-            message: "Both documentAId and documentBId are required.",
+            code: errorInfo.code,
+            message: errorInfo.message,
+            suggestion: errorInfo.suggestion,
           },
+          requestId,
         },
-        { status: 400, headers: { "x-comparison-request-id": requestId } }
-      );
-    }
-
-    // 2. Same-Document Protection
-    if (documentAId === documentBId) {
-      return NextResponse.json(
         {
-          success: false,
-          error: {
-            code: "COMPARISON_CONFLICT",
-            message: "Cannot compare a document to itself. Select two different documents.",
+          status: 429,
+          headers: {
+            "x-comparison-request-id": requestId,
+            "Retry-After": String(quota.retryAfterSeconds),
           },
-        },
-        { status: 409, headers: { "x-comparison-request-id": requestId } }
+        }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
-    // 3. Legacy Demo Document Protection
-    if (documentAId === "doc-ea-2026" || documentBId === "doc-ea-2026") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "DOCUMENT_INVALID",
-            message: "Legacy demo documents are not supported for comparison.",
-          },
-        },
-        { status: 400, headers: { "x-comparison-request-id": requestId } }
-      );
-    }
-
-    const comparisonId = typeof body.comparisonId === "string" ? body.comparisonId.trim() : undefined;
-
-    // 4. Resolve Authoritative Document A & Document B
-    // Document A is resolved from active server document storage
-    const docA = serverDocumentStore.getDocument(documentAId);
-
-    // Document B is resolved from ephemeral temporary comparison storage (or server store fallback)
+    // 8. Resolve Authoritative Document A & Document B with Session Scoping
+    const docA = serverDocumentStore.getDocument(documentAId, session.sessionId);
     const docB =
-      temporaryComparisonStore.getTemporaryDocument(documentBId, comparisonId) ||
-      serverDocumentStore.getDocument(documentBId);
+      temporaryComparisonStore.getTemporaryDocument(documentBId, comparisonId, session.sessionId) ||
+      serverDocumentStore.getDocument(documentBId, session.sessionId);
 
-    // Verify both documents exist
+    // Verify both documents exist and are authorized
     if (!docA) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
             code: "DOCUMENT_NOT_FOUND",
-            message: `Document A (${documentAId}) is not available. Please ensure an active legal document is selected.`,
+            message: `Document A (${documentAId}) is not available or not accessible in this session.`,
           },
+          requestId,
         },
         { status: 404, headers: { "x-comparison-request-id": requestId } }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
     if (!docB) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
             code: "DOCUMENT_NOT_FOUND",
-            message: `Document B (${documentBId}) is not available or has expired. Please upload a fresh second document to compare.`,
+            message: `Document B (${documentBId}) is not available, has expired, or is not accessible in this session.`,
           },
+          requestId,
         },
         { status: 404, headers: { "x-comparison-request-id": requestId } }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
-    // 5. Execute Comparison Service
+    // 9. Execute Comparison Service
     const comparisonResult = await compareDocuments(docA, docB, {
       requestId,
-      skipAi: body.skipAi === true,
+      skipAi: skipAi === true,
     });
+
+    // 10. Consume Daily Comparison Quota on Success
+    quotaStore.consumeQuota(session.sessionId, "comparison");
 
     const totalDuration = Date.now() - reqStart;
     console.log(
       `[COMP-DIAG]${reqTag} POST /api/comparison completed in ${totalDuration}ms (changes: ${comparisonResult.changes.length}, inconsistencies: ${comparisonResult.inconsistencies.length})`
     );
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         data: comparisonResult,
+        timestamp: Date.now(),
+        durationMs: totalDuration,
+        requestId,
       },
       {
         status: 200,
-        headers: {
-          "x-comparison-request-id": requestId,
-        },
+        headers: { "x-comparison-request-id": requestId },
       }
     );
+
+    return attachSessionCookie(response, session.sessionId);
   } catch (error: unknown) {
     const totalDuration = Date.now() - reqStart;
 
@@ -156,57 +246,64 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       console.error(
         `[COMP-DIAG]${reqTag} POST /api/comparison failed with ComparisonEngineError: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
       );
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
             code: error.code,
             message: error.message,
           },
+          requestId,
         },
         {
-          status: error.statusCode || 400,
+          status: error.statusCode,
           headers: { "x-comparison-request-id": requestId },
         }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
     if (error instanceof AiEngineError) {
       console.error(
-        `[COMP-DIAG]${reqTag} POST /api/comparison failed with AiEngineError: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
+        `[COMP-DIAG]${reqTag} POST /api/comparison AI error: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
       );
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
             code: error.code,
-            message: error.message,
+            message: toSafeUserMessage(error),
           },
+          requestId,
         },
         {
-          status: error.statusCode || 500,
+          status: error.statusCode,
           headers: { "x-comparison-request-id": requestId },
         }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
-    const safeMessage = toSafeUserMessage(error);
-    console.error(
-      `[COMP-DIAG]${reqTag} POST /api/comparison unexpected error after ${totalDuration}ms: ${safeMessage}`
-    );
+    const safeMessage = error instanceof Error ? error.message : "An unexpected error occurred during document comparison.";
+    console.error(`[COMP-DIAG]${reqTag} POST /api/comparison unexpected error: ${safeMessage}`);
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         success: false,
         error: {
-          code: "INTERNAL_ERROR",
-          message: "An unexpected error occurred while comparing the documents.",
+          code: "COMPARISON_INTERNAL_ERROR",
+          message: safeMessage,
         },
+        requestId,
       },
       {
         status: 500,
         headers: { "x-comparison-request-id": requestId },
       }
     );
+    return attachSessionCookie(res, session.sessionId);
+  } finally {
+    // Release in-flight lock
+    concurrencyGuard.release(session.sessionId, "comparison", lockKey);
   }
 }

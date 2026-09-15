@@ -2,6 +2,7 @@ import { extractText, getMeta } from "unpdf";
 import type { RawParsedDocument, RawParsedPage } from "../types";
 import type { DocumentParser } from "./types";
 import { createDocumentError } from "../errors";
+import { FILE_CONSTRAINTS } from "@/lib/constants";
 
 export class PdfParser implements DocumentParser {
   public async parse(buffer: Buffer): Promise<RawParsedDocument> {
@@ -17,6 +18,13 @@ export class PdfParser implements DocumentParser {
         throw createDocumentError(
           "EMPTY_DOCUMENT",
           "This PDF document contains 0 pages."
+        );
+      }
+
+      if (totalPages > FILE_CONSTRAINTS.maxPages) {
+        throw createDocumentError(
+          "PAGE_LIMIT_EXCEEDED",
+          `This PDF contains ${totalPages} pages, exceeding the maximum allowed limit of ${FILE_CONSTRAINTS.maxPages} pages.`
         );
       }
 

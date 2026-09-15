@@ -5,6 +5,7 @@ export interface TemporaryComparisonEntry {
   comparisonId: string;
   documentId: string;
   document: NormalizedDocument;
+  ownerSessionId?: string;
   createdAt: number;
   expiresAt: number;
 }
@@ -25,17 +26,18 @@ const DEFAULT_TTL_MS = 60 * 60 * 1000; // 1 hour
 /**
  * Ephemeral in-memory store for comparison-scoped Document B.
  * Documents stored here are temporary, never persisted to normal user session documents,
- * and automatically expire after their TTL.
+ * strictly scoped to comparisonId and owner anonymous session, and automatically expire.
  */
 export const temporaryComparisonStore = {
   /**
-   * Registers a freshly uploaded comparison document.
+   * Registers a freshly uploaded comparison document with optional comparisonId and owner session.
    * Returns the comparisonId associated with this upload.
    */
   registerTemporaryDocument(
     doc: NormalizedDocument,
     comparisonId?: string,
-    ttlMs: number = DEFAULT_TTL_MS
+    ttlMs: number = DEFAULT_TTL_MS,
+    ownerSessionId?: string
   ): string {
     if (!doc || !doc.id) {
       throw new Error("Invalid document: missing document or document ID.");
@@ -55,13 +57,14 @@ export const temporaryComparisonStore = {
       comparisonId: compId,
       documentId: doc.id,
       document: doc,
+      ownerSessionId: ownerSessionId ? ownerSessionId.toLowerCase() : undefined,
       createdAt: now,
       expiresAt: now + ttlMs,
     };
 
     tempStore.set(doc.id, entry);
     console.log(
-      `[TEMP-COMP-STORE] Registered temporary comparison document id=${doc.id}, name="${doc.displayName}", compId=${compId}, ttl=${ttlMs}ms`
+      `[TEMP-COMP-STORE] Registered temporary comparison document id=${doc.id}, name="${doc.displayName}", compId=${compId}, owner=${ownerSessionId || "unscoped"}, ttl=${ttlMs}ms`
     );
 
     return compId;
@@ -69,9 +72,13 @@ export const temporaryComparisonStore = {
 
   /**
    * Retrieves a temporary comparison document by its documentId.
-   * If comparisonId is provided, validates that the document belongs to that comparison context.
+   * Validates comparison context and owner session authorization if provided.
    */
-  getTemporaryDocument(docId: string, comparisonId?: string): NormalizedDocument | null {
+  getTemporaryDocument(
+    docId: string,
+    comparisonId?: string,
+    requestingSessionId?: string
+  ): NormalizedDocument | null {
     if (!docId) return null;
 
     const entry = tempStore.get(docId);
@@ -90,6 +97,17 @@ export const temporaryComparisonStore = {
         `[TEMP-COMP-STORE] Context mismatch: document ${docId} belongs to ${entry.comparisonId}, not ${comparisonId}`
       );
       return null;
+    }
+
+    // Validate session authorization if provided
+    if (requestingSessionId && entry.ownerSessionId) {
+      const normalizedReqSession = requestingSessionId.toLowerCase();
+      if (entry.ownerSessionId !== normalizedReqSession) {
+        console.warn(
+          `[TEMP-COMP-STORE-SECURITY] Cross-session temporary document access REJECTED: docId=${docId}, requestedBy=${normalizedReqSession}, owner=${entry.ownerSessionId}`
+        );
+        return null;
+      }
     }
 
     return entry.document;

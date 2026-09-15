@@ -4,6 +4,7 @@
 export type DocumentErrorCode =
   | "VALIDATION_ERROR"
   | "FILE_TOO_LARGE"
+  | "PAGE_LIMIT_EXCEEDED"
   | "UNSUPPORTED_FILE_TYPE"
   | "EMPTY_DOCUMENT"
   | "NO_READABLE_TEXT"
@@ -75,6 +76,13 @@ export function createDocumentError(
         "FILE_TOO_LARGE",
         413,
         "Please select a smaller document under 25MB."
+      );
+    case "PAGE_LIMIT_EXCEEDED":
+      return new DocumentEngineError(
+        customMessage || "The uploaded document exceeds the maximum allowable limit of 150 pages.",
+        "PAGE_LIMIT_EXCEEDED",
+        422,
+        "Please upload a document with 150 pages or fewer."
       );
     case "UNSUPPORTED_FILE_TYPE":
       return new DocumentEngineError(

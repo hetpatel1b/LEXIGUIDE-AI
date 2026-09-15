@@ -39,7 +39,7 @@ export function ProductPreview() {
               <span className="font-semibold text-[var(--foreground)] flex items-center gap-1.5 min-w-0">
                 <FileText className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" />
                 <span className="truncate max-w-[180px] sm:max-w-xs">
-                  Standard_Employment_Agreement_2026.pdf
+                  Commercial_Service_Agreement.pdf
                 </span>
               </span>
             </div>

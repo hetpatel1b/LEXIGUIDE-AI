@@ -12,9 +12,9 @@ DOCUMENT METADATA:
 - Document ID: ${context.documentId}
 - Included Chunks: ${context.includedChunks} of ${context.totalChunks} total chunks
 
-BEGIN DOCUMENT CONTEXT:
+<untrusted_document_context document_name="${context.displayName}" document_id="${context.documentId}">
 ${context.contextText}
-END DOCUMENT CONTEXT
+</untrusted_document_context>
 
 Analyze the text above strictly following the system rules:
 - Strictly adhere to item limits: 5-7 key clauses, 3-4 potential concerns, 4-6 obligations, 4-6 important dates.

@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processDocument, DocumentEngineError } from "@/lib/document-engine";
 import { temporaryComparisonStore } from "@/lib/comparison/temporary-comparison-store";
+import {
+  resolveAnonymousSession,
+  attachSessionCookie,
+  rateLimiter,
+  quotaStore,
+  getQuotaErrorMessage,
+  validateOrigin,
+} from "@/lib/security";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -8,16 +16,88 @@ export const runtime = "nodejs";
 /**
  * Dedicated comparison document upload endpoint.
  * Accepts multipart/form-data with a single comparison document (Document B).
- * Processes through the existing canonical document engine and stores it
- * strictly in the ephemeral temporaryComparisonStore with a TTL.
+ * Processes through the canonical document engine and stores it strictly in the
+ * ephemeral temporaryComparisonStore with TTL and session ownership scoping.
  *
- * It is NEVER persisted to normal user session documents.
+ * Hardened with:
+ * - Anonymous session resolution and HttpOnly cookie attachment
+ * - CSRF origin validation
+ * - Sliding-window rate limiting (5 uploads / min)
+ * - Daily upload quota enforcement (5 uploads / day)
+ * - Session and comparisonId scoping (never accessible to other sessions)
+ * - Controlled, sanitized error handling
  */
 export async function POST(request: NextRequest) {
+  // 1. Origin / CSRF Validation
+  const originCheck = validateOrigin(request);
+  if (!originCheck.valid) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "FORBIDDEN",
+          message: originCheck.reason || "Cross-origin request rejected.",
+        },
+        timestamp: new Date().toISOString(),
+      },
+      { status: 403 }
+    );
+  }
+
+  // 2. Resolve Anonymous Session
+  const session = resolveAnonymousSession(request);
+
+  // 3. Sliding-Window Rate Limit Check
+  const rateLimit = rateLimiter.checkRateLimit(session.sessionId, "upload");
+  if (!rateLimit.allowed) {
+    const res = NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: "RATE_LIMITED",
+          message: `Too many upload requests. Please wait ${rateLimit.retryAfterSeconds} seconds before uploading another document.`,
+          suggestion: "Please wait a moment before retrying.",
+        },
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateLimit.retryAfterSeconds),
+        },
+      }
+    );
+    return attachSessionCookie(res, session.sessionId);
+  }
+
+  // 4. Daily Upload Quota Check
+  const quota = quotaStore.checkQuota(session.sessionId, "upload");
+  if (!quota.allowed) {
+    const errorInfo = getQuotaErrorMessage("upload", quota.limit);
+    const res = NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: errorInfo.code,
+          message: errorInfo.message,
+          suggestion: errorInfo.suggestion,
+        },
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(quota.retryAfterSeconds),
+        },
+      }
+    );
+    return attachSessionCookie(res, session.sessionId);
+  }
+
   try {
     const contentType = request.headers.get("content-type") || "";
     if (!contentType.includes("multipart/form-data")) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
@@ -29,6 +109,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
     const formData = await request.formData();
@@ -41,7 +122,7 @@ export async function POST(request: NextRequest) {
       undefined;
 
     if (!file || !(file instanceof Blob)) {
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           success: false,
           error: {
@@ -53,6 +134,7 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
+      return attachSessionCookie(res, session.sessionId);
     }
 
     const filename = file instanceof File ? file.name : "document";
@@ -62,16 +144,21 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Process through the canonical document engine pipeline (reusing all validation, parsing & chunking)
+    // Process through the canonical document engine pipeline
     const normalizedDocument = await processDocument(buffer, filename, mimeType);
 
-    // Register strictly in the temporary comparison store with TTL
+    // Register strictly in the temporary comparison store with TTL and session ownership
     const compId = temporaryComparisonStore.registerTemporaryDocument(
       normalizedDocument,
-      existingComparisonId
+      existingComparisonId,
+      undefined,
+      session.sessionId
     );
 
-    return NextResponse.json(
+    // Authoritative Quota Consumption
+    quotaStore.consumeQuota(session.sessionId, "upload");
+
+    const response = NextResponse.json(
       {
         success: true,
         data: normalizedDocument,
@@ -80,12 +167,15 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    return attachSessionCookie(response, session.sessionId);
   } catch (error: unknown) {
     if (error instanceof DocumentEngineError) {
-      return NextResponse.json(error.toResponse(), { status: error.statusCode });
+      const res = NextResponse.json(error.toResponse(), { status: error.statusCode });
+      return attachSessionCookie(res, session.sessionId);
     }
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         success: false,
         error: {
@@ -97,5 +187,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+    return attachSessionCookie(res, session.sessionId);
   }
 }
