@@ -1,5 +1,5 @@
 /**
- * Types for verbatim evidence citations, modal views, and copilot dialogue context.
+ * Types for verbatim evidence citations and modal views.
  */
 
 export interface EvidenceDetail {
@@ -9,13 +9,4 @@ export interface EvidenceDetail {
   pageNumber: number;
   excerpt: string;
   contextNote?: string;
-}
-
-export interface CopilotQAPair {
-  question: string;
-  answer: string;
-  sectionReference: string;
-  pageNumber: number;
-  evidenceExcerpt: string;
-  suggestedNextStep?: string;
 }

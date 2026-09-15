@@ -40,7 +40,7 @@ export function DocumentPanel({
     return (
       <div
         className={cn(
-          "w-12 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col items-center py-4 gap-4 transition-all",
+          "w-12 shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col items-center py-4 gap-4",
           className
         )}
       >
@@ -48,8 +48,8 @@ export function DocumentPanel({
           size="sm"
           variant="ghost"
           onClick={onToggleCollapse}
-          aria-label="Open Document Panel"
-          title="Open Document Panel"
+          aria-label="Open document navigation"
+          title="Open document navigation"
           className="text-[var(--foreground-secondary)] hover:text-[var(--primary)]"
         >
           <PanelLeftOpen className="h-4 w-4" />
@@ -102,7 +102,7 @@ export function DocumentPanel({
     <aside
       aria-label="Document Explorer & Navigation"
       className={cn(
-        "w-full lg:w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full transition-all overflow-hidden",
+        "w-full lg:w-[280px] shrink-0 border-r border-[var(--border)] bg-[var(--surface-subtle)] flex flex-col h-full overflow-hidden",
         className
       )}
     >
@@ -135,8 +135,8 @@ export function DocumentPanel({
             size="sm"
             variant="ghost"
             onClick={onToggleCollapse}
-            aria-label="Collapse Document Panel"
-            title="Collapse Document Panel"
+            aria-label="Close document navigation"
+            title="Close document navigation"
             className="text-[var(--foreground-muted)] hover:text-[var(--foreground)] shrink-0"
           >
             <PanelLeftClose className="h-4 w-4" />
@@ -145,7 +145,7 @@ export function DocumentPanel({
       </div>
 
       {/* Single Coherent Scrollable Container for Metadata, Sections & Navigator */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 sm:p-3.5 space-y-4 [scrollbar-gutter:stable]">
         {/* Document Metadata Details */}
         <DocumentMetadata document={document} />
 

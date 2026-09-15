@@ -3,13 +3,11 @@
 import * as React from "react";
 import {
   FileText,
-  Sparkles,
   LayoutDashboard,
 } from "lucide-react";
 import { WorkspaceNav } from "@/components/shared";
 import { DocumentPanel } from "./document-panel";
 import { AnalysisMain } from "./analysis-main";
-import { CopilotPanel } from "./copilot/copilot-panel";
 import { EvidenceModal } from "./evidence/evidence-modal";
 import { WorkspaceDrawer } from "./workspace-drawers";
 import { WorkspaceSkeleton } from "./states/workspace-skeleton";
@@ -35,13 +33,11 @@ export function AnalysisWorkspace() {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Desktop Panel Collapse State: default closed
+  // Desktop Panel Collapse State: default closed / collapsed
   const [isLeftCollapsed, setIsLeftCollapsed] = React.useState(true);
-  const [isRightCollapsed, setIsRightCollapsed] = React.useState(true);
 
   // Mobile / Tablet Drawer State
   const [isDocDrawerOpen, setIsDocDrawerOpen] = React.useState(false);
-  const [isCopilotDrawerOpen, setIsCopilotDrawerOpen] = React.useState(false);
 
   // Storage synchronization version
   const [storageVersion, setStorageVersion] = React.useState(0);
@@ -64,16 +60,20 @@ export function AnalysisWorkspace() {
     }
   };
 
-  // Listen for storage updates in other tabs/windows or local updates
+  // Listen for storage updates in other tabs/windows or local updates, plus bfcache restoration
   React.useEffect(() => {
     const handleStorage = () => {
       setStorageVersion((v) => v + 1);
     };
     window.addEventListener("storage", handleStorage);
     window.addEventListener("lexiguide-doc-update", handleStorage);
+    window.addEventListener("lexiguide-workspace-reset", handleStorage);
+    window.addEventListener("pageshow", handleStorage);
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("lexiguide-doc-update", handleStorage);
+      window.removeEventListener("lexiguide-workspace-reset", handleStorage);
+      window.removeEventListener("pageshow", handleStorage);
     };
   }, []);
 
@@ -105,6 +105,26 @@ export function AnalysisWorkspace() {
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null);
   const [selectedPage, setSelectedPage] = React.useState<number>(1);
 
+  // Evidence Dialog State
+  const [activeEvidence, setActiveEvidence] = React.useState<EvidenceDetail | null>(null);
+  const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
+
+  // Reset tab selection, active section, drawer, and evidence modal whenever the document changes or is cleared
+  const currentDocId = uploadedDoc?.id || null;
+  const prevDocIdRef = React.useRef<string | null>(currentDocId);
+  React.useEffect(() => {
+    if (prevDocIdRef.current !== currentDocId) {
+      prevDocIdRef.current = currentDocId;
+      setActiveTab("overview");
+      setSelectedSectionId(null);
+      setSelectedPage(1);
+      setActiveEvidence(null);
+      setIsEvidenceOpen(false);
+      setIsDocDrawerOpen(false);
+      setIsLeftCollapsed(true);
+    }
+  }, [currentDocId]);
+
   const selectedSection: DocumentSectionItem | null = React.useMemo(() => {
     if (!uploadedDoc || !uploadedDoc.sections || uploadedDoc.sections.length === 0) {
       return null;
@@ -128,10 +148,6 @@ export function AnalysisWorkspace() {
       pageNumber: first.pageReferences[0] || 1,
     };
   }, [uploadedDoc, selectedSectionId]);
-
-  // Evidence Dialog State
-  const [activeEvidence, setActiveEvidence] = React.useState<EvidenceDetail | null>(null);
-  const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
 
   // Development Preview State (normal by default; testable via ?state=loading|empty|error)
   const [previewStateOverride, setPreviewStateOverride] = React.useState<WorkspacePreviewState | null>(null);
@@ -172,6 +188,17 @@ export function AnalysisWorkspace() {
 
   // Case B: No active user-uploaded document exists
   if (!uploadedDoc && previewState === "normal") {
+    if (!hasMounted) {
+      return (
+        <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+          <WorkspaceNav documentName={null} documentType={null} status="none" />
+          <main className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 overflow-hidden">
+            <WorkspaceSkeleton />
+          </main>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col h-screen w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
         <WorkspaceNav documentName={null} documentType={null} status="none" />
@@ -239,21 +266,11 @@ export function AnalysisWorkspace() {
 
           <button
             type="button"
-            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 min-h-[40px] rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-3 min-h-[40px] rounded-[var(--radius-md)] bg-[var(--primary)] text-white text-xs font-medium shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
             aria-current="page"
           >
             <LayoutDashboard className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>Analysis</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsCopilotDrawerOpen(true)}
-            className="flex-1 xs:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 min-h-[40px] rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-subtle)] text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--foreground)] active:bg-[var(--surface-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
-            aria-label="Open Copilot assistant drawer"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] shrink-0" aria-hidden="true" />
-            <span>Copilot</span>
           </button>
         </div>
       </div>
@@ -273,7 +290,7 @@ export function AnalysisWorkspace() {
           <WorkspaceError onRetry={() => setPreviewStateOverride("normal")} />
         )}
 
-        {/* Normal Mode: Hybrid 3-Panel Workspace */}
+        {/* Normal Mode: 2-Panel Workspace (Document Navigation + Main Analysis) */}
         {previewState === "normal" && uploadedDoc && (
           <>
             {/* Left: Document Panel (Desktop >= 1024px) */}
@@ -289,7 +306,7 @@ export function AnalysisWorkspace() {
               />
             </div>
 
-            {/* Center: Primary Analysis Workspace */}
+            {/* Center / Main: Primary Analysis Workspace */}
             <AnalysisMain
               realDocument={uploadedDoc}
               analysisResult={analysis}
@@ -303,19 +320,8 @@ export function AnalysisWorkspace() {
               onSelectSection={handleSelectSection}
               onClearSection={() => setSelectedSectionId(null)}
               onOpenDocumentDrawer={() => setIsDocDrawerOpen(true)}
-              onOpenCopilotDrawer={() => setIsCopilotDrawerOpen(true)}
               onViewEvidence={handleOpenEvidence}
             />
-
-            {/* Right: AI Copilot Assistant (Desktop >= 1024px) */}
-            <div className="hidden lg:flex h-full shrink-0">
-              <CopilotPanel
-                document={uploadedDoc}
-                isCollapsed={isRightCollapsed}
-                onToggleCollapse={() => setIsRightCollapsed(!isRightCollapsed)}
-                onViewEvidence={handleOpenEvidence}
-              />
-            </div>
           </>
         )}
       </div>
@@ -338,24 +344,6 @@ export function AnalysisWorkspace() {
             selectedPage={selectedPage}
             onSelectPage={handleSelectPage}
             className="w-full border-r-0"
-          />
-        </div>
-      </WorkspaceDrawer>
-
-      {/* Mobile / Tablet Copilot Drawer */}
-      <WorkspaceDrawer
-        isOpen={isCopilotDrawerOpen}
-        onClose={() => setIsCopilotDrawerOpen(false)}
-        title="Document Copilot"
-        side="right"
-      >
-        <div className="flex-1 flex flex-col h-full overflow-hidden">
-          <CopilotPanel
-            document={uploadedDoc}
-            isCollapsed={false}
-            onToggleCollapse={() => setIsCopilotDrawerOpen(false)}
-            onViewEvidence={handleOpenEvidence}
-            className="w-full border-l-0"
           />
         </div>
       </WorkspaceDrawer>

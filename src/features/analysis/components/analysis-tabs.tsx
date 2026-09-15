@@ -61,7 +61,6 @@ export function AnalysisTabs({
   const tabsRef = React.useRef<(HTMLButtonElement | null)[]>([]);
   const [canScrollLeft, setCanScrollLeft] = React.useState(false);
   const [canScrollRight, setCanScrollRight] = React.useState(false);
-  const [containerWidth, setContainerWidth] = React.useState<number>(1200);
 
   const checkScroll = React.useCallback(() => {
     const el = containerRef.current;
@@ -71,45 +70,38 @@ export function AnalysisTabs({
     setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
   }, []);
 
-  // Monitor container width dynamically to adapt when side panels expand/collapse
+  // Monitor scrollability without triggering layout re-measurement loops
   React.useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     checkScroll();
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.contentRect) {
-          setContainerWidth(entry.contentRect.width);
-        }
-      }
-      checkScroll();
-    });
-
-    observer.observe(el);
     el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
+    window.addEventListener("resize", checkScroll, { passive: true });
 
     return () => {
-      observer.disconnect();
       el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
     };
   }, [checkScroll]);
 
-  // Keep active tab scrolled into view
+  // Keep active tab visible inside container without scrolling ancestor containers or the window
   React.useEffect(() => {
     const activeIndex = TAB_ITEMS.findIndex((t) => t.id === activeTab);
-    if (activeIndex !== -1 && tabsRef.current[activeIndex]) {
-      tabsRef.current[activeIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
-      setTimeout(checkScroll, 250);
+    const container = containerRef.current;
+    const tabEl = tabsRef.current[activeIndex];
+    if (container && tabEl) {
+      const cLeft = container.scrollLeft;
+      const cRight = cLeft + container.clientWidth;
+      const tLeft = tabEl.offsetLeft;
+      const tRight = tLeft + tabEl.clientWidth;
+      if (tLeft < cLeft) {
+        container.scrollTo({ left: tLeft, behavior: "smooth" });
+      } else if (tRight > cRight) {
+        container.scrollTo({ left: tRight - container.clientWidth, behavior: "smooth" });
+      }
     }
-  }, [activeTab, checkScroll]);
+  }, [activeTab]);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     let targetIndex = -1;
@@ -127,17 +119,22 @@ export function AnalysisTabs({
       e.preventDefault();
       const nextTab = TAB_ITEMS[targetIndex];
       onSelectTab(nextTab.id);
-      tabsRef.current[targetIndex]?.focus();
-      tabsRef.current[targetIndex]?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "nearest",
-      });
+      const targetEl = tabsRef.current[targetIndex];
+      targetEl?.focus();
+      const container = containerRef.current;
+      if (container && targetEl) {
+        const cLeft = container.scrollLeft;
+        const cRight = cLeft + container.clientWidth;
+        const tLeft = targetEl.offsetLeft;
+        const tRight = tLeft + targetEl.clientWidth;
+        if (tLeft < cLeft) {
+          container.scrollTo({ left: tLeft, behavior: "smooth" });
+        } else if (tRight > cRight) {
+          container.scrollTo({ left: tRight - container.clientWidth, behavior: "smooth" });
+        }
+      }
     }
   };
-
-  const isCompact = containerWidth < 960;
-  const isUltraCompact = containerWidth < 540;
 
   return (
     <div className={cn("relative w-full bg-[var(--surface)] border-b border-[var(--border)] shrink-0", className)}>
@@ -182,15 +179,11 @@ export function AnalysisTabs({
         ref={containerRef}
         role="tablist"
         aria-label="Document Analysis Navigation"
-        className={cn(
-          "flex items-center overflow-x-auto no-scrollbar scroll-smooth w-full",
-          isCompact ? "px-2 sm:px-3" : "px-3 sm:px-5 lg:px-6"
-        )}
+        className="flex items-center overflow-x-auto no-scrollbar scroll-smooth w-full px-2 sm:px-4 lg:px-6"
       >
         {TAB_ITEMS.map((tab, idx) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
-          const displayText = isCompact && tab.shortLabel ? tab.shortLabel : tab.label;
 
           return (
             <button
@@ -207,11 +200,7 @@ export function AnalysisTabs({
               onClick={() => onSelectTab(tab.id)}
               onKeyDown={(e) => handleKeyDown(e, idx)}
               className={cn(
-                "group relative flex-1 flex items-center justify-center transition-colors cursor-pointer border-b-2 -mb-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded-t-sm whitespace-nowrap",
-                isUltraCompact ? "shrink-0 min-w-max" : "shrink min-w-0",
-                isCompact
-                  ? "gap-1 px-1.5 sm:px-2 py-2.5 text-xs"
-                  : "gap-1.5 sm:gap-2 py-3 px-2 sm:px-3 text-xs sm:text-sm font-medium",
+                "group relative flex-1 flex items-center justify-center transition-colors cursor-pointer border-b-2 -mb-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] rounded-t-sm whitespace-nowrap shrink-0 xs:shrink xs:min-w-0 gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-1.5 xs:px-2 sm:px-3 text-xs sm:text-sm font-medium",
                 isActive
                   ? "border-[var(--primary)] text-[var(--primary)] font-semibold"
                   : "border-transparent text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:border-[var(--border-strong)]"
@@ -219,14 +208,22 @@ export function AnalysisTabs({
             >
               <Icon
                 className={cn(
-                  "shrink-0 transition-colors",
-                  isCompact ? "h-3.5 w-3.5" : "h-4 w-4",
+                  "shrink-0 transition-colors h-3.5 w-3.5 sm:h-4 sm:w-4",
                   isActive ? "text-[var(--primary)]" : "text-[var(--foreground-muted)] group-hover:text-[var(--foreground)]"
                 )}
               />
 
-              {/* Label */}
-              <span className="truncate">{displayText}</span>
+              {/* Responsive Label - CSS driven without JS measurements */}
+              <span className="truncate">
+                {tab.shortLabel ? (
+                  <>
+                    <span className="hidden md:inline">{tab.label}</span>
+                    <span className="md:hidden">{tab.shortLabel}</span>
+                  </>
+                ) : (
+                  tab.label
+                )}
+              </span>
 
               {/* Count Badge */}
               {(() => {

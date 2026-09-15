@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Sparkles,
@@ -14,6 +14,7 @@ import {
 import { BrandLogo } from "./brand-logo";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { resetDocumentWorkspace } from "@/lib/document-storage";
 
 export interface WorkspaceNavProps {
   documentName?: string | null;
@@ -62,6 +63,42 @@ export function WorkspaceNav({
   extraRightControls,
 }: WorkspaceNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isExiting, setIsExiting] = React.useState(false);
+
+  const handleExit = React.useCallback(
+    async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+      e.preventDefault();
+      if (isExiting) return;
+      setIsExiting(true);
+
+      // 1. Immediately reset client-side document workspace
+      resetDocumentWorkspace();
+
+      // 2. Fire server-side workspace reset (keepalive guarantees delivery during navigation)
+      try {
+        if (typeof fetch === "function") {
+          fetch("/api/documents/reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+          }).catch((err) => {
+            console.warn("Failed to notify server of workspace reset:", err);
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to trigger server workspace reset:", err);
+      }
+
+      // 3. Navigate cleanly to home using replace so history does not trap the user
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      } else {
+        router.replace("/");
+      }
+    },
+    [isExiting, router]
+  );
 
   return (
     <header
@@ -153,15 +190,17 @@ export function WorkspaceNav({
           {extraRightControls}
 
           <div className="border-l border-[var(--border)] pl-1.5 sm:pl-2.5 flex items-center shrink-0">
-            <Link
-              href="/"
-              title="Exit Workspace & Return Home"
-              aria-label="Exit Workspace & Return Home"
-              className="inline-flex items-center justify-center p-1.5 sm:px-2.5 sm:py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0"
+            <button
+              type="button"
+              onClick={handleExit}
+              disabled={isExiting}
+              title="Exit Current Document Workspace & Return to Upload"
+              aria-label="Exit Current Document Workspace & Return to Upload"
+              className="inline-flex items-center justify-center p-1.5 sm:px-2.5 sm:py-1 rounded-[var(--radius-md)] text-xs text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors min-h-[36px] min-w-[36px] sm:min-h-0 sm:min-w-0 disabled:opacity-50 cursor-pointer"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline font-medium">Exit</span>
-            </Link>
+              <span className="hidden sm:inline font-medium ml-1">Exit</span>
+            </button>
           </div>
         </div>
       </div>

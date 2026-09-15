@@ -39,7 +39,6 @@ export interface AnalysisMainProps {
   onSelectSection?: (section: DocumentSectionItem) => void;
   onClearSection?: () => void;
   onOpenDocumentDrawer?: () => void;
-  onOpenCopilotDrawer?: () => void;
   onViewEvidence: (evidence: EvidenceDetail) => void;
   className?: string;
 }
@@ -57,7 +56,6 @@ export function AnalysisMain({
   onSelectSection,
   onClearSection,
   onOpenDocumentDrawer,
-  onOpenCopilotDrawer,
   onViewEvidence,
 }: AnalysisMainProps) {
   const [showRawStructureView, setShowRawStructureView] = React.useState(false);
@@ -128,7 +126,7 @@ export function AnalysisMain({
           </div>
         </div>
 
-        {/* Right: Structure View Switcher + Badge + Copilot Trigger */}
+        {/* Right: Structure View Switcher + Badge */}
         <div className="flex items-center gap-2 shrink-0">
           {realDocument && (
             <Button
@@ -155,19 +153,6 @@ export function AnalysisMain({
               ? "NVIDIA Nemotron Analysis"
               : "Real Ingested Document"}
           </Badge>
-
-          {onOpenCopilotDrawer && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={onOpenCopilotDrawer}
-              leftIcon={<Sparkles className="h-3.5 w-3.5" />}
-              className="lg:hidden text-xs shadow-sm min-h-[36px]"
-              aria-label="Open Document Copilot assistant drawer"
-            >
-              <span>Copilot</span>
-            </Button>
-          )}
         </div>
       </div>
 
@@ -192,7 +177,7 @@ export function AnalysisMain({
         id={`panel-${activeTab}`}
         role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
-        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 [scrollbar-gutter:stable]"
       >
         <div className="w-full max-w-[1600px] mx-auto space-y-6">
           {/* A. If viewing raw extracted document view */}

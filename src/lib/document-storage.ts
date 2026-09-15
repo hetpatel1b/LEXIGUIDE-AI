@@ -315,3 +315,49 @@ export function setCachedAnalysis(docId: string, result: AnalysisResult): void {
     // Ignore storage quota errors
   }
 }
+
+let currentWorkspaceGeneration = 0;
+
+/**
+ * Returns the current workspace generation counter, incremented whenever a workspace reset occurs.
+ */
+export function getWorkspaceGeneration(): number {
+  return currentWorkspaceGeneration;
+}
+
+/**
+ * Completely resets the document workspace on the client.
+ * Clears active document, session documents, all cached analyses, and custom action items.
+ * Dispatches synchronization events so all listening components update immediately.
+ */
+export function resetDocumentWorkspace(): void {
+  currentWorkspaceGeneration += 1;
+
+  if (typeof window === "undefined") return;
+
+  try {
+    // 1. Remove specific known keys
+    window.sessionStorage.removeItem(ACTIVE_DOC_STORAGE_KEY);
+    window.sessionStorage.removeItem(SESSION_DOCS_STORAGE_KEY);
+    window.sessionStorage.removeItem("lexiguide_custom_action_items");
+
+    // 2. Scan and purge all document analysis cache entries and lexiguide document keys
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.sessionStorage.length; i++) {
+      const key = window.sessionStorage.key(i);
+      if (key && (key.startsWith(ANALYSIS_CACHE_PREFIX) || key.startsWith("lexiguide_"))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => window.sessionStorage.removeItem(key));
+
+    // 3. Dispatch events to notify all active workspace listeners
+    if (typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new Event("lexiguide-doc-update"));
+      window.dispatchEvent(new Event("lexiguide-workspace-reset"));
+      window.dispatchEvent(new Event("storage"));
+    }
+  } catch (err) {
+    console.warn("Failed to reset document workspace from sessionStorage:", err);
+  }
+}

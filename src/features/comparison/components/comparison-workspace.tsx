@@ -70,31 +70,44 @@ export function ComparisonWorkspace() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [loadingStage, setLoadingStage] = React.useState<string>("Preparing documents…");
   const [comparisonError, setComparisonError] = React.useState<string | null>(null);
+  // Abort controller for in-flight comparison requests
+  const compAbortControllerRef = React.useRef<AbortController | null>(null);
 
-  // Listen for storage updates in other tabs/windows or local updates
+  // Listen for storage updates in other tabs/windows or local updates, plus bfcache restoration
   React.useEffect(() => {
     const handleStorage = () => {
       setStorageVersion((v) => v + 1);
     };
     window.addEventListener("storage", handleStorage);
     window.addEventListener("lexiguide-doc-update", handleStorage);
+    window.addEventListener("lexiguide-workspace-reset", handleStorage);
+    window.addEventListener("pageshow", handleStorage);
     return () => {
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener("lexiguide-doc-update", handleStorage);
+      window.removeEventListener("lexiguide-workspace-reset", handleStorage);
+      window.removeEventListener("pageshow", handleStorage);
     };
   }, []);
 
-  // Stale state protection: Invalidate comparison if active Document A changes
+  // Stale state protection: Invalidate comparison if active Document A changes or is cleared
   const prevActiveDocIdRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    if (activeDoc) {
-      if (prevActiveDocIdRef.current && prevActiveDocIdRef.current !== activeDoc.id) {
-        setTempDocB(null);
-        setComparisonResult(null);
-        setComparisonError(null);
-        setComparisonId(undefined);
+    const currentId = activeDoc?.id || null;
+    if (prevActiveDocIdRef.current !== currentId) {
+      if (compAbortControllerRef.current) {
+        compAbortControllerRef.current.abort();
+        compAbortControllerRef.current = null;
       }
-      prevActiveDocIdRef.current = activeDoc.id;
+      setTempDocB(null);
+      setComparisonResult(null);
+      setComparisonError(null);
+      setComparisonId(undefined);
+      setIsUploadOpen(false);
+      setActiveEvidenceChange(null);
+      setIsEvidenceModalOpen(false);
+      setSelectedCategory("All");
+      prevActiveDocIdRef.current = currentId;
     }
   }, [activeDoc]);
 
@@ -135,6 +148,12 @@ export function ComparisonWorkspace() {
         return;
       }
 
+      if (compAbortControllerRef.current) {
+        compAbortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      compAbortControllerRef.current = controller;
+
       setIsLoading(true);
       setComparisonError(null);
       setLoadingStage("Preparing documents…");
@@ -160,9 +179,16 @@ export function ComparisonWorkspace() {
             documentBId: targetB.id,
             comparisonId: compId,
           }),
+          signal: controller.signal,
         });
 
         const data = await response.json();
+
+        // Late response guard: verify Document A is STILL the active document
+        const currentActive = getActiveDocument();
+        if (!currentActive || currentActive.id !== targetA.id) {
+          return;
+        }
 
         if (response.ok && data.success && data.data) {
           setComparisonResult(data.data as ComparisonResult);
@@ -171,7 +197,14 @@ export function ComparisonWorkspace() {
           setComparisonError(errMsg);
           setComparisonResult(null);
         }
-      } catch {
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+        const currentActive = getActiveDocument();
+        if (!currentActive || currentActive.id !== targetA.id) {
+          return;
+        }
         setComparisonError("Network error occurred while connecting to comparison engine.");
         setComparisonResult(null);
       } finally {

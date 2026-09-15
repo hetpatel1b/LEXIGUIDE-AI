@@ -135,6 +135,25 @@ export const temporaryComparisonStore = {
   },
 
   /**
+   * Completely clears all temporary comparison documents belonging to an owner session.
+   */
+  clearSession(ownerSessionId: string): number {
+    if (!ownerSessionId) return 0;
+    const normalizedOwner = ownerSessionId.toLowerCase();
+    let removedCount = 0;
+    for (const [id, entry] of tempStore.entries()) {
+      if (entry.ownerSessionId === normalizedOwner) {
+        tempStore.delete(id);
+        removedCount++;
+      }
+    }
+    console.log(
+      `[TEMP-COMP-STORE] Cleared comparison documents for session ${normalizedOwner}, removed ${removedCount}`
+    );
+    return removedCount;
+  },
+
+  /**
    * Cleans up all expired entries.
    */
   cleanupExpired(): void {

@@ -38,15 +38,50 @@ export function ActionCenterWorkspace() {
   const [isEvidenceOpen, setIsEvidenceOpen] = React.useState(false);
   const [copiedCitation, setCopiedCitation] = React.useState(false);
 
+  // Storage synchronization version
+  const [storageVersion, setStorageVersion] = React.useState(0);
+
+  // Listen for storage updates in other tabs/windows or local updates, plus bfcache restoration
+  React.useEffect(() => {
+    const handleStorage = () => {
+      setStorageVersion((v) => v + 1);
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("lexiguide-doc-update", handleStorage);
+    window.addEventListener("lexiguide-workspace-reset", handleStorage);
+    window.addEventListener("pageshow", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("lexiguide-doc-update", handleStorage);
+      window.removeEventListener("lexiguide-workspace-reset", handleStorage);
+      window.removeEventListener("pageshow", handleStorage);
+    };
+  }, []);
+
   const activeDoc = React.useMemo(() => {
     if (!hasMounted) return null;
+    void storageVersion;
     return getActiveDocument();
-  }, [hasMounted]);
+  }, [hasMounted, storageVersion]);
+
+  // Reset Action Center state when document changes or is cleared
+  const currentDocId = activeDoc?.id || null;
+  const prevDocIdRef = React.useRef<string | null>(currentDocId);
+  React.useEffect(() => {
+    if (prevDocIdRef.current !== currentDocId) {
+      prevDocIdRef.current = currentDocId;
+      setCheckedIds(new Set());
+      setSelectedCategory("all");
+      setActiveEvidenceItem(null);
+      setIsEvidenceOpen(false);
+    }
+  }, [currentDocId]);
 
   const analysis = React.useMemo(() => {
     if (!activeDoc) return null;
+    void storageVersion;
     return getCachedAnalysis(activeDoc.id);
-  }, [activeDoc]);
+  }, [activeDoc, storageVersion]);
 
   // Derive dynamic action items from real analysis
   const items: ActionItem[] = React.useMemo(() => {

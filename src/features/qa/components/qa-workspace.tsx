@@ -45,11 +45,47 @@ export function QAWorkspace() {
 
   const counterRef = React.useRef(200);
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const qaAbortControllerRef = React.useRef<AbortController | null>(null);
+
+  // Storage synchronization version
+  const [storageVersion, setStorageVersion] = React.useState(0);
+
+  // Listen for storage updates in other tabs/windows or local updates, plus bfcache restoration
+  React.useEffect(() => {
+    const handleStorage = () => {
+      setStorageVersion((v) => v + 1);
+    };
+    const handleWorkspaceReset = () => {
+      if (qaAbortControllerRef.current) {
+        qaAbortControllerRef.current.abort();
+        qaAbortControllerRef.current = null;
+      }
+      setQaHistoryByDoc({});
+      setIsThinking(false);
+      setThinkingMessage("");
+      setActiveCitation(null);
+      setIsEvidenceOpen(false);
+      setIsTopicsDrawerOpen(false);
+      setStorageVersion((v) => v + 1);
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("lexiguide-doc-update", handleStorage);
+    window.addEventListener("lexiguide-workspace-reset", handleWorkspaceReset);
+    window.addEventListener("pageshow", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("lexiguide-doc-update", handleStorage);
+      window.removeEventListener("lexiguide-workspace-reset", handleWorkspaceReset);
+      window.removeEventListener("pageshow", handleStorage);
+    };
+  }, []);
 
   const activeDoc = React.useMemo(() => {
     if (!hasMounted) return null;
+    void storageVersion;
     return getActiveDocument();
-  }, [hasMounted]);
+  }, [hasMounted, storageVersion]);
 
   // Synchronize active document if targetDocId is provided in URL
   React.useEffect(() => {
@@ -57,6 +93,17 @@ export function QAWorkspace() {
       switchActiveDocument(targetDocId);
     }
   }, [targetDocId, activeDoc]);
+
+  // Abort pending Q&A requests when document changes or unmounts
+  const currentDocId = activeDoc?.id || null;
+  React.useEffect(() => {
+    return () => {
+      if (qaAbortControllerRef.current) {
+        qaAbortControllerRef.current.abort();
+        qaAbortControllerRef.current = null;
+      }
+    };
+  }, [currentDocId]);
 
   // Document-isolated Q&A history
   const qaHistory = React.useMemo(() => {
@@ -117,6 +164,12 @@ export function QAWorkspace() {
       setThinkingMessage("Preparing grounded answer…");
     }, 2000);
 
+    if (qaAbortControllerRef.current) {
+      qaAbortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    qaAbortControllerRef.current = controller;
+
     try {
       const response = await fetch("/api/qa", {
         method: "POST",
@@ -128,9 +181,16 @@ export function QAWorkspace() {
           question: trimmedText,
           document: activeDoc,
         }),
+        signal: controller.signal,
       });
 
       const data = await response.json();
+
+      // Guard: Check if workspace was exited or document changed during fetch
+      const currentActive = getActiveDocument();
+      if (!currentActive || currentActive.id !== activeDoc.id) {
+        return;
+      }
 
       counterRef.current += 1;
       let assistantMsg: QuestionMessage;
@@ -184,6 +244,13 @@ export function QAWorkspace() {
         [activeDoc.id]: [...(prev[activeDoc.id] || []), assistantMsg],
       }));
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+      const currentActive = getActiveDocument();
+      if (!currentActive || currentActive.id !== activeDoc.id) {
+        return;
+      }
       counterRef.current += 1;
       const errorMsg: QuestionMessage = {
         id: `asst-qa-${counterRef.current}`,
