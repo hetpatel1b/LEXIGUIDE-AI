@@ -11,9 +11,9 @@ import {
   rateLimiter,
   quotaStore,
   getQuotaErrorMessage,
-  concurrencyGuard,
   validateOrigin,
 } from "@/lib/security";
+import { serverResultCache } from "@/lib/cache/server-result-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -105,25 +105,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return attachSessionCookie(res, session.sessionId);
   }
 
-  // 5. In-Flight Concurrency Guard
-  const lockKey = `${documentAId}:${documentBId}`;
-  const lockAcquired = concurrencyGuard.acquire(session.sessionId, "comparison", lockKey);
-  if (!lockAcquired) {
-    console.warn(`[COMP-DIAG]${reqTag} In-flight duplicate comparison rejected for ${lockKey}`);
-    const res = NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "REQUEST_IN_PROGRESS",
-          message: "A comparison operation is already in progress for these documents. Please wait for it to complete.",
-        },
-        requestId,
-      },
-      { status: 429, headers: { "x-comparison-request-id": requestId } }
-    );
-    return attachSessionCookie(res, session.sessionId);
-  }
-
   try {
     // 6. Sliding-Window Rate Limiting
     const rateLimit = rateLimiter.checkRateLimit(session.sessionId, "comparison");
@@ -211,13 +192,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 9. Execute Comparison Service
-    const comparisonResult = await compareDocuments(docA, docB, {
-      requestId,
-      skipAi: skipAi === true,
+    const cacheKey = `comparison:${documentAId}:${documentBId}:${skipAi}`;
+    const comparisonResult = await serverResultCache.getOrCompute(cacheKey, session.sessionId, async () => {
+      const res = await compareDocuments(docA, docB, {
+        requestId,
+        skipAi: skipAi === true,
+      });
+      // 10. Consume Daily Comparison Quota on Success
+      quotaStore.consumeQuota(session.sessionId, "comparison");
+      return res;
     });
-
-    // 10. Consume Daily Comparison Quota on Success
-    quotaStore.consumeQuota(session.sessionId, "comparison");
 
     const totalDuration = Date.now() - reqStart;
     console.log(
@@ -302,9 +286,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     );
     return attachSessionCookie(res, session.sessionId);
-  } finally {
-    // Release in-flight lock
-    concurrencyGuard.release(session.sessionId, "comparison", lockKey);
   }
 }
 

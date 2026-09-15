@@ -1,0 +1,133 @@
+import test from "node:test";
+import assert from "node:assert";
+import { ServerResultCache } from "../src/lib/cache/server-result-cache";
+
+// Minimal mock AiEngineError if needed
+class MockAiError extends Error {
+  code: string;
+  constructor(message: string, code: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+test("Efficiency - Server-Side Deduplication & Caching", async (t) => {
+  await t.test("Simultaneous identical requests should trigger exactly one computation (In-flight Dedup)", async () => {
+    const cache = new ServerResultCache();
+    const sessionId = "session_A";
+    const key = "analysis:doc_123";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      // Simulate 50ms async work
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return { data: "success" };
+    };
+
+    // Fire 5 concurrent requests
+    const promises = Array.from({ length: 5 }).map(() =>
+      cache.getOrCompute(key, sessionId, computeFn)
+    );
+
+    const results = await Promise.all(promises);
+
+    // Assert only one computation happened
+    assert.strictEqual(computeCount, 1, "Should only compute once for concurrent identical requests");
+    
+    // Assert all returned the same exact data
+    for (const res of results) {
+      assert.deepStrictEqual(res, { data: "success" });
+    }
+  });
+
+  await t.test("Sequential identical requests should use cached value (Lifecycle Caching)", async () => {
+    const cache = new ServerResultCache();
+    const sessionId = "session_A";
+    const key = "analysis:doc_123";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      return { data: "cached_data" };
+    };
+
+    const firstResult = await cache.getOrCompute(key, sessionId, computeFn);
+    assert.strictEqual(computeCount, 1);
+    assert.deepStrictEqual(firstResult, { data: "cached_data" });
+
+    // Next request sequentially
+    const secondResult = await cache.getOrCompute(key, sessionId, computeFn);
+    
+    // Should NOT have incremented
+    assert.strictEqual(computeCount, 1, "Should not recompute sequential request");
+    assert.deepStrictEqual(secondResult, { data: "cached_data" });
+  });
+
+  await t.test("Different sessions should not share the cache (Security Isolation)", async () => {
+    const cache = new ServerResultCache();
+    const key = "analysis:doc_123";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      return { data: `session_data_${computeCount}` };
+    };
+
+    const resA = await cache.getOrCompute(key, "session_A", computeFn);
+    assert.strictEqual(computeCount, 1);
+    
+    // Request from a DIFFERENT session for the same document
+    const resB = await cache.getOrCompute(key, "session_B", computeFn);
+    
+    assert.strictEqual(computeCount, 2, "Should recompute for a different session");
+    assert.notDeepStrictEqual(resA, resB);
+  });
+
+  await t.test("Failed computations should not be cached permanently", async () => {
+    const cache = new ServerResultCache();
+    const sessionId = "session_A";
+    const key = "qa:doc_123:failed";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      throw new MockAiError("AI failed", "AI_ERROR");
+    };
+
+    // First attempt fails
+    await assert.rejects(
+      cache.getOrCompute(key, sessionId, computeFn),
+      /AI failed/
+    );
+
+    // Second attempt should recompute, not just instantly fail from cache
+    await assert.rejects(
+      cache.getOrCompute(key, sessionId, computeFn),
+      /AI failed/
+    );
+
+    assert.strictEqual(computeCount, 2, "Should have attempted computation twice because first failed");
+  });
+
+  await t.test("Cache invalidation and session clearing", async () => {
+    const cache = new ServerResultCache();
+    const sessionId = "session_A";
+    const key = "analysis:doc_123";
+
+    let computeCount = 0;
+    const computeFn = async () => {
+      computeCount++;
+      return { data: "data" };
+    };
+
+    await cache.getOrCompute(key, sessionId, computeFn);
+    assert.strictEqual(computeCount, 1);
+
+    // Clear session
+    cache.clearSession(sessionId);
+
+    await cache.getOrCompute(key, sessionId, computeFn);
+    assert.strictEqual(computeCount, 2, "Should recompute after session clear");
+  });
+});

@@ -7,10 +7,10 @@ import type { NormalizedDocument } from "@/lib/document-engine/types";
 import {
   quotaStore,
   getQuotaErrorMessage,
-  concurrencyGuard,
   withApiSecurity,
   ApiContext,
 } from "@/lib/security";
+import { serverResultCache } from "@/lib/cache/server-result-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -115,23 +115,6 @@ async function qaHandler(request: NextRequest, context: ApiContext): Promise<Nex
     );
   }
 
-  // 4. In-Flight Concurrency Guard
-  const lockAcquired = concurrencyGuard.acquire(session.sessionId, "qa", documentId);
-  if (!lockAcquired) {
-    console.warn(`[QA-DIAG]${reqTag} In-flight duplicate Q&A rejected for docId=${documentId}`);
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "REQUEST_IN_PROGRESS",
-          message: "A question is already being processed for this document. Please wait for it to complete.",
-        },
-        requestId,
-      },
-      { status: 429, headers: { "x-qa-request-id": requestId } }
-    );
-  }
-
   try {
     // 5. Daily Quota Check (Enforced BEFORE expensive processing)
     const quota = quotaStore.checkQuota(session.sessionId, "qa", documentId);
@@ -159,10 +142,16 @@ async function qaHandler(request: NextRequest, context: ApiContext): Promise<Nex
 
     // 6. Execute Grounded Legal Q&A Service
     const reqStart = Date.now();
-    const qaResult = await defaultQaService.answerQuestion(document, question, requestId);
+    
+    const normalizedQuestion = question.trim().toLowerCase();
+    const cacheKey = `qa:${documentId}:${normalizedQuestion}`;
 
-    // 7. Consume Daily Question Quota for this document
-    quotaStore.consumeQuota(session.sessionId, "qa", documentId);
+    const qaResult = await serverResultCache.getOrCompute(cacheKey, session.sessionId, async () => {
+      const res = await defaultQaService.answerQuestion(document, question, requestId);
+      // 7. Consume Daily Question Quota for this document
+      quotaStore.consumeQuota(session.sessionId, "qa", documentId);
+      return res;
+    });
 
     const totalDuration = Date.now() - reqStart;
     console.log(
@@ -182,9 +171,8 @@ async function qaHandler(request: NextRequest, context: ApiContext): Promise<Nex
         headers: { "x-qa-request-id": requestId },
       }
     );
-  } finally {
-    // Release in-flight lock
-    concurrencyGuard.release(session.sessionId, "qa", documentId);
+  } catch (error) {
+    throw error;
   }
 }
 

@@ -7,10 +7,10 @@ import type { NormalizedDocument } from "@/lib/document-engine/types";
 import {
   quotaStore,
   getQuotaErrorMessage,
-  concurrencyGuard,
   withApiSecurity,
   ApiContext,
 } from "@/lib/security";
+import { serverResultCache } from "@/lib/cache/server-result-cache";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -104,23 +104,6 @@ async function analysisHandler(request: NextRequest, context: ApiContext): Promi
     );
   }
 
-  // 3. In-Flight Concurrency Guard (Prevent duplicate clicks / parallel analysis for same doc)
-  const lockAcquired = concurrencyGuard.acquire(session.sessionId, "analysis", docId);
-  if (!lockAcquired) {
-    console.warn(`[AI-DIAG]${reqTag} In-flight duplicate request rejected for docId=${docId}`);
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "REQUEST_IN_PROGRESS",
-          message: "An analysis request is already in progress for this document. Please wait for it to complete.",
-        },
-        requestId,
-      },
-      { status: 429, headers: { "x-analysis-request-id": requestId } }
-    );
-  }
-
   try {
     // 4. Daily Quota Check (Enforced BEFORE expensive NVIDIA call)
     const quota = quotaStore.checkQuota(session.sessionId, "analysis");
@@ -150,12 +133,16 @@ async function analysisHandler(request: NextRequest, context: ApiContext): Promi
       `[AI-DIAG]${reqTag} Analyzing document id=${document.id}, title=${document.displayName}, chunks=${document.chunks.length}`
     );
 
-    // 5. Execute Analysis Service with NVIDIA Nemotron
     const reqStart = Date.now();
-    const result = await analyzeDocument(document, undefined, requestId);
-
-    // 6. Consume Daily Analysis Quota on Success
-    quotaStore.consumeQuota(session.sessionId, "analysis");
+    
+    // 5. Execute Analysis Service with Deduplication Cache
+    const cacheKey = `analysis:${docId}`;
+    const result = await serverResultCache.getOrCompute(cacheKey, session.sessionId, async () => {
+      const res = await analyzeDocument(document, undefined, requestId);
+      // 6. Consume Daily Analysis Quota on Success (only once per actual computation)
+      quotaStore.consumeQuota(session.sessionId, "analysis");
+      return res;
+    });
 
     const totalDuration = Date.now() - reqStart;
     console.log(
@@ -175,9 +162,8 @@ async function analysisHandler(request: NextRequest, context: ApiContext): Promi
         headers: { "x-analysis-request-id": requestId },
       }
     );
-  } finally {
-    // Release in-flight concurrency lock
-    concurrencyGuard.release(session.sessionId, "analysis", docId);
+  } catch (error) {
+    throw error;
   }
 }
 
