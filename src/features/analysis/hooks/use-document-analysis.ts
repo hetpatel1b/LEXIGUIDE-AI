@@ -147,7 +147,7 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
             "Content-Type": "application/json",
             "X-Analysis-Request-Id": requestId,
           },
-          body: JSON.stringify({ document: targetDoc, requestId }),
+          body: JSON.stringify({ documentId: targetDoc.id, requestId }),
           signal: controller.signal,
         });
 

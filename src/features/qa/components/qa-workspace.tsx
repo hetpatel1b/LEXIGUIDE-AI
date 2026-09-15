@@ -179,7 +179,6 @@ export function QAWorkspace() {
         body: JSON.stringify({
           documentId: activeDoc.id,
           question: trimmedText,
-          document: activeDoc,
         }),
         signal: controller.signal,
       });
