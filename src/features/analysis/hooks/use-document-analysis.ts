@@ -49,7 +49,9 @@ export function useDocumentAnalysis(document: NormalizedDocument | null) {
 
   // Keep a stable ref to document to prevent runAnalysis callback from constantly re-creating
   const documentRef = React.useRef<NormalizedDocument | null>(document);
-  documentRef.current = document;
+  React.useEffect(() => {
+    documentRef.current = document;
+  }, [document]);
 
   // Adjust state during render when document prop changes (React 19 pattern)
   if (docId !== prevDocId) {

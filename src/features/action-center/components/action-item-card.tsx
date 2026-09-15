@@ -182,7 +182,7 @@ export function ActionItemCard({
         )}
 
         <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          {/* Discuss with Copilot */}
+          {/* Ask Document */}
           <Button
             href={`/qa?q=${encodeURIComponent(item.suggestedQuestion || item.title)}`}
             variant="outline"
@@ -190,7 +190,7 @@ export function ActionItemCard({
             leftIcon={<Sparkles className="h-3.5 w-3.5 text-[var(--primary)]" />}
             className="text-xs shrink-0 w-full sm:w-auto"
           >
-            Discuss with Copilot
+            Ask Document
           </Button>
         </div>
       </div>
