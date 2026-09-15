@@ -5,6 +5,9 @@ import nextConfig from "eslint-config-next";
  */
 const eslintConfig = [
   ...nextConfig,
+  {
+    ignores: ["scratch/**"]
+  }
 ];
 
 export default eslintConfig;
