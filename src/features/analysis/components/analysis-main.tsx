@@ -151,7 +151,7 @@ export function AnalysisMain({
             className="hidden xs:inline-flex shrink-0"
           >
             {analysisResult
-              ? "NVIDIA Nemotron Analysis"
+              ? "Groq AI Analysis"
               : "Real Ingested Document"}
           </Badge>
         </div>
@@ -200,7 +200,7 @@ export function AnalysisMain({
                   Analyzing your document…
                 </h3>
                 <p className="text-xs sm:text-sm text-[var(--foreground-muted)]">
-                  Extracting and verifying legal provisions with NVIDIA Nemotron
+                  Extracting and verifying legal provisions with Groq AI
                 </p>
               </div>
 
@@ -209,7 +209,7 @@ export function AnalysisMain({
                 {[
                   { label: "Preparing document and indexing sections", minSec: 0 },
                   { label: "Selecting key clauses across 12 legal categories", minSec: 2 },
-                  { label: "Analyzing contract terms with NVIDIA Nemotron", minSec: 5 },
+                  { label: "Analyzing contract terms with Groq AI", minSec: 5 },
                   { label: "Verifying citations against document text", minSec: 22 },
                   { label: "Finalizing structured legal review", minSec: 28 },
                 ].map((step, sIdx, arr) => {
@@ -283,7 +283,7 @@ export function AnalysisMain({
                 Ready for AI Analysis
               </h3>
               <p className="text-xs sm:text-sm text-[var(--foreground-muted)] leading-relaxed">
-                Real document &ldquo;{realDocument.displayName}&rdquo; is ready for analysis. Run NVIDIA Nemotron to generate grounded clause breakdowns, obligations, and review priorities.
+                Real document &ldquo;{realDocument.displayName}&rdquo; is ready for analysis. Run Groq AI to generate grounded clause breakdowns, obligations, and review priorities.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
                 {onTriggerAnalysis && (
@@ -294,7 +294,7 @@ export function AnalysisMain({
                     onClick={onTriggerAnalysis}
                     leftIcon={<Sparkles className="h-3.5 w-3.5" />}
                   >
-                    Analyze with NVIDIA Nemotron
+                    Analyze with Groq AI
                   </Button>
                 )}
                 <Button

@@ -51,7 +51,13 @@ export function toSafeUserMessage(error: unknown): string {
       case "AI_AUTH_ERROR":
         return "AI analysis service is temporarily unavailable. Please check system configuration or try again later.";
       case "AI_RATE_LIMITED":
-        return "The AI analysis service is experiencing high traffic. Please wait a moment and try again.";
+        if (error.details?.isDailyQuota) {
+          return "The AI provider's current usage limit has been reached. Please try again after the quota resets.";
+        }
+        if (typeof error.details?.retryAfterSeconds === "number" && error.details.retryAfterSeconds > 0) {
+          return `Groq is temporarily rate-limiting analysis requests. Please wait ${error.details.retryAfterSeconds} seconds and try again.`;
+        }
+        return "Groq is temporarily rate-limiting analysis requests. Please wait briefly and try again.";
       case "AI_TIMEOUT":
         return "The analysis request timed out while processing your document. Please try again.";
       case "AI_CONTEXT_TOO_LARGE":

@@ -43,7 +43,7 @@ You must respond with ONLY a valid JSON object matching this schema:
 }`;
 
 /**
- * Builds a focused, bounded comparison context for Nemotron.
+ * Builds a focused, bounded comparison context for Groq AI.
  * Target: ~3-10K characters, containing ONLY the changed clause pairs.
  */
 export function buildComparisonAiContext(

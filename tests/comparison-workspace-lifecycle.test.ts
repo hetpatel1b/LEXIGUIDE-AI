@@ -473,7 +473,7 @@ test("TEST 8: Completed comparison -> Exit Workspace -> comparison fully cleared
   assert.equal(getActiveDocument(), null, "Active Document A must be purged on Exit");
 });
 
-test("TEST 9 & 10: Completed comparison -> switch tabs -> NO comparison API rerun & NO Nemotron call", () => {
+test("TEST 9 & 10: Completed comparison -> switch tabs -> NO comparison API rerun & NO Groq AI call", () => {
   let apiCallCount = 0;
 
   // Track API requests
@@ -504,7 +504,7 @@ test("TEST 9 & 10: Completed comparison -> switch tabs -> NO comparison API reru
   assert.equal(state1.status, "completed");
 
   // Zero network API calls should be triggered by tab switching
-  assert.equal(apiCallCount, 0, "No comparison API or Nemotron requests must occur on tab switch");
+  assert.equal(apiCallCount, 0, "No comparison API or Groq AI requests must occur on tab switch");
 });
 
 test("TEST 11: Completed comparison -> switch tabs -> server-side comparison record still exists", () => {
@@ -580,7 +580,7 @@ test("TEST 14: Comparison in COMPLETED state -> tab switch -> counts and evidenc
 });
 
 test("TEST 15: Comparison error -> tab switch -> return -> error/retry state preserved", () => {
-  const errorMsg = "Comparison engine timeout connecting to Nemotron.";
+  const errorMsg = "Comparison engine timeout connecting to Groq AI.";
   setComparisonWorkspaceState({
     comparisonId: "cmp_test_err",
     documentAId: docA.id,

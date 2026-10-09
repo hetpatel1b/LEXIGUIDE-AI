@@ -205,7 +205,7 @@ export function RealDocumentView({
               Document Intelligence Notice
             </p>
             <p className="text-[var(--foreground-muted)]">
-              Clause extraction, obligation synthesis, risk severity rating, and interactive Q&amp;A are powered by NVIDIA Nemotron across all parsed sections and chunks.
+              Clause extraction, obligation synthesis, risk severity rating, and interactive Q&amp;A are powered by Groq AI across all parsed sections and chunks.
             </p>
           </div>
         </div>

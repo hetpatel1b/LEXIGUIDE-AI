@@ -139,6 +139,8 @@ export interface ComparisonDiagnostics {
   sectionMappingMs: number;
   clauseMappingMs: number;
   diffMs: number;
+  ttftMs: number;
+  groqTtftMs?: number;
   nvidiaTtftMs: number;
   generationMs: number;
   jsonParseMs: number;

@@ -153,7 +153,7 @@ test("Q&A Cross-Document Isolation: Never retrieves from inactive documents", as
         finishReason: "stop",
         ttftMs: 50,
         totalDurationMs: 120,
-        model: "nvidia/nemotron-3-super-120b-a12b",
+        model: "openai/gpt-oss-120b",
         estimatedOutputTokens: 50,
       };
     },
@@ -341,7 +341,7 @@ test("Q&A Source Verification: Rejects fabricated citations", async () => {
         finishReason: "stop",
         ttftMs: 40,
         totalDurationMs: 100,
-        model: "nvidia/nemotron-3-super-120b-a12b",
+        model: "openai/gpt-oss-120b",
         estimatedOutputTokens: 40,
       };
     },

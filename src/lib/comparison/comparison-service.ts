@@ -11,7 +11,7 @@ import { mapClauses } from "./clause-mapper";
 import { detectAllInconsistencies } from "./inconsistency-detector";
 import { buildComparisonAiContext } from "./comparison-context";
 import { RawAiComparisonResponseSchema } from "@/lib/ai/schemas/comparison-schema";
-import { NemotronClient } from "@/lib/ai/client/nemotron-client";
+import { GroqClient } from "@/lib/ai/client/groq-client";
 import type { AiProvider } from "@/lib/ai/client/types";
 import { AiEngineError } from "@/lib/ai/errors";
 
@@ -26,6 +26,8 @@ export interface CompareDocumentsOptions {
 interface AiEnrichmentResult {
   aiUsed: boolean;
   aiError?: string;
+  ttftMs: number;
+  groqTtftMs?: number;
   nvidiaTtftMs: number;
   generationMs: number;
   jsonParseMs: number;
@@ -53,7 +55,7 @@ function cleanJsonOutput(raw: string): string {
 /**
  * Authoritative comparison service.
  * Executes section mapping, deterministic diffing, inconsistency detection,
- * bounded Nemotron AI explanation, and strict source validation.
+ * bounded Groq AI explanation, and strict source validation.
  */
 export async function compareDocuments(
   docA: NormalizedDocument,
@@ -132,6 +134,8 @@ export async function compareDocuments(
     sectionMappingMs,
     clauseMappingMs,
     diffMs: clauseMappingMs,
+    ttftMs: aiStats.ttftMs,
+    groqTtftMs: aiStats.groqTtftMs,
     nvidiaTtftMs: aiStats.nvidiaTtftMs,
     generationMs: aiStats.generationMs,
     jsonParseMs: aiStats.jsonParseMs,
@@ -188,6 +192,8 @@ async function enrichWithAiExplanation(
 ): Promise<AiEnrichmentResult> {
   const result: AiEnrichmentResult = {
     aiUsed: false,
+    ttftMs: 0,
+    groqTtftMs: 0,
     nvidiaTtftMs: 0,
     generationMs: 0,
     jsonParseMs: 0,
@@ -212,7 +218,7 @@ async function enrichWithAiExplanation(
     result.contextChars = promptContext.contextChars;
     result.estimatedInputTokens = promptContext.estimatedInputTokens;
 
-    const provider = options.aiProvider || new NemotronClient();
+    const provider = options.aiProvider || new GroqClient();
     result.aiCallCount = 1;
     result.aiUsed = true;
 
@@ -227,6 +233,8 @@ async function enrichWithAiExplanation(
         reasoningEffort: "none",
       });
       rawAiResponse = detailed.content;
+      result.ttftMs = detailed.ttftMs;
+      result.groqTtftMs = detailed.ttftMs;
       result.nvidiaTtftMs = detailed.ttftMs;
       result.generationMs = detailed.totalDurationMs;
       result.outputTokens =

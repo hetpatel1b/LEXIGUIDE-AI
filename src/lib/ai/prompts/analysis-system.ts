@@ -1,5 +1,5 @@
 /**
- * Versioned system prompt for NVIDIA Nemotron legal document analysis.
+ * Versioned system prompt for Groq AI legal document analysis.
  * Version: 1.1
  * Enforces strict grounding, concise item bounds, explicit JSON formatting, and prompt injection defense.
  */
@@ -33,13 +33,14 @@ CRITICAL OPERATIONAL RULES:
 4. CONCISE CITATIONS & TOKEN BUDGET EFFICIENCY:
 - Keep all explanations crisp and factual. Avoid verbose narrative filler.
 - financialTerms: summarize all explicit compensation elements mentioned in the text (base salary, incentive %, retention award, etc.) in 1-2 sentences.
-- keyClauses: return 5 to 7 of the MOST CRITICAL clauses. Each summary must be 1 concise sentence (max 25 words). Include key terms like retention award (Schedule F) if present.
-- potentialConcerns: return 3 to 4 key legal review points. Explanation: 1 concise sentence. WhyItMatters: 1 concise sentence. SuggestedReviewQuestion: 1 concise question.
-- obligations: return 4 to 6 core obligations. Description: 1 concise sentence.
-- importantDates: return 4 to 6 explicit dates or durations.
-- For "source", supply ONLY "chunkId" and "quote" (under 60 characters). Do NOT output sectionId, sectionTitle, or pageNumber (they are resolved automatically by the platform).
+- keyClauses: return 4 to 5 of the MOST CRITICAL clauses. Each summary must be 1 concise sentence (max 20 words). Include key terms like retention award (Schedule F) if present.
+- potentialConcerns: return 3 key legal review points. Explanation: 1 concise sentence. WhyItMatters: 1 concise sentence. SuggestedReviewQuestion: 1 concise question.
+- obligations: return 3 to 4 core obligations. Description: 1 concise sentence.
+- importantDates: return 3 to 4 explicit dates or durations.
+- For "source", supply ONLY "chunkId" and "quote" (under 45 characters). Do NOT output sectionId, sectionTitle, or pageNumber (they are resolved automatically by the platform).
 - executiveSummary.overview: exactly 2 concise sentences.
 - keyThemes, majorObligationsSummary, reviewPriorities: 2 to 3 short bullet phrases each.
+- analysisNotes: 1 to 2 concise items.
 
 5. STRICT JSON OUTPUT SPECIFICATION:
 - Return ONLY one valid JSON object.
@@ -135,12 +136,13 @@ Your task is to analyze the provided legal document context and return a compact
 
 RECOVERY RULES:
 1. STRICT DOCUMENT GROUNDING: Analyze ONLY the supplied context. If absent, return "Not found in the uploaded document." or null.
-2. TIGHT ITEM LIMITS:
-   - keyClauses: 4 most critical clauses (1 sentence summary, quote under 60 chars).
-   - potentialConcerns: 3 key concerns.
-   - obligations: 4 core obligations.
-   - importantDates: 4 key dates/durations.
+2. TIGHT RECOVERY ITEM LIMITS:
+   - keyClauses: exactly 3 most critical clauses (1 concise sentence summary, quote under 40 chars).
+   - potentialConcerns: exactly 2 key concerns.
+   - obligations: exactly 3 core obligations.
+   - importantDates: exactly 2 key dates/durations.
    - overview: 1-2 concise sentences.
+   - analysisNotes: 1 brief item.
 3. STRICT JSON:
    - Return ONLY one valid JSON object adhering strictly to the schema below. No markdown code blocks.
 

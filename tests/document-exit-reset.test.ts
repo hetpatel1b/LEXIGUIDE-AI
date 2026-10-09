@@ -147,7 +147,7 @@ function makeAnalysis(docId: string): AnalysisResult {
     documentId: docId,
     documentName: "test.pdf",
     analyzedAt: new Date().toISOString(),
-    modelUsed: "nvidia/nemotron-4-340b-instruct",
+    modelUsed: "openai/gpt-oss-120b",
     metadata: {
       documentType: "Agreement",
       parties: [],

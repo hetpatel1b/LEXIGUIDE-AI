@@ -58,25 +58,31 @@ export function isSubstantiveChange(textA: string, textB: string): boolean {
  * Extracts key numbers, currencies, dates, and time periods from text.
  */
 export function extractNumericTokens(text: string): string[] {
+  if (!text) return [];
+
+  // Normalize parenthesized numbers e.g. "thirty (30) days" -> "thirty 30 days", "five (5) years" -> "five 5 years"
+  // so that numeric regexes can see the digit directly preceding the time unit.
+  const normalized = text.replace(/\(\s*(\d+)\s*\)/g, " $1 ");
+
   const matches: string[] = [];
   // Currencies and amounts (e.g. ₹2,400,000, INR 2,400,000, $50,000, Rs. 1000)
-  const money = text.match(/(?:[₹$€£]|rs\.?|inr)\s*[\d,]+(?:\.\d+)?/gi) || [];
+  const money = normalized.match(/(?:[₹$€£]|rs\.?|inr)\s*[\d,]+(?:\.\d+)?/gi) || [];
   matches.push(...money);
 
   // Formatted numbers with commas (e.g. 2,400,000 or 24,00,000)
-  const commaNumbers = text.match(/\b\d{1,3}(?:,\d{2,3})+(?:\.\d+)?\b/g) || [];
+  const commaNumbers = normalized.match(/\b\d{1,3}(?:,\d{2,3})+(?:\.\d+)?\b/g) || [];
   matches.push(...commaNumbers);
 
-  // Time periods (e.g. 30 days, 90 days, 12 months, 2 years)
-  const periods = text.match(/\b\d+\s*(?:calendar\s*)?(?:business\s*)?(?:days?|weeks?|months?|years?|hours?)\b/gi) || [];
+  // Time periods with digits (e.g. 30 days, 90 days, 12 months, 2 years)
+  const periods = normalized.match(/\b\d+\s*(?:calendar\s*)?(?:business\s*)?(?:days?|weeks?|months?|years?|hours?)\b/gi) || [];
   matches.push(...periods);
 
   // Percentages (e.g. 10%, 25.5%)
-  const percentages = text.match(/\b\d+(?:\.\d+)?\s*%/g) || [];
+  const percentages = normalized.match(/\b\d+(?:\.\d+)?\s*%/g) || [];
   matches.push(...percentages);
 
   // Years and specific dates (e.g. 2026, 2027)
-  const years = text.match(/\b20\d\d\b/g) || [];
+  const years = normalized.match(/\b20\d\d\b/g) || [];
   matches.push(...years);
 
   return Array.from(new Set(matches.map((m) => m.toLowerCase().trim())));

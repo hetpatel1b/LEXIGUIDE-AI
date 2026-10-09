@@ -22,7 +22,7 @@ export const runtime = "nodejs";
  * POST /api/comparison
  * Production comparison endpoint for real user documents.
  * Compares two NormalizedDocuments, detects section/clause diffs,
- * identifies potential inconsistencies, and enriches changes with Nemotron AI.
+ * identifies potential inconsistencies, and enriches changes with Groq AI.
  *
  * Hardened with:
  * - Anonymous session resolution and HttpOnly cookie attachment

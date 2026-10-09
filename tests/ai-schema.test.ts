@@ -5,7 +5,7 @@ import {
   MOCK_VALID_EMPLOYMENT_RESPONSE,
   MOCK_VALID_NDA_RESPONSE,
   MOCK_INVALID_SCHEMA_RESPONSE,
-} from "./fixtures/ai/mock-nemotron-responses";
+} from "./fixtures/ai/mock-groq-responses";
 
 test("AI Schema - validates compliant employment analysis response", () => {
   const parsed = JSON.parse(MOCK_VALID_EMPLOYMENT_RESPONSE);

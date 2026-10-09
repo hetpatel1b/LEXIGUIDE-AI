@@ -1,6 +1,7 @@
 export * from "./config";
 export * from "./errors";
 export * from "./types";
+export * from "./client/groq-client";
 export * from "./client/nemotron-client";
 export * from "./client/types";
 export * from "./context/context-builder";

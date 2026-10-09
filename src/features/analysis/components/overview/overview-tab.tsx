@@ -272,7 +272,7 @@ export function OverviewTab({ analysisResult, onNavigateTab, onViewEvidence }: O
 
               <div className="flex items-center gap-2">
                 <Badge variant={analysisResult ? "brand" : "neutral"} size="sm" dot>
-                  {analysisResult ? "Real AI Analysis • NVIDIA Nemotron" : "No Analysis Loaded"}
+                  {analysisResult ? "Real AI Analysis • Groq" : "No Analysis Loaded"}
                 </Badge>
               </div>
             </div>

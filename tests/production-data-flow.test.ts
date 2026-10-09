@@ -279,7 +279,7 @@ test("Session Storage: Manages multi-document lifecycle, switching, and deletion
       documentId: "doc-2",
       documentName: "Amendment_v2.pdf",
       analyzedAt: new Date().toISOString(),
-      modelUsed: "nvidia/nemotron-3-super-120b-a12b",
+      modelUsed: "openai/gpt-oss-120b",
       metadata: {
         documentType: "Vendor Agreement",
         parties: [{ role: "Vendor", name: "Vendor Inc" }],

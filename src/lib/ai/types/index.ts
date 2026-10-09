@@ -73,7 +73,7 @@ export interface ImportantDate {
 }
 
 /**
- * Complete canonical AnalysisResult produced by Nemotron AI analysis.
+ * Complete canonical AnalysisResult produced by Groq AI analysis.
  */
 export interface AnalysisResult {
   analysisSchemaVersion: "1.0";

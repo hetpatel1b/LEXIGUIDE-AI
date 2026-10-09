@@ -1,5 +1,5 @@
 import type { NormalizedDocument } from "@/lib/document-engine/types";
-import { NemotronClient } from "../client/nemotron-client";
+import { GroqClient } from "../client/groq-client";
 import type { AiProvider, ChatCompletionResult } from "../client/types";
 import { buildAnalysisContext } from "../context/context-builder";
 import { buildDocumentAnalysisIndex } from "../context/document-index";
@@ -22,7 +22,16 @@ function safeCleanJsonString(rawText: string): string {
   if (match && match[1]) {
     cleaned = match[1].trim();
   } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace > 0 && lastBrace > firstBrace) {
+    const leading = cleaned.substring(0, firstBrace).trim();
+    if (leading.length < 150 && !leading.includes('"')) {
+      cleaned = cleaned.substring(firstBrace, lastBrace + 1).trim();
+    }
   }
 
   // Safe normalization: close missing double quote on chunkId (e.g. "chunkId": "chk_doc_123, -> "chunkId": "chk_doc_123",)
@@ -35,12 +44,12 @@ function safeCleanJsonString(rawText: string): string {
  * Inspects response completeness and structural integrity before parsing.
  */
 function isTruncatedOrIncomplete(cleanedJson: string, finishReason: string | null): boolean {
-  if (finishReason === "length") {
+  if (finishReason === "length" || finishReason === "interrupted" || finishReason === "content_filter") {
     return true;
   }
 
   const trimmed = cleanedJson.trim();
-  if (!trimmed.endsWith("}")) {
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
     return true;
   }
 
@@ -79,7 +88,7 @@ function isTruncatedOrIncomplete(cleanedJson: string, finishReason: string | nul
 
 /**
  * End-to-end orchestrator for real document AI analysis.
- * Coordinates context building, Nemotron invocation, truncation detection,
+ * Coordinates context building, Groq API invocation, truncation detection,
  * safe single retry, Zod validation, and authoritative source verification.
  */
 export async function analyzeDocument(
@@ -116,7 +125,7 @@ export async function analyzeDocument(
     `[AI-DIAG]${reqTag} document validated and indexed in ${documentValidationMs}ms: sections=${document.sections?.length}, chunks=${document.chunks?.length}`
   );
 
-  const client = provider || new NemotronClient();
+  const client = provider || new GroqClient();
 
   let lastContextSelectionMs = 0;
   let lastPromptConstructionMs = 0;
@@ -126,7 +135,7 @@ export async function analyzeDocument(
 
   // Helper to execute a single generation pass
   const executePass = async (isRetry: boolean): Promise<{ rawResult: ChatCompletionResult; parsed: unknown }> => {
-    const passBudget = isRetry ? 12000 : AI_CONFIG.maxContextChars;
+    const passBudget = isRetry ? 7500 : AI_CONFIG.maxContextChars;
     const tCtx0 = Date.now();
     const context = buildAnalysisContext(document, passBudget, docIndex);
     lastContextSelectionMs = Date.now() - tCtx0;
@@ -149,15 +158,20 @@ export async function analyzeDocument(
       { role: "user" as const, content: userPrompt },
     ];
 
+    // For truncation recovery, we give AMPLE output tokens (3200) instead of reducing it
+    const passMaxTokens = isRetry ? 3200 : AI_CONFIG.maxTokens;
+
     let genResult: ChatCompletionResult;
     if (client.generateChatCompletionDetailed) {
       genResult = await client.generateChatCompletionDetailed(messages, {
-        maxTokens: isRetry ? 1800 : AI_CONFIG.maxTokens,
+        maxTokens: passMaxTokens,
+        reasoningEffort: "low",
         requestId: reqId,
       });
     } else {
       const content = await client.generateChatCompletion(messages, {
-        maxTokens: isRetry ? 1800 : AI_CONFIG.maxTokens,
+        maxTokens: passMaxTokens,
+        reasoningEffort: "low",
         requestId: reqId,
       });
       genResult = {
@@ -165,7 +179,7 @@ export async function analyzeDocument(
         finishReason: null,
         ttftMs: Date.now() - t0,
         totalDurationMs: Date.now() - t0,
-        model: process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel,
+        model: process.env.AI_MODEL || process.env.GROQ_MODEL_ID || AI_CONFIG.defaultModel,
       };
     }
 
@@ -185,12 +199,15 @@ export async function analyzeDocument(
       );
       throw new AiEngineError(
         "AI_INVALID_RESPONSE",
-        "AI provider response was truncated or malformed.",
+        genResult.finishReason === "length"
+          ? "AI provider output was truncated due to length limits."
+          : "AI provider response was truncated or malformed.",
         422,
         {
-          diagnostic: "TRUNCATED_OR_MALFORMED_JSON",
+          diagnostic: genResult.finishReason === "length" ? "OUTPUT_LENGTH_TRUNCATED" : "TRUNCATED_OR_MALFORMED_JSON",
           finish_reason: genResult.finishReason,
           output_chars: genResult.content.length,
+          max_tokens: passMaxTokens,
           ttft: genResult.ttftMs,
           total_time: genResult.totalDurationMs,
         }
@@ -208,7 +225,7 @@ export async function analyzeDocument(
         "AI provider response could not be parsed as valid JSON.",
         422,
         {
-          diagnostic: "TRUNCATED_OR_MALFORMED_JSON",
+          diagnostic: "JSON_PARSE_ERROR",
           finish_reason: genResult.finishReason,
           output_chars: genResult.content.length,
           error: String(parseErr),
@@ -226,15 +243,20 @@ export async function analyzeDocument(
     lastRawResult = pass1.rawResult;
     console.log(`[AI-DIAG]${reqTag} Pass 1 JSON parsed successfully`);
   } catch (pass1Error) {
-    // Step 14: Safe single retry ONLY for invalid/truncated JSON (not auth/rate-limit/timeout)
+    // Safe single retry ONLY for invalid/truncated JSON (not auth/rate-limit/timeout)
     if (
       pass1Error instanceof AiEngineError &&
       pass1Error.code === "AI_INVALID_RESPONSE" &&
-      pass1Error.details?.diagnostic === "TRUNCATED_OR_MALFORMED_JSON"
+      (pass1Error.details?.diagnostic === "TRUNCATED_OR_MALFORMED_JSON" ||
+       pass1Error.details?.diagnostic === "OUTPUT_LENGTH_TRUNCATED" ||
+       pass1Error.details?.diagnostic === "JSON_PARSE_ERROR")
     ) {
+      const diag = String(pass1Error.details?.diagnostic);
       console.warn(
-        `[AI-DIAG]${reqTag} Triggering single recovery retry with reduced context and tighter item limits...`
+        `[AI-DIAG]${reqTag} Pass 1 failed with ${diag}. Triggering single recovery retry with compact schema and dedicated output budget...`
       );
+      // Pacing delay to avoid immediate token-bucket exhaustion on Groq on-demand tier
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       const pass2 = await executePass(true);
       parsedJson = pass2.parsed;
       lastRawResult = pass2.rawResult;
@@ -263,7 +285,7 @@ export async function analyzeDocument(
 
   // Source & Evidence Verification against Phase 2 chunks/sections
   const tSrc0 = Date.now();
-  const modelName = process.env.AI_MODEL || process.env.NVIDIA_MODEL_ID || AI_CONFIG.defaultModel;
+  const modelName = process.env.AI_MODEL || process.env.GROQ_MODEL_ID || AI_CONFIG.defaultModel;
   const verifiedResult = validateAnalysisSources(
     validationResult.data,
     document,
@@ -278,7 +300,7 @@ export async function analyzeDocument(
     : "";
 
   console.log(
-    `[PERF] request_id=${reqId} provider=nvidia model=${modelName} doc_val_ms=${documentValidationMs} ctx_sel_ms=${lastContextSelectionMs} prompt_ms=${lastPromptConstructionMs} ttft_ms=${lastTtftMs} gen_ms=${lastGenMs} provider_total_ms=${lastRawResult?.totalDurationMs ?? 0} json_parse_ms=${lastJsonParseMs} zod_val_ms=${zodValidationMs} src_val_ms=${sourceValidationMs} total_api_ms=${totalApiMs} finish_reason=${lastRawResult?.finishReason ?? "stop"} output_chars=${lastRawResult?.content.length ?? 0} estimated_output_tokens=${lastRawResult?.estimatedOutputTokens ?? Math.ceil((lastRawResult?.content.length ?? 0) / 4)}${usageTokens}`
+    `[PERF] request_id=${reqId} provider=groq model=${modelName} doc_val_ms=${documentValidationMs} ctx_sel_ms=${lastContextSelectionMs} prompt_ms=${lastPromptConstructionMs} ttft_ms=${lastTtftMs} gen_ms=${lastGenMs} provider_total_ms=${lastRawResult?.totalDurationMs ?? 0} json_parse_ms=${lastJsonParseMs} zod_val_ms=${zodValidationMs} src_val_ms=${sourceValidationMs} total_api_ms=${totalApiMs} finish_reason=${lastRawResult?.finishReason ?? "stop"} output_chars=${lastRawResult?.content.length ?? 0} estimated_output_tokens=${lastRawResult?.estimatedOutputTokens ?? Math.ceil((lastRawResult?.content.length ?? 0) / 4)}${usageTokens}`
   );
   console.log(
     `[AI-DIAG]${reqTag} source validation complete: verifiedClauses=${verifiedResult.keyClauses.length}, verifiedConcerns=${verifiedResult.potentialConcerns.length}, totalDuration=${totalApiMs}ms`

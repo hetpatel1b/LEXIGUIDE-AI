@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { processDocument } from "../src/lib/document-engine/pipeline";
 import { compareDocuments } from "../src/lib/comparison/comparison-service";
-import { NemotronClient } from "../src/lib/ai/client/nemotron-client";
+import { GroqClient } from "../src/lib/ai/client/groq-client";
 import type { NormalizedDocument } from "../src/lib/document-engine/types";
 
 // Load .env.local
@@ -11,11 +11,8 @@ if (fs.existsSync(envPath)) {
   const lines = fs.readFileSync(envPath, "utf8").split("\n");
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed.startsWith("NVIDIA_API_KEY=")) {
-      process.env.NVIDIA_API_KEY = trimmed.substring("NVIDIA_API_KEY=".length).trim().replace(/^["']|["']$/g, "");
-    }
-    if (trimmed.startsWith("NVIDIA_MODEL_ID=")) {
-      process.env.NVIDIA_MODEL_ID = trimmed.substring("NVIDIA_MODEL_ID=".length).trim().replace(/^["']|["']$/g, "");
+    if (trimmed.startsWith("GROQ_API_KEY=")) {
+      process.env.GROQ_API_KEY = trimmed.substring("GROQ_API_KEY=".length).trim().replace(/^["']|["']$/g, "");
     }
     if (trimmed.startsWith("AI_MODEL=")) {
       process.env.AI_MODEL = trimmed.substring("AI_MODEL=".length).trim().replace(/^["']|["']$/g, "");
@@ -25,9 +22,9 @@ if (fs.existsSync(envPath)) {
 
 async function runRealNvidiaVerification() {
   console.log("================================================================================");
-  console.log("LEXIGUIDE AI — PHASE 5 REAL NVIDIA COMPARISON VERIFICATION");
-  console.log(`Model: ${process.env.NVIDIA_MODEL_ID || "nvidia/nemotron-3-super-120b-a12b"}`);
-  console.log("Provider: NVIDIA (https://integrate.api.nvidia.com/v1)");
+  console.log("LEXIGUIDE AI — REAL GROQ COMPARISON VERIFICATION");
+  console.log(`Model: ${process.env.AI_MODEL || "openai/gpt-oss-120b"}`);
+  console.log("Provider: Groq API (https://api.groq.com/openai/v1)");
   console.log("================================================================================\n");
 
   const pdfPath = path.resolve(process.cwd(), "tests/fixtures/LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf");
@@ -189,7 +186,7 @@ async function runRealNvidiaVerification() {
     console.log(`STARTING REAL NVIDIA COMPARISON RUN ${i} (FINAL HEADROOM CONFIRMATION)`);
     console.log(`================================================================================`);
 
-    const client = new NemotronClient();
+    const client = new GroqClient();
     const t0 = Date.now();
     const result = await compareDocuments(docA, docB, {
       requestId: `real_nvidia_run_${i}_${Date.now()}`,

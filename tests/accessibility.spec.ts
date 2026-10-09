@@ -8,6 +8,7 @@ test.describe('Accessibility E2E Verification', () => {
   test('Landing page - Axe checks and skip link', async ({ page }) => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
+    await page.locator('h1').first().waitFor({ state: 'visible' });
 
     // Axe Check
     const results = await new AxeBuilder({ page }).analyze();

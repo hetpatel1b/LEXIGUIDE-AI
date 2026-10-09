@@ -6,8 +6,8 @@ LexiGuide AI is an India-first legal document intelligence platform that transfo
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
-![NVIDIA NIM](https://img.shields.io/badge/NVIDIA-NIM-76B900?logo=nvidia)
-![Tests](https://img.shields.io/badge/Tests-201%20Passing-success)
+![Groq API](https://img.shields.io/badge/Groq-API-F55036?logo=fastapi)
+![Tests](https://img.shields.io/badge/Tests-203%20Passing-success)
 
 ---
 
@@ -39,7 +39,7 @@ LexiGuide AI focuses on a structured workflow rather than a collection of unrela
 | Challenge Requirement | LexiGuide AI Response | Evidence in Product |
 | --- | --- | --- |
 | **Simplifying complex legal documents** | Plain-language executive summary and document overview | Analysis Workspace breaks down dense terms into a readable summary. |
-| **Understanding legal documents** | Structured document analysis, sections, key provisions, metadata | Document Engine extracts structure before Nemotron 3 Super evaluates it. |
+| **Understanding legal documents** | Structured document analysis, sections, key provisions, metadata | Document Engine extracts structure before Groq AI evaluates it. |
 | **Comparing contracts/agreements** | A/B document comparison with categorized substantive differences | Compare Workspace highlights major, moderate, and minor changes. |
 | **Highlighting important clauses** | Key provisions across termination, payment, liability, confidentiality, IP, etc. | Analysis explicitly extracts Key Provisions with source mappings. |
 | **Identifying risks** | Potential concern scanner using cautious review-oriented language | Identifies review points without declaring them definitively illegal. |
@@ -108,7 +108,7 @@ No unnecessary chatbot gimmicks, legal marketplace, payments, lawyer booking, vo
 - Anonymous sessions via server-minted identity (HttpOnly cookies).
 - Server-side document ownership with strict file validation.
 - Daily quotas, concurrency guards, sliding-window rate limits, and prompt injection defenses.
-- Server-only NVIDIA API key that is never exposed to the client.
+- Server-only Groq API key that is never exposed to the client.
 
 ---
 
@@ -172,7 +172,7 @@ graph TD
         R --> SV[Source Validation]
         R --> QV[Quote Verification]
         
-        R --> AI[NVIDIA Nemotron 3 Super 120B A12B]
+        R --> AI[Groq API: openai/gpt-oss-120b]
         
         AI --> SO[Structured AI Output]
         SO --> ZV[Zod Validation + Evidence Validation]
@@ -193,7 +193,7 @@ The AI model never receives an uncontrolled raw document without structure. By m
 
 ## Grounded AI, Not Free-Form Guessing
 
-LexiGuide treats document text explicitly as untrusted data. The document is parsed into structured content, and only relevant chunks are selected for the given task. The NVIDIA Nemotron 3 Super model receives a bounded evidence context, and its output must follow strict Zod schemas. 
+LexiGuide treats document text explicitly as untrusted data. The document is parsed into structured content, and only relevant chunks are selected for the given task. The Groq AI model receives a bounded evidence context, and its output must follow strict Zod schemas. 
 
 Most importantly, **citation IDs are checked against the actual document** and **quotes are verified against the actual chunk text**. Unsupported evidence is rejected. When evidence cannot answer a question, the system clearly communicates that limitation instead of hallucinating. A fluent answer is not enough; users need to know exactly where the answer came from.
 
@@ -221,7 +221,7 @@ LexiGuide AI implements comprehensive anonymous security controls:
 - **Concurrency protection** to prevent duplicate in-flight processing.
 - **File constraints** including magic-byte/signature validation, 25MB upload size limits, filename sanitization, and null-byte/control-character handling.
 - **Prompt injection defenses** protecting the model from adversarial payloads inside contracts.
-- **Server-only NVIDIA API key** and Zod validation across all endpoints.
+- **Server-only Groq API key** and Zod validation across all endpoints.
 
 *Note: Anonymous quota identity can be reset by clearing cookies, and the current cache/session state is instance-local. A shared Redis-compatible store would be the next hardening step for globally consistent distributed state.*
 
@@ -275,7 +275,7 @@ The test matrix covers PDF/DOCX/TXT parsing, invalid/oversized files, AI schema 
 ## Technology Stack
 
 **Frontend:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4  
-**AI:** NVIDIA Nemotron 3 Super 120B A12B (via NVIDIA API / OpenAI-compatible interface)  
+**AI:** Groq API (`openai/gpt-oss-120b` via OpenAI-compatible endpoint)  
 **Document Processing:** unpdf, mammoth, internal deterministic document engine  
 **Validation & Security:** Zod  
 **Testing:** Node.js native test runner, Playwright, axe-core  
@@ -327,9 +327,24 @@ cp .env.example .env.local
 ```
 Set your server-side API key in `.env.local`:
 ```env
-NVIDIA_API_KEY=your_nvidia_api_key
+AI_PROVIDER=groq
+AI_MODEL=openai/gpt-oss-120b
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_API_KEY=your_groq_api_key_here
 ```
-**IMPORTANT:** Never expose `NVIDIA_API_KEY` to the browser. Never commit `.env.local`. Client code does not require or have access to this key.
+**IMPORTANT:** Never expose `GROQ_API_KEY` to the browser. Never commit `.env.local`. Client code does not require or have access to this key.
+
+### Vercel Deployment Configuration
+When deploying to Vercel:
+1. Navigate to your project on the Vercel Dashboard: **Project Settings → Environment Variables**.
+2. Add the following production environment variable:
+   - **Key:** `GROQ_API_KEY`
+   - **Value:** `gsk_...` (your Groq API secret key)
+   - **Environments:** Production, Preview, Development
+3. (Optional) You can also configure:
+   - `AI_MODEL` = `openai/gpt-oss-120b` (defaults to `openai/gpt-oss-120b` if omitted)
+   - `GROQ_BASE_URL` = `https://api.groq.com/openai/v1` (defaults to official endpoint if omitted)
+4. Trigger a new deployment (`git push` or Vercel CLI `vercel --prod`).
 
 ### Development
 ```bash

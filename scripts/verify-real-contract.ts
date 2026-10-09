@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { processDocument } from "../src/lib/document-engine/pipeline";
 import { analyzeDocument } from "../src/lib/ai/analysis/analysis-service";
-import { NemotronClient } from "../src/lib/ai/client/nemotron-client";
+import { GroqClient } from "../src/lib/ai/client/groq-client";
 
 // Load .env.local
 const envPath = path.resolve(process.cwd(), ".env.local");
@@ -10,11 +10,8 @@ if (fs.existsSync(envPath)) {
   const lines = fs.readFileSync(envPath, "utf8").split("\n");
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed.startsWith("NVIDIA_API_KEY=")) {
-      process.env.NVIDIA_API_KEY = trimmed.substring("NVIDIA_API_KEY=".length).trim().replace(/^["']|["']$/g, "");
-    }
-    if (trimmed.startsWith("NVIDIA_MODEL_ID=")) {
-      process.env.NVIDIA_MODEL_ID = trimmed.substring("NVIDIA_MODEL_ID=".length).trim().replace(/^["']|["']$/g, "");
+    if (trimmed.startsWith("GROQ_API_KEY=")) {
+      process.env.GROQ_API_KEY = trimmed.substring("GROQ_API_KEY=".length).trim().replace(/^["']|["']$/g, "");
     }
     if (trimmed.startsWith("AI_MODEL=")) {
       process.env.AI_MODEL = trimmed.substring("AI_MODEL=".length).trim().replace(/^["']|["']$/g, "");
@@ -26,7 +23,7 @@ async function verifyContract() {
   console.log("========================================================");
   console.log("LEXIGUIDE AI — LIVE REAL CONTRACT PERFORMANCE & QUALITY SUITE");
   console.log("Contract: LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf");
-  console.log(`Target Model: ${process.env.AI_MODEL || process.env.NVIDIA_MODEL_ID || "nvidia/nemotron-3-super-120b-a12b"}`);
+  console.log(`Target Model: ${process.env.AI_MODEL || "openai/gpt-oss-120b"}`);
   console.log("========================================================\n");
 
   const pdfPath = path.resolve(process.cwd(), "tests/fixtures/LexiGuide_AI_Comprehensive_Legal_Test_Contract.pdf");
@@ -41,9 +38,9 @@ async function verifyContract() {
   const ingestDuration = Date.now() - tIngest0;
   console.log(`[INGEST] Completed in ${ingestDuration}ms: sections=${doc.sections.length}, chunks=${doc.chunks.length}, pages=${doc.pages.length}\n`);
 
-  console.log("[ANALYSIS] Running analyzeDocument with live NVIDIA Nemotron...");
+  console.log("[ANALYSIS] Running analyzeDocument with live Groq AI...");
   const t0 = Date.now();
-  const client = new NemotronClient();
+  const client = new GroqClient();
   const result = await analyzeDocument(doc, client, "verify_perf_pass");
   const totalDuration = Date.now() - t0;
 

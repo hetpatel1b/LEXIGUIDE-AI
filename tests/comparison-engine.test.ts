@@ -350,9 +350,8 @@ test("Full Comparison: Added, Removed, Modified, and Unchanged clauses with AI e
   // Verify Metrics
   assert.strictEqual(result.documentA.name, "Contract_A_Original.pdf");
   assert.strictEqual(result.documentB.name, "Contract_B_Revised.pdf");
-  assert.strictEqual(result.unchangedSections.length, 3);
-  console.log("TEST 1 CHANGES:", JSON.stringify(result.changes, null, 2));
-  assert.ok(result.changes.length >= 3); // 2 modified + 1 added or something
+  assert.strictEqual(result.unchangedSections.length, 2);
+  assert.strictEqual(result.changes.length, 4); // 2 modified + 1 removed + 1 added
 
   // Verify Unchanged Sections
   const unchangedTitles = result.unchangedSections.map((u) => u.title);

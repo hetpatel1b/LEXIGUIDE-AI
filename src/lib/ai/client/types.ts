@@ -9,11 +9,8 @@ export interface ChatCompletionRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
-  reasoning_effort?: "none" | "low" | "high";
-  chat_template_kwargs?: {
-    enable_thinking?: boolean;
-    force_nonempty_content?: boolean;
-  };
+  reasoning_effort?: "none" | "low" | "medium" | "high";
+  reasoning_format?: "hidden" | "parsed" | "raw";
   response_format?: { type: "json_object" };
 }
 
@@ -60,7 +57,8 @@ export interface ChatCompletionOptions {
   maxTokens?: number;
   temperature?: number;
   requestId?: string;
-  reasoningEffort?: "none" | "low" | "high";
+  reasoningEffort?: "none" | "low" | "medium" | "high";
+  reasoningFormat?: "hidden" | "parsed" | "raw";
   enableThinking?: boolean;
   stream?: boolean;
   model?: string;
@@ -68,7 +66,8 @@ export interface ChatCompletionOptions {
 
 /**
  * Pluggable AI provider interface.
- * Abstracts Nemotron away from application logic for clean testability and future expansions.
+ * Abstracts the underlying AI provider (Groq API) away from application logic
+ * for clean testability and future expansions.
  */
 export interface AiProvider {
   generateChatCompletion(messages: ChatMessage[], options?: ChatCompletionOptions): Promise<string>;

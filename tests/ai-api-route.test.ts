@@ -47,10 +47,10 @@ test("API Route /api/analysis - returns 422 when document chunks array is empty"
   assert.strictEqual(data.error.code, "EMPTY_DOCUMENT");
 });
 
-test("API Route /api/analysis - returns 401 with safe message when NVIDIA_API_KEY is missing", async () => {
-  // Ensure NVIDIA_API_KEY is unset for this test
-  const savedKey = process.env.NVIDIA_API_KEY;
-  delete process.env.NVIDIA_API_KEY;
+test("API Route /api/analysis - returns 401 with safe message when GROQ_API_KEY is missing", async () => {
+  // Ensure GROQ_API_KEY is unset for this test
+  const savedKey = process.env.GROQ_API_KEY;
+  delete process.env.GROQ_API_KEY;
 
   try {
     const req = createRequest({ document: employmentDocRaw });
@@ -60,10 +60,10 @@ test("API Route /api/analysis - returns 401 with safe message when NVIDIA_API_KE
     assert.strictEqual(res.status, 401);
     assert.strictEqual(data.success, false);
     assert.strictEqual(data.error.code, "AI_CONFIG_ERROR");
-    assert.ok(!data.error.message.includes("NVIDIA_API_KEY")); // Asserts no secret name leaked
+    assert.ok(!data.error.message.includes("GROQ_API_KEY")); // Asserts no secret name leaked
   } finally {
     if (savedKey) {
-      process.env.NVIDIA_API_KEY = savedKey;
+      process.env.GROQ_API_KEY = savedKey;
     }
   }
 });

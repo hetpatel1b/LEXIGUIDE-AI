@@ -26,7 +26,7 @@ export const AiComparisonInconsistencySchema = z.object({
 });
 
 /**
- * Authoritative Zod schema for Nemotron comparison structured output.
+ * Authoritative Zod schema for Groq AI comparison structured output.
  */
 export const RawAiComparisonResponseSchema = z.object({
   changes: z.array(AiComparisonChangeExplanationSchema).default([]),

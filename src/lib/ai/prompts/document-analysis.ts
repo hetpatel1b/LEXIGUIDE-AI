@@ -17,9 +17,9 @@ ${context.contextText}
 </untrusted_document_context>
 
 Analyze the text above strictly following the system rules:
-- Strictly adhere to item limits: 5-7 key clauses, 3-4 potential concerns, 4-6 obligations, 4-6 important dates.
-- Keep all summaries and explanations concise (1 sentence, max 25 words).
-- In "source", supply ONLY "chunkId" and "quote" (verbatim excerpt under 60 characters). Do not output sectionId, sectionTitle, or pageNumber.
+- Strictly adhere to item limits: 4-5 key clauses, 3 potential concerns, 3-4 obligations, 3-4 important dates.
+- Keep all summaries and explanations concise (1 sentence, max 20 words).
+- In "source", supply ONLY "chunkId" and "quote" (verbatim excerpt under 45 characters). Do not output sectionId, sectionTitle, or pageNumber.
 - financialTerms: summarize all explicit compensation terms (base salary INR 2,400,000, 15% incentive, retention award INR 600,000) in 1-2 concise sentences.
 - jurisdiction / governingLaw: capture the specific seat of arbitration (e.g. Mumbai) and governing law (e.g. Laws of India).
 - Do NOT fabricate any facts, clauses, dates, parties, or citations. If information is not present, use "Not found in the uploaded document." or null.
@@ -42,7 +42,7 @@ ${context.contextText}
 END DOCUMENT CONTEXT
 
 RETRY INSTRUCTIONS:
-- Exactly 4 key clauses, 3 concerns, 3 obligations, 3 dates.
-- Keep quotes under 90 characters.
+- Exactly 3 key clauses, 2 concerns, 3 obligations, 2 dates.
+- Keep quotes under 40 characters.
 - Return ONLY valid JSON with double-quoted keys and closed string literals.`;
 }

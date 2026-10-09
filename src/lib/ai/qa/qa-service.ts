@@ -1,5 +1,5 @@
 import type { NormalizedDocument, DocumentChunk } from "@/lib/document-engine/types";
-import { NemotronClient } from "../client/nemotron-client";
+import { GroqClient } from "../client/groq-client";
 import { AiEngineError } from "../errors";
 import { RawQaResponseSchema, type RawQaResponse } from "../schemas/qa-schema";
 import { QA_SYSTEM_PROMPT, buildQaUserPrompt } from "../prompts/qa-prompt";
@@ -26,6 +26,8 @@ export interface QaDiagnostics {
   retrievalMs: number;
   contextChars: number;
   estimatedInputTokens: number;
+  ttftMs: number;
+  groqTtftMs?: number;
   nvidiaTtftMs: number;
   generationMs: number;
   jsonParseMs: number;
@@ -117,20 +119,20 @@ function verifyQaSource(
 
 /**
  * Production Q&A Service coordinating server-side retrieval,
- * prompt building, NVIDIA Nemotron inference, Zod validation, and source verification.
+ * prompt building, Groq API inference, Zod validation, and source verification.
  */
 export class QaService {
   private retriever: DocumentRetriever;
-  private customAiClient?: NemotronClient;
+  private customAiClient?: GroqClient;
 
-  constructor(retriever: DocumentRetriever = defaultRetriever, aiClient?: NemotronClient) {
+  constructor(retriever: DocumentRetriever = defaultRetriever, aiClient?: GroqClient) {
     this.retriever = retriever;
     this.customAiClient = aiClient;
   }
 
-  private getAiClient(): NemotronClient {
+  private getAiClient(): GroqClient {
     if (this.customAiClient) return this.customAiClient;
-    return new NemotronClient();
+    return new GroqClient();
   }
 
   public async answerQuestion(
@@ -195,6 +197,8 @@ export class QaService {
           retrievalMs: 0,
           contextChars: 0,
           estimatedInputTokens: 0,
+          ttftMs: 0,
+          groqTtftMs: 0,
           nvidiaTtftMs: 0,
           generationMs: 0,
           jsonParseMs: 0,
@@ -263,6 +267,8 @@ export class QaService {
           retrievalMs,
           contextChars: 0,
           estimatedInputTokens: 0,
+          ttftMs: 0,
+          groqTtftMs: 0,
           nvidiaTtftMs: 0,
           generationMs: 0,
           jsonParseMs: 0,
@@ -285,10 +291,9 @@ export class QaService {
     const estimatedInputTokens = Math.ceil(contextChars / 4);
 
     console.log(`[QA-DIAG]${reqTag} contextChars=${contextChars}`);
-    console.log(`[QA-DIAG]${reqTag} NVIDIA request started`);
-    console.log(`[QA-DIAG]${reqTag} model=nvidia/nemotron-3-super-120b-a12b`);
+    console.log(`[QA-DIAG]${reqTag} Groq request started`);
 
-    // 6. Invoke NVIDIA Nemotron 3 Super 120B
+    // 6. Invoke Groq API
     const messages = [
       { role: "system" as const, content: QA_SYSTEM_PROMPT },
       { role: "user" as const, content: userPrompt },
@@ -304,7 +309,7 @@ export class QaService {
     });
 
     const generationMs = Math.max(0, aiResult.totalDurationMs - aiResult.ttftMs);
-    console.log(`[QA-DIAG]${reqTag} NVIDIA status=200`);
+    console.log(`[QA-DIAG]${reqTag} Groq status=200`);
     console.log(`[QA-DIAG]${reqTag} TTFT=${aiResult.ttftMs}ms`);
     console.log(`[QA-DIAG]${reqTag} generation=${generationMs}ms`);
     console.log(`[QA-DIAG]${reqTag} outputChars=${aiResult.content.length}`);
@@ -400,6 +405,8 @@ export class QaService {
         retrievalMs,
         contextChars,
         estimatedInputTokens,
+        ttftMs: aiResult.ttftMs,
+        groqTtftMs: aiResult.ttftMs,
         nvidiaTtftMs: aiResult.ttftMs,
         generationMs,
         jsonParseMs,

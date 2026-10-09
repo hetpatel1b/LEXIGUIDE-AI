@@ -18,7 +18,7 @@ export const QaKeyPointSchema = z.object({
 });
 
 /**
- * Authoritative schema for Nemotron Q&A structured output.
+ * Authoritative schema for Groq AI Q&A structured output.
  */
 export const RawQaResponseSchema = z.object({
   answer: z

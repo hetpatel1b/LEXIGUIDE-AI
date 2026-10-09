@@ -98,18 +98,26 @@ export function withApiSecurity(
         console.error(
           `[API-DIAG]${reqTag} POST /api/${featureName} failed with AiEngineError: code=${error.code}, status=${error.statusCode}, duration=${totalDuration}ms`
         );
+        const headers: Record<string, string> = {
+          [`x-${featureName}-request-id`]: requestId,
+        };
+        const retryAfterSec = typeof error.details?.retryAfterSeconds === "number" ? error.details.retryAfterSeconds : undefined;
+        if (error.statusCode === 429 && retryAfterSec) {
+          headers["Retry-After"] = String(retryAfterSec);
+        }
         const res = NextResponse.json(
           {
             success: false,
             error: {
               code: error.code,
               message: toSafeUserMessage(error),
+              retryAfter: retryAfterSec,
             },
             requestId,
           },
           {
             status: error.statusCode,
-            headers: { [`x-${featureName}-request-id`]: requestId },
+            headers,
           }
         );
         return attachSessionCookie(res, session.sessionId);

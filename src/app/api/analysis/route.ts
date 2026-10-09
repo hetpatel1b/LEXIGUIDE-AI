@@ -19,7 +19,7 @@ export const runtime = "nodejs";
  * POST /api/analysis
  * Accepts document reference, validates session authorization,
  * enforces server-side rate limits & daily quotas, prevents in-flight duplicate requests,
- * processes through NVIDIA Nemotron 3 Super 120B with bounded context, and returns
+ * processes through Groq API with bounded context, and returns
  * verified AnalysisResult.
  */
 async function analysisHandler(request: NextRequest, context: ApiContext): Promise<NextResponse> {
@@ -105,7 +105,7 @@ async function analysisHandler(request: NextRequest, context: ApiContext): Promi
   }
 
   try {
-    // 4. Daily Quota Check (Enforced BEFORE expensive NVIDIA call)
+    // 4. Daily Quota Check (Enforced BEFORE expensive Groq AI call)
     const quota = quotaStore.checkQuota(session.sessionId, "analysis");
     if (!quota.allowed) {
       const errorInfo = getQuotaErrorMessage("analysis", quota.limit);

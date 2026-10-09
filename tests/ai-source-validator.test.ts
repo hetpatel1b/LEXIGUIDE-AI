@@ -6,7 +6,7 @@ import employmentDocRaw from "./fixtures/ai/employment-agreement.json";
 import {
   MOCK_VALID_EMPLOYMENT_RESPONSE,
   MOCK_FABRICATED_QUOTE_RESPONSE,
-} from "./fixtures/ai/mock-nemotron-responses";
+} from "./fixtures/ai/mock-groq-responses";
 import type { NormalizedDocument } from "@/lib/document-engine/types";
 
 const employmentDoc = employmentDocRaw as unknown as NormalizedDocument;

@@ -19,7 +19,7 @@ export const runtime = "nodejs";
  * POST /api/qa
  * Grounded legal Q&A endpoint.
  * Retrieves targeted evidence from the active document and invokes
- * NVIDIA Nemotron 3 Super 120B with source verification.
+ * Groq API with source verification.
  *
  * Hardened with:
  * - Anonymous session resolution and HttpOnly cookie attachment
