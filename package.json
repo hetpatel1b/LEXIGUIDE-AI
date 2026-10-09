@@ -10,6 +10,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
+    "test:e2e": "playwright test",
+    "security:bundle-check": "node scripts/verify-client-secrets.mjs",
     "ai:smoke": "node scripts/ai-smoke.mjs"
   },
   "dependencies": {

@@ -1,0 +1,36 @@
+# Gitleaks Configuration for LexiGuide AI
+title = "LexiGuide AI Secret Scanning Policy"
+
+[allowlist]
+description = "Allowlist for synthetic test fixtures and documentation examples"
+paths = [
+  '''tests/fixtures/''',
+  '''tests/ai-groq-migration.test.ts''',
+  '''tests/ai-groq-rate-limit.test.ts''',
+  '''tests/ai-groq-truncation-recovery.test.ts''',
+  '''scripts/verify-client-secrets.mjs''',
+  '''.env.example''',
+  '''package-lock.json''',
+]
+regexes = [
+  '''mock_test_key_for_ci_environment''',
+  '''mock_ci_test_key_for_deterministic_testing''',
+  '''gsk_dummy_test_key''',
+  '''gsk_test_mock_key_12345''',
+  '''gsk_super_secret_production_key_xyz''',
+  '''invalid-groq-key''',
+]
+
+[[rules]]
+id = "groq-api-key"
+description = "Detected Groq API Key"
+regex = '''\bgsk_[a-zA-Z0-9]{20,}\b'''
+secretGroup = 0
+keywords = ["gsk_"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic High-Entropy API Key Assignment"
+regex = '''(?i)(?:api_key|apikey|secret_key|private_key)\s*[:=]\s*["'][a-zA-Z0-9_\-]{20,}["']'''
+secretGroup = 0
+keywords = ["api_key", "apikey", "secret_key"]

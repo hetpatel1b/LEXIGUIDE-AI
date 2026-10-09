@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Maintain npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "hetpatel1b"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      production-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "production"
+      development-dependencies:
+        patterns:
+          - "*"
+        dependency-type: "development"
+
+  # Maintain GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "hetpatel1b"
+    commit-message:
+      prefix: "ci(actions)"

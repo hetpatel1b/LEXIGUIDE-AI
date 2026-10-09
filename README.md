@@ -259,16 +259,19 @@ LexiGuide implements WCAG-oriented design principles to ensure broad usability:
 
 LexiGuide AI is backed by comprehensive automated test coverage:
 
-- **195 unit/integration tests**
-- **6 end-to-end tests**
-- **201 total automated tests**
+- **222 unit/integration tests**
+- **6 end-to-end accessibility tests**
+- **228 total automated tests**
 - **0 failed | 0 skipped | 0 flaky**
-- Line coverage: **85.79%**
-- Branch coverage: **77.73%**
-- Function coverage: **73.47%**
-- Statement coverage: **85.79%**
 
-The test matrix covers PDF/DOCX/TXT parsing, invalid/oversized files, AI schema validation, source validation, quote verification, hallucinated citation rejection, prompt injection, security isolation, quota/rate limiting, cache deduplication, document comparison, inconsistency detection, Q&A grounding, keyboard accessibility, and production smoke tests.
+The test matrix covers PDF/DOCX/TXT parsing, invalid/oversized files, AI schema validation, source validation, quote verification, hallucinated citation rejection, prompt injection, security isolation, quota/rate limiting, cache deduplication, document comparison, inconsistency detection, Q&A grounding, keyboard accessibility, rate-limit adaptive backoff, truncation recovery, and production smoke tests.
+
+### CI/CD & Security Automation
+- **GitHub Actions Workflows:** Pull request & push CI (`ci.yml`), Security & SAST scanning (`security.yml`), and deployment smoke checks (`deployment-smoke.yml`).
+- **Secret Protection:** Gitleaks commit scanning (`.gitleaks.toml`) and client bundle scanner (`scripts/verify-client-secrets.mjs`).
+- **Static Security Analysis:** GitHub CodeQL with `security-extended` query suite.
+- **Dependency Maintenance:** Automated Dependabot updates (`.github/dependabot.yml`) for npm and GitHub Actions.
+- **Full Documentation:** See [CI/CD & Security Architecture](docs/ci-cd-security.md).
 
 ---
 
