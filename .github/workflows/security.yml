@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Gitleaks Secret Scan
-        uses: gitleaks/gitleaks-action@e971a5dd469a4c042ea0f3c5fbeabcc8fa593fec # v2.3.9
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: ".gitleaks.toml"
@@ -81,12 +81,12 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@4dd1613324961b72e4e168b99451e75a06fc8078 # v3.28.11
+        uses: github/codeql-action/init@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3.28.11
         with:
           languages: "javascript-typescript"
           queries: "security-extended"
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@4dd1613324961b72e4e168b99451e75a06fc8078 # v3.28.11
+        uses: github/codeql-action/analyze@6bb031afdd8eb862ea3fc1848194185e076637e5 # v3.28.11
         with:
           category: "/language:javascript-typescript"

@@ -88,7 +88,7 @@ To enforce this pipeline on GitHub:
 1. Navigate to **Repository Settings** → **Branches** → **Add branch protection rule**.
 2. **Branch name pattern:** `main`
 3. Check **Require a pull request before merging**:
-   - Require approvals: `1`
+   - Require approvals: `0` (for solo maintainers) or `1` (for teams)
    - Dismiss stale pull request approvals when new commits are pushed: `Checked`
 4. Check **Require status checks to pass before merging**:
    - Require branches to be up to date before merging: `Checked`

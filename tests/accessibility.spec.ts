@@ -1,12 +1,10 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const BASE_URL = 'http://localhost:3000';
-
 test.describe('Accessibility E2E Verification', () => {
   // Test 1: Landing Page and Skip Link
   test('Landing page - Axe checks and skip link', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.locator('h1').first().waitFor({ state: 'visible' });
 
@@ -26,7 +24,7 @@ test.describe('Accessibility E2E Verification', () => {
 
   // Test 2: Upload Dropzone & Forms
   test('Upload page - Axe checks and keyboard accessibility', async ({ page }) => {
-    await page.goto(`${BASE_URL}/`);
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Keyboard navigation to the upload dropzone
@@ -42,7 +40,7 @@ test.describe('Accessibility E2E Verification', () => {
 
   // Test 3: Analysis Route
   test('Analysis workspace - Axe checks and Tabs keyboard nav', async ({ page }) => {
-    await page.goto(`${BASE_URL}/analyze`);
+    await page.goto('/analyze');
     await page.waitForLoadState('networkidle');
 
     const results = await new AxeBuilder({ page }).analyze();
@@ -51,7 +49,7 @@ test.describe('Accessibility E2E Verification', () => {
 
   // Test 4: Comparison Route
   test('Comparison workspace - Axe checks', async ({ page }) => {
-    await page.goto(`${BASE_URL}/compare`);
+    await page.goto('/compare');
     await page.waitForLoadState('networkidle');
 
     const results = await new AxeBuilder({ page }).analyze();
@@ -60,7 +58,7 @@ test.describe('Accessibility E2E Verification', () => {
 
   // Test 5: Q&A Route
   test('Q&A workspace - Axe checks', async ({ page }) => {
-    await page.goto(`${BASE_URL}/qa`);
+    await page.goto('/qa');
     await page.waitForLoadState('networkidle');
 
     const results = await new AxeBuilder({ page }).analyze();
@@ -69,7 +67,7 @@ test.describe('Accessibility E2E Verification', () => {
 
   // Test 6: Action Center Route
   test('Action Center - Axe checks', async ({ page }) => {
-    await page.goto(`${BASE_URL}/action-center`);
+    await page.goto('/action-center');
     await page.waitForLoadState('networkidle');
 
     const results = await new AxeBuilder({ page }).analyze();
