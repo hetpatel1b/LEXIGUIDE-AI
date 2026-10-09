@@ -29,10 +29,13 @@ export function sanitizeFilename(rawFilename: string): SanitizedFilenameInfo {
     .replace(/[\x00-\x1f\x7f-\x9f]/g, "")
     .trim();
 
-  // 3. Extract basename to defeat path traversal attacks (../, ..\, /etc/passwd, C:\windows)
-  cleanName = path.basename(cleanName);
+  // 3. Normalize Windows drive letters and backslashes to forward slashes for universal cross-platform handling
+  cleanName = cleanName.replace(/^[a-zA-Z]:/, "").replace(/\\/g, "/");
 
-  // 4. Remove leading/trailing dots and slashes
+  // 4. Extract basename across all path separators
+  cleanName = path.posix.basename(cleanName);
+
+  // 5. Remove leading/trailing dots and slashes
   cleanName = cleanName.replace(/^[./\\]+/, "").replace(/[./\\]+$/, "");
 
   // 5. Extract extension safely
